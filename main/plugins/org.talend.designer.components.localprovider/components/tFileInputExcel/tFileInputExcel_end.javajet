@@ -40,11 +40,12 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e_<%=cid%>.getMessage());
 			<%}%>
 			<%log4jFileUtil.retrievedDataNumberInfo(node);%>
 			
-			globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);
 			<%if((version07 && !eventMode) || !version07) {%>
 				}
 			<%}//Bug TDI-25655%>
-		} finally { 
+
+			globalMap.put("<%=cid %>_NB_LINE",nb_line_<%=cid %>);
+		} finally {
 				<%if(!version07){%>
 					if(!(source_<%=cid %> instanceof java.io.InputStream)){
 						workbook_<%=cid %>.close();
