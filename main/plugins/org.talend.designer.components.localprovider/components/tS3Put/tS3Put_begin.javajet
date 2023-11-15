@@ -41,6 +41,8 @@ imports="
 	String retentionMode = ElementParameterParser.getValue(node, "__RETENTION_MODE__");
 	String retentionPeriod = ElementParameterParser.getValue(node, "__RETENTION_PERIOD__");
 	String retentionPeriodType = ElementParameterParser.getValue(node, "__RETENTION_PERIOD_TYPE__");
+	boolean setObjectTags = "true".equals(ElementParameterParser.getValue(node, "__SET_OBJECT_TAGS__"));
+	List<Map<String, String>> objectTags = ElementParameterParser.getTableValue(node,"__OBJECT_TAGS__");
 	%>
 	String millisecTime_<%=cid %> = null;
 	<%
@@ -157,7 +159,18 @@ accessCtrlList.grantPermission(grantee_<%=cid%>_<%=grantee_id%>, com.amazonaws.s
 			}
 		}
   		%>
-		
+  		List<com.amazonaws.services.s3.model.Tag> objectTags_<%=cid%> = new java.util.ArrayList<com.amazonaws.services.s3.model.Tag>();
+  		<%
+  		if (setObjectTags) {
+  			for (Map<String, String> objectTag: objectTags) {
+  				String objectTagKey = objectTag.get("OBJECT_TAG_KEY");
+  				String objectTagValue = objectTag.get("OBJECT_TAG_VALUE");
+  		%>
+  				objectTags_<%=cid%>.add(new com.amazonaws.services.s3.model.Tag(<%=objectTagKey %>, <%=objectTagValue %>));
+		<%
+			}
+		}
+		%>
 		if(!useStream_<%=cid%>) {
 				java.io.File inputFile_<%=cid%> = new java.io.File((String)fileOrStream_<%=cid%>);
 				
@@ -182,7 +195,9 @@ accessCtrlList.grantPermission(grantee_<%=cid%>_<%=grantee_id%>, com.amazonaws.s
 				   }
 				}
 			<%}%>
-			
+			<%if (setObjectTags) {%>
+				putRequest_<%=cid%>.withTagging(new com.amazonaws.services.s3.model.ObjectTagging(objectTags_<%=cid%>));
+			<%}%>
   			<%@ include file="./set_kms_objectlock.javajet"%>
   			
   			com.amazonaws.services.s3.transfer.Upload upload_<%=cid%> = tm_<%=cid%>.upload(putRequest_<%=cid%>);
@@ -238,6 +253,9 @@ accessCtrlList.grantPermission(grantee_<%=cid%>_<%=grantee_id%>, com.amazonaws.s
 				             }
 				         }
 			        <%}%>
+			        <%if (setObjectTags) {%>
+						putRequest_<%=cid%>.withTagging(new com.amazonaws.services.s3.model.ObjectTagging(objectTags_<%=cid%>));
+					<%}%>
     				<%@ include file="./set_kms_objectlock.javajet"%>
     				
     				conn_<%=cid%>.putObject(putRequest_<%=cid%>);
@@ -256,6 +274,9 @@ accessCtrlList.grantPermission(grantee_<%=cid%>_<%=grantee_id%>, com.amazonaws.s
 				    }
 				}
 			    <%}%>
+			    <%if (setObjectTags) {%>
+					putRequest_<%=cid%>.withTagging(new com.amazonaws.services.s3.model.ObjectTagging(objectTags_<%=cid%>));
+				<%}%>
       			<%@ include file="./set_kms_objectlock.javajet"%>
       			
       			com.amazonaws.services.s3.model.InitiateMultipartUploadResult initResponse_<%=cid%> = conn_<%=cid%>.initiateMultipartUpload(putRequest_<%=cid%>);
