@@ -70,7 +70,7 @@ public class JavaVersionProjectSettingPage extends AbstractProjectSettingPage {
     private StyledText defaultText;
 
     private StyledText customText;
-
+    
     public JavaVersionProjectSettingPage() {
         noDefaultAndApplyButton();
     }
@@ -161,11 +161,31 @@ public class JavaVersionProjectSettingPage extends AbstractProjectSettingPage {
         updateUI();
     }
     
+    private void backupPreference() {
+        boolean selected = getPreferenceStore().getBoolean(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS);
+        boolean backupVal = getPreferenceStore().getBoolean(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS_BACKUP);
+        if (backupVal != selected) {
+            getPreferenceStore().setValue(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS_BACKUP, selected);
+        }
+    }
+    
+    private void restorePreference() {
+        boolean selected = getPreferenceStore().getBoolean(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS);
+        boolean backupVal = getPreferenceStore().getBoolean(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS_BACKUP);
+        if (backupVal != selected) {
+            getPreferenceStore().setValue(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS, backupVal);
+        }
+    }
+
     private void updateUI() {
         if (JavaUtils.isComplianceLevelSet()) {
+            backupPreference();
             javaVersionCombo.setEnabled(false);
             accessCheckbox.setSelection(true);
             accessCheckbox.setEnabled(false);
+        } else {
+            restorePreference();
+            javaVersionCombo.select(0);
         }
     }
 
