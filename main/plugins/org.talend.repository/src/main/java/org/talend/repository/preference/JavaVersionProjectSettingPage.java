@@ -157,6 +157,16 @@ public class JavaVersionProjectSettingPage extends AbstractProjectSettingPage {
         accessConfigLabel.setLayoutData(scriptLabelData);
 
         createTabArea(parent);
+        
+        updateUI();
+    }
+    
+    private void updateUI() {
+        if (JavaUtils.isComplianceLevelSet()) {
+            javaVersionCombo.setEnabled(false);
+            accessCheckbox.setSelection(true);
+            accessCheckbox.setEnabled(false);
+        }
     }
 
     private void createTabArea(Composite parent) {
