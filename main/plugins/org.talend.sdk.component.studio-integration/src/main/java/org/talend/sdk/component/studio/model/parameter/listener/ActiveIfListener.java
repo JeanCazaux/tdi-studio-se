@@ -164,23 +164,23 @@ public class ActiveIfListener implements PropertyChangeListener {
 
     private boolean evaluteScope(final PropertyDefinitionDecorator.Condition cond) {
         String[] values = cond.getValues();
-        for (String value : values) {
-            String targetPath = cond.getTargetPath();
-            if (TaCoKitConst.TARGET.equalsIgnoreCase(targetPath)) {
-                TaCoKitElementParameter targetParam = targetParams.get(cond.getPath());
-                if (targetParam == null && sourceParameter.getName().equals(cond.getPath())) {
-                    targetParam = sourceParameter;
-                }
-                if (targetParam != null) {
-                    List contexts = evaluteContext(targetParam);
+        String targetPath = cond.getTargetPath();
+        if (TaCoKitConst.TARGET.equalsIgnoreCase(targetPath)) {
+            TaCoKitElementParameter targetParam = targetParams.get(cond.getPath());
+            if (targetParam == null && sourceParameter.getName().equals(cond.getPath())) {
+                targetParam = sourceParameter;
+            }
+            if (targetParam != null) {
+                List contexts = evaluteContext(targetParam);
+                for (String value : values) {
                     String[] scopes = value.split(","); //$NON-NLS-1$
                     for (String scope : scopes) {
                         if (contexts.contains(scope)) {
                             return true;
                         }
                     }
-                    return false;
                 }
+                return false;
             }
         }
         return true;
