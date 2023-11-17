@@ -187,6 +187,10 @@ public class JavaVersionProjectSettingPage extends AbstractProjectSettingPage {
             restorePreference();
             javaVersionCombo.select(0);
         }
+
+        boolean selection = accessCheckbox.getSelection();
+        accessConfigLabel.setVisible(selection);
+        tabFolder.setVisible(selection);
     }
 
     private void createTabArea(Composite parent) {

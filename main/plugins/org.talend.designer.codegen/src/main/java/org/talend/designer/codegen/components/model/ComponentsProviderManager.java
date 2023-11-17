@@ -14,6 +14,7 @@ package org.talend.designer.codegen.components.model;
 
 import java.util.ArrayList;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -21,6 +22,9 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.jdt.core.JavaCore;
+import org.talend.commons.utils.VersionUtils;
+import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.components.AbstractComponentsProvider;
 import org.talend.core.runtime.util.SharedStudioInfoProvider;
@@ -61,6 +65,17 @@ public final class ComponentsProviderManager {
                     String id = configurationElement.getAttribute("id"); //$NON-NLS-1$
                     String folderName = configurationElement.getAttribute("folderName"); //$NON-NLS-1$
                     String contributerName = configurationElement.getContributor().getName();
+                    String javaMajorVersion = configurationElement.getAttribute("javaMajorVersion");
+                    
+                    // those old provider's javaMajorVersion is not set, set them to Java 1.8 by default
+                    if (StringUtils.isEmpty(javaMajorVersion)) {
+                        javaMajorVersion = JavaCore.VERSION_1_8;
+                    }
+                    // filter out if provider's java version > project's java version
+                    String projectJavaVersion = JavaUtils.getProjectJavaVersion();
+                    if (VersionUtils.compareTo(javaMajorVersion, projectJavaVersion) > 0) {
+                        continue;
+                    }
                     IBrandingService brandingService = (IBrandingService) GlobalServiceRegister.getDefault().getService(
                             IBrandingService.class);
                     if (!brandingService.isPoweredOnlyCamel()
@@ -76,6 +91,7 @@ public final class ComponentsProviderManager {
                         componentsProvider.setId(id);
                         componentsProvider.setFolderName(folderName);
                         componentsProvider.setContributer(contributerName);
+                        componentsProvider.setJavaMajorVersion(javaMajorVersion);
                         providers.add(componentsProvider);
                     } catch (CoreException e) {
                         log.error(Messages.getString("ComponentsProviderManager.unableLoad") + id, e); //$NON-NLS-1$
