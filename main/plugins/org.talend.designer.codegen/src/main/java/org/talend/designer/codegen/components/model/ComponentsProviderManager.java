@@ -72,12 +72,16 @@ public final class ComponentsProviderManager {
                         if (!StringUtils.equals(JavaCore.VERSION_17, javaMajorVersion)
                                 && !StringUtils.equals(JavaCore.VERSION_1_8, javaMajorVersion)) {
                             log
-                                    .warn("Invalid java version: " + javaMajorVersion + " was set for component, id: "
+                                    .warn("Invalid java version: " + javaMajorVersion + " was set for component provider, id: "
                                             + id + ", folderName: " + folderName + ", contributor: " + contributerName);
                         }
                         // if provider's java version == project's java version
                         String projectJavaVersion = JavaUtils.getProjectJavaVersion();
                         if (VersionUtils.compareTo(javaMajorVersion, projectJavaVersion) != 0) {
+                            log
+                                    .warn("Java version: " + javaMajorVersion + ", project java version: "
+                                            + projectJavaVersion + ", skip loading component provider, id: " + id
+                                            + ", folderName: " + folderName + ", contributor: " + contributerName);
                             continue;
                         }
                     }
