@@ -67,14 +67,19 @@ public final class ComponentsProviderManager {
                     String contributerName = configurationElement.getContributor().getName();
                     String javaMajorVersion = configurationElement.getAttribute("javaMajorVersion");
                     
-                    // those old provider's javaMajorVersion is not set, set them to Java 1.8 by default
-                    if (StringUtils.isEmpty(javaMajorVersion)) {
-                        javaMajorVersion = JavaCore.VERSION_1_8;
-                    }
-                    // filter out if provider's java version > project's java version
-                    String projectJavaVersion = JavaUtils.getProjectJavaVersion();
-                    if (VersionUtils.compareTo(javaMajorVersion, projectJavaVersion) > 0) {
-                        continue;
+                    // if no java version, load them all, otherwise check
+                    if (!StringUtils.isEmpty(javaMajorVersion)) {
+                        if (!StringUtils.equals(JavaCore.VERSION_17, javaMajorVersion)
+                                && !StringUtils.equals(JavaCore.VERSION_1_8, javaMajorVersion)) {
+                            log
+                                    .warn("Invalid java version: " + javaMajorVersion + " was set for component, id: "
+                                            + id + ", folderName: " + folderName + ", contributor: " + contributerName);
+                        }
+                        // if provider's java version == project's java version
+                        String projectJavaVersion = JavaUtils.getProjectJavaVersion();
+                        if (VersionUtils.compareTo(javaMajorVersion, projectJavaVersion) != 0) {
+                            continue;
+                        }
                     }
                     IBrandingService brandingService = (IBrandingService) GlobalServiceRegister.getDefault().getService(
                             IBrandingService.class);
