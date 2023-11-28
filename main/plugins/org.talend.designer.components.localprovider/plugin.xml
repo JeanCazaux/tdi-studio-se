@@ -120,8 +120,8 @@
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
-            id="snappy-java-1.1.10.1.jar"
-            name="snappy-java-1.1.10.1.jar" mvn_uri="mvn:org.xerial.snappy/snappy-java/1.1.10.1"
+            id="snappy-java-1.1.10.5.jar"
+            name="snappy-java-1.1.10.5.jar" mvn_uri="mvn:org.xerial.snappy/snappy-java/1.1.10.5"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
@@ -171,7 +171,7 @@
             <library id="kafka-clients-0.8.2.0.jar"/>
             <library id="lz4-1.2.0.jar"/>
             <library id="metrics-core-2.2.0.jar"/>
-            <library id="snappy-java-1.1.10.1.jar"/>
+            <library id="snappy-java-1.1.10.5.jar"/>
             <library id="zkclient-0.3.jar"/>
             <library id="zookeeper-3.4.8.jar"/>
             <library id="reload4j-1.2.19.jar"/>
