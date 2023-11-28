@@ -103,7 +103,11 @@ public class Truster implements X509TrustManager {
             } catch (IOException _ex) {
             }
         try {
-            ks.load(in, certStorePwd);
+            if (in == null) {
+                ks = null;
+            } else {
+                ks.load(in, certStorePwd);
+            }
         } catch (Exception e) {
             System.err.println("ASF Truster: Failed to load the cert store : " + e.getMessage());
             return;
