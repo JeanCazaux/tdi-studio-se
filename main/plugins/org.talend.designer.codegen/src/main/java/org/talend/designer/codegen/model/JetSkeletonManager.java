@@ -38,9 +38,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.osgi.framework.Bundle;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.runtime.utils.io.IOUtils;
 import org.talend.core.model.components.ComponentCompilations;
@@ -138,9 +136,6 @@ public final class JetSkeletonManager {
         }
         project.open(new NullProgressMonitor());
         IFile file = project.getFile("SkeletonUpdateCache"); //$NON-NLS-1$
-        if (!file.exists()) {
-            file.create(null, true, new NullProgressMonitor());
-        }
         return file.getLocation().toFile();
     }
 
