@@ -128,7 +128,7 @@
 								<artifactItem>
 									<groupId>org.talend.components</groupId>
 									<artifactId>talendssl</artifactId>
-									<version>1.0-20190118</version>
+									<version>1.0-20231128</version>
 									<type>jar</type>
 									<overWrite>true</overWrite>
 									<outputDirectory>${tldapinput.dir}</outputDirectory>

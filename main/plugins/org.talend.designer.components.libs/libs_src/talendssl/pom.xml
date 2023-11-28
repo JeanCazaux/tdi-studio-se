@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.talend.components</groupId>
 	<artifactId>talendssl</artifactId>
-	<version>1.0-20190118</version>
+	<version>1.0-20231128</version>
 	<packaging>jar</packaging>
 
 	<properties>
