@@ -424,14 +424,21 @@ public class SettingVisitor implements PropertyVisitor {
      * Sets Closed List possible values and sets 1st element as default
      */
     private TaCoKitElementParameter visitClosedList(final PropertyNode node) {
-        final TaCoKitElementParameter parameter = new TaCoKitElementParameter(element);
-        commonSetup(parameter, node);
         final PropertyValidation validation = node.getProperty().getValidation();
 
         final boolean isEnum = node.getProperty().getType().equalsIgnoreCase("enum");
         if (isEnum && (validation == null || validation.getEnumValues() == null)) {
             throw new IllegalArgumentException("No values for enum " + node.getProperty().getPath());
         }
+
+        final TaCoKitElementParameter parameter;
+        if (isEnum && node.getProperty().hasSuggestions()) {
+            final SuggestionsAction suggestionsAction = createSuggestionsAction(node);
+            parameter = new SuggestableEnumParameter(element, suggestionsAction, node.getProperty().getProposalDisplayNames());
+        } else {
+            parameter = new TaCoKitElementParameter(element);
+        }
+        commonSetup(parameter, node);
 
         if (validation == null || validation.getEnumValues() == null || validation.getEnumValues().isEmpty()) {
             final ActionReference dynamicValuesAction =
