@@ -19,11 +19,9 @@ import static org.talend.sdk.component.studio.util.TaCoKitUtil.isEmpty;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -66,7 +64,6 @@ import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.ValueModel;
 import org.talend.sdk.component.studio.metadata.node.ITaCoKitRepositoryNode;
 import org.talend.sdk.component.studio.model.parameter.PropertyDefinitionDecorator;
-import org.talend.sdk.component.studio.model.parameter.ValueConverter;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
 import org.talend.sdk.component.studio.websocket.WebSocketClient.V1Component;
@@ -138,44 +135,12 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
             return addQuotesIfNecessary(connection, valueModel.getValue());
         } else if (EParameterFieldType.TABLE.equals(fieldType)
                 || EParameterFieldType.TACOKIT_SUGGESTABLE_TABLE.equals(fieldType)) {
-            String value = valueModel.getValue();
-            if (TaCoKitConst.CONFIG_NODE_ID_DATASET.equalsIgnoreCase(model.getConfigTypeNode().getConfigurationType())) {
-
-                String tableValue = getTableParameterValue(value, key);
-                return model.convertParameterValue(repositoryKey, key, tableValue);
-            }
             return model.convertParameterValue(repositoryKey, key, valueModel.getValue());
         } else {
             return valueModel.getValue();
         }
     }
 
-    private String getTableParameterValue(String objectValue, String parentKey) {
-        if (objectValue == null || objectValue instanceof String) {
-            final List<Map<String, Object>> tableValue = ValueConverter.toTable(objectValue);
-            Map<String, Object> newMap = new HashMap<String, Object>();
-            for (Map<String, Object> map : tableValue) {
-
-                Set<Entry<String, Object>> entrySet = map.entrySet();
-                Iterator<Entry<String, Object>> iterator = entrySet.iterator();
-
-                while (iterator.hasNext()) {
-                    Entry<String, Object> next = iterator.next();
-                    String k = next.getKey();
-                    String substringAfter = StringUtils.substringAfter(k, "[]");
-                    String newKey = parentKey + "[]" + substringAfter;
-
-                    newMap.put(newKey, next.getValue());
-
-                }
-            }
-            if (newMap.size() > 0) {
-
-                objectValue = newMap.toString();
-            }
-        }
-        return objectValue;
-    }
     /**
      * Computes stored key (a key which is used to store specific parameter value) from {@code parameterId} of specified {@code component}
      *
