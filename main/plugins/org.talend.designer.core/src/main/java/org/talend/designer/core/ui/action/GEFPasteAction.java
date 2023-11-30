@@ -51,6 +51,7 @@ import org.talend.designer.core.ui.editor.cmd.NodesPasteCommand;
 import org.talend.designer.core.ui.editor.cmd.NotesPasteCommand;
 import org.talend.designer.core.ui.editor.connections.ConnLabelEditPart;
 import org.talend.designer.core.ui.editor.jobletcontainer.AbstractJobletContainer;
+import org.talend.designer.core.ui.editor.jobletcontainer.JobletContainer;
 import org.talend.designer.core.ui.editor.jobletcontainer.JobletContainerPart;
 import org.talend.designer.core.ui.editor.nodecontainer.NodeContainer;
 import org.talend.designer.core.ui.editor.nodecontainer.NodeContainerPart;
@@ -215,13 +216,21 @@ public class GEFPasteAction extends SelectionAction {
                 boolean isCollapsedNode = false;
                 if (editor.getProcess().getGraphicalNodes().contains(nodePart.getModel())) {
                     isCollapsedNode = true;
+                } else {
+                    if(((Node)nodePart.getModel()).getProcess() != editor.getProcess()) {//copy to other job, joblet
+                        if (nodePart.getParent() instanceof JobletContainerPart) {
+                            JobletContainerPart jobletContainerPart = (JobletContainerPart) nodePart.getParent();
+                            JobletContainer jobletContainer = (JobletContainer) jobletContainerPart.getModel();
+                            isCollapsedNode = jobletContainer.isCollapsed();
+                        }
+                    }
                 }
                 if (!isCollapsedNode && nodePart.getParent() instanceof JobletContainerPart) {
-                    JobletContainerPart jobletContainer = (JobletContainerPart) nodePart.getParent();
-                    List<NodePart> jobletNodeParts = jobletMap.get(jobletContainer);
+                    JobletContainerPart jobletContainerPart = (JobletContainerPart) nodePart.getParent();
+                    List<NodePart> jobletNodeParts = jobletMap.get(jobletContainerPart);
                     if (jobletNodeParts == null) {
                         jobletNodeParts = new ArrayList<NodePart>();
-                        jobletMap.put(jobletContainer, jobletNodeParts);
+                        jobletMap.put(jobletContainerPart, jobletNodeParts);
                     }
                     jobletNodeParts.add(nodePart);
                 }
