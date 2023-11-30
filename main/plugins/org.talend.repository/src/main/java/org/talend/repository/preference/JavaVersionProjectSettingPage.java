@@ -185,6 +185,8 @@ public class JavaVersionProjectSettingPage extends AbstractProjectSettingPage {
             accessCheckbox.setEnabled(false);
         } else {
             restorePreference();
+            boolean selected = getPreferenceStore().getBoolean(JavaUtils.ALLOW_JAVA_INTERNAL_ACCESS);
+            accessCheckbox.setSelection(selected);
             javaVersionCombo.select(0);
         }
 
