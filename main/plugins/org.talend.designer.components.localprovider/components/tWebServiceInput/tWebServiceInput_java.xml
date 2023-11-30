@@ -214,12 +214,12 @@ for(int i = 0; i &lt; result.length; i++){
 			<IMPORT NAME="WebServiceInput" MODULE="talend-webservice-input-1.0.2.jar" MVN="mvn:org.talend.libraries/talend-webservice-input-1.0.2/6.0.0"
 				REQUIRED_IF="(API=='AXIS')" />
 			<IMPORT NAME="SOAP-axis" MODULE="axis-1.4.jar" MVN="mvn:org.apache.axis/axis/1.4" REQUIRED_IF="(API=='AXIS')"/>
-			<IMPORT NAME="SOAP-jaxrpc" MODULE="jaxrpc.jar" MVN="mvn:org.talend.libraries/jaxrpc/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jax/lib/jaxrpc.jar"
+			<IMPORT NAME="SOAP-jaxrpc" MODULE="axis-jaxrpc-1.4.jar" MVN="mvn:org.apache.axis/axis-jaxrpc/1.4"  UrlPath="platform:/plugin/org.talend.libraries.jax/lib/jaxrpc.jar"
 				REQUIRED_IF="(API=='AXIS')" />
-			<IMPORT NAME="SOAP-saaj" MODULE="saaj.jar" MVN="mvn:org.talend.libraries/saaj/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.saaj/lib/saaj.jar" REQUIRED_IF="(API=='AXIS')" />
+			<IMPORT NAME="SOAP-saaj" MODULE="axis-saaj-1.4.jar" MVN="mvn:org.apache.axis/axis-saaj/1.4"  UrlPath="platform:/plugin/org.talend.libraries.saaj/lib/saaj.jar" REQUIRED_IF="(API=='AXIS')" />
 			<IMPORT NAME="SOAP-discovery"
-				MODULE="commons-discovery-0.2.jar" MVN="mvn:org.talend.libraries/commons-discovery-0.2/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-discovery-0.2.jar" REQUIRED_IF="(API=='AXIS')" />
-			<IMPORT NAME="SOAP-logging" MODULE="commons-logging-1.1.jar" MVN="mvn:org.talend.libraries/commons-logging-1.1/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-logging-1.1.jar"
+				MODULE="commons-discovery-0.2.jar" MVN="mvn:commons-discovery/commons-discovery/0.2"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-discovery-0.2.jar" REQUIRED_IF="(API=='AXIS')" />
+			<IMPORT NAME="SOAP-logging" MODULE="commons-logging-1.1.jar" MVN="mvn:commons-logging/commons-logging/1.1"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-logging-1.1.jar"
 				REQUIRED_IF="(API=='AXIS')" />
 			<IMPORT NAME="COMMONSHTTPCLIENT" MODULE="commons-httpclient-3.1.jar" MVN="mvn:commons-httpclient/commons-httpclient/3.1" 
 				REQUIRED_IF="(API=='AXIS')" />
@@ -233,8 +233,8 @@ for(int i = 0; i &lt; result.length; i++){
 			/>
 			<IMPORT
 				NAME="SOAP-JAF"
-				MODULE="activation.jar"
-				MVN="mvn:org.talend.libraries/activation/6.0.0"
+				MODULE="activation-1.1.jar"
+				MVN="mvn:javax.activation/activation/1.1/jar"
 				UrlPath="platform:/plugin/org.talend.libraries.apache.axis2/lib/activation.jar"
 				REQUIRED="true"
 			/>
@@ -328,7 +328,7 @@ for(int i = 0; i &lt; result.length; i++){
 			<IMPORT
 				NAME="commons-logging"
 				MODULE="commons-logging-1.1.1.jar"
-				MVN="mvn:org.talend.libraries/commons-logging-1.1.1/6.0.0"
+				MVN="mvn:commons-logging/commons-logging/1.1.1"
 				UrlPath="platform:/base/plugins/org.apache.commons.logging_1.1.1.v201101211721.jar"
 				REQUIRED_IF="(API=='CXF')"
 			/>

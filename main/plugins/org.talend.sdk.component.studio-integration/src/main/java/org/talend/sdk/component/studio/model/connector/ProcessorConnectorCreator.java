@@ -39,6 +39,7 @@ import org.talend.core.model.process.INode;
 import org.talend.core.model.process.INodeConnector;
 import org.talend.designer.core.model.components.NodeConnector;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
+import org.talend.sdk.component.studio.util.TaCoKitSpeicalManager;
 
 /**
  * Creates connectors for Processor component
@@ -174,7 +175,11 @@ class ProcessorConnectorCreator extends AbstractConnectorCreator {
     protected INodeConnector createIterateConnector() {
         final TaCoKitNodeConnector iterate = new TaCoKitNodeConnector(node, ITERATE);
         iterate.setMinLinkInput(0);
-        iterate.setMaxLinkInput(0);
+        if(TaCoKitSpeicalManager.supportIterateProcessor(detail.getDisplayName())) {
+            iterate.setMaxLinkInput(1);
+        } else {
+            iterate.setMaxLinkInput(0);
+        }
         iterate.setMinLinkOutput(0);
         iterate.setMaxLinkOutput(-1);
         existingTypes.add(ITERATE);

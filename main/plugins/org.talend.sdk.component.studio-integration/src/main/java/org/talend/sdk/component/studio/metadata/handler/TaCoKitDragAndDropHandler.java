@@ -328,6 +328,12 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
                 if (!isAdditionalJDBC && IAdditionalJDBCComponent.class.isInstance(component)) {
                     continue;
                 }
+                if (!isAdditionalJDBC) {
+                    String componentName = component.getName().toLowerCase();
+                    if (componentName.contains("jdbcoutputbulk") || componentName.contains("jdbcbulk")) {
+                        continue;
+                    }
+                }
                 if (ComponentModel.class.cast(component).supports(familyName, configType, configName)) {
                     neededComponents.add(component);
                 }

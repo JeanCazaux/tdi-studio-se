@@ -110,7 +110,7 @@
 			<IMPORT NAME="Talend_CSV" MODULE="talendcsv-1.1.0.jar" MVN="mvn:org.talend.components/talendcsv/1.1.0"  UrlPath="platform:/plugin/org.talend.libraries.csv/lib/talendcsv-1.1.0.jar" REQUIRED="true" />
 			<IMPORT NAME="Advanced_Persistent_Lookup"
 				MODULE="advancedPersistentLookupLib-1.5.jar"
-				MVN="mvn:org.talend.libraries/advancedPersistentLookupLib/1.5"
+				MVN="mvn:org.talend.components.lib/advancedPersistentLookupLib/1.5/jar"
 				UrlPath="platform:/plugin/org.talend.libraries.persist.lookup/lib/advancedPersistentLookupLib-1.5.jar"
 				REQUIRED="true" />
 			<IMPORT NAME="ApacheCommonsCollection32"

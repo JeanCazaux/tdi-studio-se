@@ -111,6 +111,6 @@ public class TaCoKitCreateWizard extends TaCoKitConfigurationWizard {
         }
         factory.create(connectionItem, getWizardPropertiesPage().getDestinationPath());
         RepositoryManager.refreshCreatedNode(TaCoKitConst.METADATA_TACOKIT);
-        // RepositoryUpdateManager.updateFileConnection(connectionItem);
+        notifyDQSQLExplorer();
     }
 }

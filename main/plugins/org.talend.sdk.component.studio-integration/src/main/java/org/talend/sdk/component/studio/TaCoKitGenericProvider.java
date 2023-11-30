@@ -128,6 +128,10 @@ public class TaCoKitGenericProvider implements IGenericProvider {
                             jdbcComponentMap.put(connectionModel.getDisplayName(), connectionModel);
                         }
                     }
+                }
+
+                if (!createdCloseFamiliySet.contains(index.getId().getFamily())) {
+                    ActionList actionList = Lookups.taCoKitCache().getActionList(index.getId().getFamily());
                     IComponent closeModel = createCloseConnectionComponent(index, detail, configTypes, reportPath, isCatcherAvailable, createdCloseFamiliySet, actionList);
                     if (closeModel != null) {
                         components.add(closeModel);
@@ -176,22 +180,30 @@ public class TaCoKitGenericProvider implements IGenericProvider {
     private VirtualComponentModel createCloseConnectionComponent(final ComponentIndex index, final ComponentDetail detail,
             final ConfigTypeNodes configTypeNodes, String reportPath, boolean isCatcherAvailable, Set<String> createdFamiliySet, ActionList actionList) {
         boolean isSupport = false;
+        String iconKey = null;
         VirtualComponentModel model = null;
         if (actionList != null && actionList.getItems() != null) {
             for (ActionItem action : actionList.getItems()) {
                 if (TaCoKitConst.CLOSE_CONNECTION_ATCION_NAME.equals(action.getType())) {
                     isSupport = true;
+                    iconKey = action.getType();
                     break;
                 }
             }
         }
         if (isSupport && !createdFamiliySet.contains(index.getId().getFamily())) {
             ImageDescriptor imageDesc = null;
+
             try {
-                imageDesc = TaCokitImageUtil.getConnectionImage(detail.getId().getFamilyId());
+                imageDesc = TaCokitImageUtil.getImage(detail.getId().getFamilyId(), iconKey);
             } catch (Exception e) {
-                ExceptionHandler.process(e);
+                try {
+                    imageDesc = TaCokitImageUtil.getConnectionImage(detail.getId().getFamilyId());
+                } catch (Exception ex) {
+                    ExceptionHandler.process(e);
+                }
             }
+
             if (imageDesc == null) {
                 imageDesc = ComponentService.DEFAULT_IMAGE;
             }
@@ -207,22 +219,30 @@ public class TaCoKitGenericProvider implements IGenericProvider {
     private VirtualComponentModel createConnectionComponent(final ComponentIndex index, final ComponentDetail detail,
             final ConfigTypeNodes configTypeNodes, String reportPath, boolean isCatcherAvailable, Set<String> createdFamiliySet, ActionList actionList) {
         boolean isSupport = false;
+        String iconKey = null;
         VirtualComponentModel model = null;
         if (actionList != null && actionList.getItems() != null) {
             for (ActionItem action : actionList.getItems()) {
                 if (TaCoKitConst.CREATE_CONNECTION_ATCION_NAME.equals(action.getType())) {
                     isSupport = true;
+                    iconKey = action.getType();
                     break;
                 }
             }
         }
         if (isSupport && !createdFamiliySet.contains(index.getId().getFamily())) {
             ImageDescriptor imageDesc = null;
+
             try {
-                imageDesc = TaCokitImageUtil.getConnectionImage(detail.getId().getFamilyId());
+                imageDesc = TaCokitImageUtil.getImage(detail.getId().getFamilyId(), iconKey);
             } catch (Exception e) {
-                ExceptionHandler.process(e);
+                try {
+                    imageDesc = TaCokitImageUtil.getConnectionImage(detail.getId().getFamilyId());
+                } catch (Exception ex) {
+                    ExceptionHandler.process(e);
+                }
             }
+
             if (imageDesc == null) {
                 imageDesc = ComponentService.DEFAULT_IMAGE;
             }

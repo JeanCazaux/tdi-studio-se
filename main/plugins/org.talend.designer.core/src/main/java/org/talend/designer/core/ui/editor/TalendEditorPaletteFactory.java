@@ -402,9 +402,15 @@ public final class TalendEditorPaletteFactory {
             String oraFamily = component.getOriginalFamilyName();
             if ("Business/NetSuite".equalsIgnoreCase(oraFamily) || "Cloud/NetSuite".equalsIgnoreCase(oraFamily)) { //$NON-NLS-1$ //$NON-NLS-2$
                 iter.remove();
+                continue;
             }
             if (needCheckVisible
                     && (component == null || !ComponentUtilities.isComponentVisible(component) || component.isTechnical())) {
+                iter.remove();
+                continue;
+            }
+            String componentName = component.getName().toLowerCase();
+            if (componentName.contains("jdbcoutputbulk") || componentName.contains("jdbcbulk")) {
                 iter.remove();
             }
         }

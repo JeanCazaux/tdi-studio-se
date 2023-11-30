@@ -19,9 +19,10 @@ import org.eclipse.emf.common.util.EList;
 import org.talend.core.model.components.ComponentCategory;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.designer.core.model.components.EParameterName;
-import org.talend.designer.core.model.utils.emf.talendfile.impl.ElementParameterTypeImpl;
-import org.talend.designer.core.model.utils.emf.talendfile.impl.ElementValueTypeImpl;
+import org.talend.designer.core.model.utils.emf.talendfile.ElementParameterType;
+import org.talend.designer.core.model.utils.emf.talendfile.ElementValueType;
 import org.talend.designer.core.model.utils.emf.talendfile.impl.NodeTypeImpl;
+import org.talend.designer.core.model.utils.emf.talendfile.impl.TalendFileFactoryImpl;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.server.front.model.SimplePropertyDefinition;
@@ -82,7 +83,7 @@ public final class TaCoKitNode {
         @SuppressWarnings("rawtypes")
         EList parameters = node.getElementParameter();
         for (final Object elem : parameters) {
-            ElementParameterTypeImpl parameter = (ElementParameterTypeImpl) elem;
+            ElementParameterType parameter = (ElementParameterType) elem;
             if (!isCommonParameterName(parameter.getName())) {
                 if (EParameterFieldType.TABLE.name().equals(parameter.getField())) {
                     addTableElementValue(properties, parameter);
@@ -121,20 +122,19 @@ public final class TaCoKitNode {
         return Lookups.taCoKitCache().isVirtualComponentName(componentName);
     }
 
-    private void addTableElementValue(Map<String, String> properties, ElementParameterTypeImpl tableElementParam) {
+    private void addTableElementValue(Map<String, String> properties, ElementParameterType tableElementParam) {
         List list = tableElementParam.getElementValue();
         if (list != null) {
             int index = 0;
-            Set<String> keySet = new HashSet<String>();
+            String firstColumnKey = null;
             for (int i = 0; i < list.size(); i++) {
                 Object value = list.get(i);
                 if (value instanceof ElementValueType) {
                     ElementValueType eValue = (ElementValueType) value;
-                    if (keySet.contains(eValue.getElementRef())) {
-                        keySet.clear();
+                    if (firstColumnKey == null) {
+                        firstColumnKey = eValue.getElementRef();
+                    } else if (firstColumnKey.equals(eValue.getElementRef())){
                         index++;
-                    } else {
-                        keySet.add(eValue.getElementRef());
                     }
                     String paramName = getTableParamName(index, eValue);
                     if (paramName != null) {
@@ -162,8 +162,8 @@ public final class TaCoKitNode {
 
     @SuppressWarnings("unchecked")
     public void migrate(final Map<String, String> properties) {
-        final List<ElementParameterTypeImpl> noMigration = getParametersExcludedFromMigration();
-        final List<ElementParameterTypeImpl> tableFieldParamList = getTableFieldParameterFromMigration();
+        final List<ElementParameterType> noMigration = getParametersExcludedFromMigration();
+        final List<ElementParameterType> tableFieldParamList = getTableFieldParameterFromMigration();
         node.getElementParameter().clear();
         node.getElementParameter().addAll(noMigration);
 
@@ -174,7 +174,7 @@ public final class TaCoKitNode {
                         .find())))
                 .forEach(e -> node.getElementParameter().add(createParameter(e.getKey(), e.getValue())));
         properties.entrySet().stream().filter(e -> e.getKey().endsWith(VersionParameter.VERSION_SUFFIX)).forEach(e -> {
-            final ElementParameterTypeImpl parameter = new ElementParameter();
+            final ElementParameterType parameter = TalendFileFactoryImpl.eINSTANCE.createElementParameterType();
             parameter.setName(e.getKey());
             parameter.setValue(e.getValue());
             parameter.setField(EParameterFieldType.TECHNICAL.getName());
@@ -187,54 +187,43 @@ public final class TaCoKitNode {
         node.setComponentVersion(Integer.toString(detail.getVersion()));
     }
 
-    private void fillTableParamData(List<ElementParameterTypeImpl> tableFieldParamList, String paramKey, String paramValue) {
+    private void fillTableParamData(List<ElementParameterType> tableFieldParamList, String paramKey, String paramValue) {
         String paramName = paramKey.substring(0, paramKey.indexOf("["));
         String elemRef = paramKey.substring(0, paramKey.indexOf("[") + 1) + paramKey.substring(paramKey.indexOf("]"));
         int paramIndex = Integer.parseInt(paramKey.substring(paramKey.indexOf("[") + 1, paramKey.indexOf("]")));
-        ElementParameterTypeImpl sameNameParam = null;
-        for (ElementParameterTypeImpl param : tableFieldParamList) {
+        ElementParameterType sameNameParam = null;
+        for (ElementParameterType param : tableFieldParamList) {
             if (param.getName().equals(paramName)) {
                 sameNameParam = param;
                 List list = param.getElementValue();
-                Set<String> keySet = new HashSet<String>();
-                int index = 0, i = 0;
-                for (; i < list.size(); ) {
-                    ElementValueType eValue = (ElementValueType) list.get(i);
-                    if (paramIndex == index) {
-                        break;
-                    } else if (keySet.contains(eValue.getElementRef())) {
-                        index++;
-                        keySet.clear();
-                    } else {
-                        keySet.add(eValue.getElementRef());
-                        i++;
-                    }
-                }
-                for (; i < list.size(); i++) {
+                int index = 0;
+                for (int i = 0; i < list.size(); i++) {
                     ElementValueType eValue = (ElementValueType) list.get(i);
                     if (elemRef.equals(eValue.getElementRef())) {
-                        eValue.setValue(paramValue);
-                        return;
-                    } else {
-                        continue;
+                        if (paramIndex == index) {
+                            eValue.setValue(paramValue);
+                            return;
+                        } else {
+                            index ++;
+                        }
                     }
                 }
-            }
+            }              
         }
         if (sameNameParam == null) {
-            sameNameParam = new ElementParameter();
+            sameNameParam = TalendFileFactoryImpl.eINSTANCE.createElementParameterType();
             sameNameParam.setName(paramName);
             sameNameParam.setField(EParameterFieldType.TABLE.name());
             tableFieldParamList.add(sameNameParam);
         }
-        ElementValueType elementValueType = new ElementValueType();
+        ElementValueType elementValueType = TalendFileFactoryImpl.eINSTANCE.createElementValueType();
         elementValueType.setElementRef(elemRef);
         elementValueType.setValue(paramValue);
         sameNameParam.getElementValue().add(elementValueType);
     }
 
-    private ElementParameterTypeImpl createParameter(final String name, final String value) {
-        final ElementParameterTypeImpl parameter = new ElementParameter();
+    private ElementParameterType createParameter(final String name, final String value) {
+        final ElementParameterType parameter = TalendFileFactoryImpl.eINSTANCE.createElementParameterType();
         parameter.setName(name);
         parameter.setValue(value);
         parameter.setField(getPropertyType(name));
@@ -252,21 +241,21 @@ public final class TaCoKitNode {
         return new WidgetTypeMapper().getFieldType(property).getName();
     }
 
-    private List<ElementParameterTypeImpl> getTableFieldParameterFromMigration() {
-        List<ElementParameterTypeImpl> list = new ArrayList<>();
+    private List<ElementParameterType> getTableFieldParameterFromMigration() {
+        List<ElementParameterType> list = new ArrayList<>();
         for (final Object elem : node.getElementParameter()) {
-            if (EParameterFieldType.TABLE.name().equals(((ElementParameterTypeImpl) elem).getField())) {
-                list.add((ElementParameterTypeImpl) elem);
+            if (EParameterFieldType.TABLE.name().equals(((ElementParameterType) elem).getField())) {
+                list.add((ElementParameterType) elem);
             }
         }
         return list;
     }
 
-    private List<ElementParameterTypeImpl> getParametersExcludedFromMigration() {
-        List<ElementParameterTypeImpl> technical = new ArrayList<>();
+    private List<ElementParameterType> getParametersExcludedFromMigration() {
+        List<ElementParameterType> technical = new ArrayList<>();
         for (final Object elem : node.getElementParameter()) {
-            if (isCommonParameterName(((ElementParameterTypeImpl) elem).getName())) {
-                technical.add((ElementParameterTypeImpl) elem);
+            if (isCommonParameterName(((ElementParameterType) elem).getName())) {
+                technical.add((ElementParameterType) elem);
             }
         }
         return technical;
@@ -282,7 +271,7 @@ public final class TaCoKitNode {
 
     private static Optional<String> getComponentId(final NodeTypeImpl node) {
         for (final Object elem : node.getElementParameter()) {
-            ElementParameterTypeImpl parameter = (ElementParameterTypeImpl) elem;
+            ElementParameterType parameter = (ElementParameterType) elem;
             if (TACOKIT_COMPONENT_ID.equals(parameter.getName())) {
                 return Optional.ofNullable(parameter.getValue());
             }
@@ -314,28 +303,4 @@ public final class TaCoKitNode {
         }
         return commonParameterNames;
     }
-
-    /**
-     * This class extends ElementParameterTypeImpl to allow instance creation
-     */
-    private static class ElementParameter extends ElementParameterTypeImpl {
-
-        /**
-         * Extends super class constructor visibility
-         */
-        public ElementParameter() {
-            super();
-        }
-    }
-
-    private static class ElementValueType extends ElementValueTypeImpl {
-
-        /**
-         * Extends super class constructor visibility
-         */
-        public ElementValueType() {
-            super();
-        }
-    }
-
 }

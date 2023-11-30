@@ -174,8 +174,9 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
         if (root.hasLeaves(Metadatas.MAIN_FORM)) {
 
             List<IElementParameter> parameters = helper.getParameters(Metadatas.MAIN_FORM);
-            List<IElementParameter> parametersForAdvanced = helper.getParameters(Metadatas.ADVANCED_FORM);
-            parameters.addAll(parametersForAdvanced);
+            // Related to feat(TUP-25445)Tacokit support context in repository metadata
+            // List<IElementParameter> parametersForAdvanced = helper.getParameters(Metadatas.ADVANCED_FORM);
+            // parameters.addAll(parametersForAdvanced);
             mainPage = new TaCoKitConfigurationWizardPage(runtimeData,
                     Metadatas.MAIN_FORM,
                     isNew(),

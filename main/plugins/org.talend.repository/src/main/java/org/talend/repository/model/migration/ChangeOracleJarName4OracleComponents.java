@@ -52,7 +52,7 @@ public class ChangeOracleJarName4OracleComponents extends AbstractJobMigrationTa
                 if (dbVersion != null) {
                     String jarValue = dbVersion.getValue();
                     if ("ojdbc6-11g.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
-                        dbVersion.setValue("ojdbc6.jar"); //$NON-NLS-1$
+                        dbVersion.setValue("ojdbc6-11.2.0.4.jar"); //$NON-NLS-1$
                     } else if ("ojdbc5-11g.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
                         dbVersion.setValue("ojdbc5.jar"); //$NON-NLS-1$
                     } else if ("ojdbc14-10g.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$

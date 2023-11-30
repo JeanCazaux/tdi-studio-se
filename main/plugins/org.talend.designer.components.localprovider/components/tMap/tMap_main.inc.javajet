@@ -1159,7 +1159,7 @@
 							} // T 70
 
 
-              				if(!isLastTable) { // T_TM_M_218 
+              				if(!isLastTable) { // T_TM_M_218
 
 								if(!isLastTable && nextInputTable != null && nextInputTable.isPersistent() && !"ALL_ROWS".equals(nextInputTable.getMatchingMode())) { // T_TM_M_216
 									nextLookupColumnsKeys.clear();
@@ -1322,8 +1322,15 @@
                 			}
                 			closeAllRowsBlockCount.clear();
                 		}
-                	
-					%>
+                		if(org.talend.designer.mapper.model.table.LOOKUP_MODE.RELOAD.name().equals(lookupMode) ) {
+							%>
+							if((tHash_Lookup_<%= tableName %> != null && !tHash_Lookup_<%= tableName %>.hasNext())){
+								tHash_Lookup_<%=tableName%>.endGet();
+								tHash_Lookup_<%=tableName%>=null;
+							}
+							<%
+						}
+						%>
 	    	        	} // G_TM_M_250 loop "<%= previousJoinedTablesPersistentSortedDelimited %>"
 
 	            		<%
@@ -1333,8 +1340,14 @@
 	            	
 	           	<%
 	            } // T_TM_M_218
+					if(org.talend.designer.mapper.model.table.LOOKUP_MODE.RELOAD.name().equals(lookupMode)) {
+					%>
+						if((tHash_Lookup_<%= tableName %> != null && !tHash_Lookup_<%= tableName %>.hasNext())){
+							tHash_Lookup_<%=tableName%>.endGet();
+							tHash_Lookup_<%=tableName%> = null;
+						}
+					<% }
 	            %>
-	            	
 	            	
 	            <%
 				} // T_TM_M_296

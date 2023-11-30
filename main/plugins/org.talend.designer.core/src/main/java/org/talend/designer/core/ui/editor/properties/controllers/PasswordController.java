@@ -71,6 +71,9 @@ public class PasswordController extends TextController {
      */
     @Override
     protected boolean isPasswordParam(IElementParameter parameter) {
+        if (parameter.getValue() == null || ContextParameterUtils.containContextVariables(parameter.getValue().toString())) {
+            return false;
+        }
         return true;
     }
 

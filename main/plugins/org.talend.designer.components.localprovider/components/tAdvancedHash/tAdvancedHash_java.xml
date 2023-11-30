@@ -46,7 +46,7 @@
 
 <CODEGENERATION>
     <IMPORTS>
-        <IMPORT NAME="Advanced_Persistent_Lookup" MODULE="advancedPersistentLookupLib-1.5.jar" MVN="mvn:org.talend.libraries/advancedPersistentLookupLib/1.5" UrlPath="platform:/plugin/org.talend.libraries.persist.lookup/lib/advancedPersistentLookupLib-1.5.jar" REQUIRED="true"/>
+        <IMPORT NAME="Advanced_Persistent_Lookup" MODULE="advancedPersistentLookupLib-1.5.jar" MVN="mvn:org.talend.components.lib/advancedPersistentLookupLib/1.5/jar" UrlPath="platform:/plugin/org.talend.libraries.persist.lookup/lib/advancedPersistentLookupLib-1.5.jar" REQUIRED="true"/>
         <IMPORT NAME="ApacheCommonsCollection32" MODULE="commons-collections-3.2.2.jar" MVN="mvn:commons-collections/commons-collections/3.2.2" UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-collections-3.2.2.jar" REQUIRED="true" BundleID=""/>
         <IMPORT NAME="Jboss_Marshalling" MODULE="jboss-marshalling-2.0.12.Final.jar" MVN="mvn:org.jboss.marshalling/jboss-marshalling/2.0.12.Final" REQUIRED="true"/>
         <IMPORT NAME="Jboss_River" MODULE="jboss-marshalling-river-2.0.12.Final.jar" MVN="mvn:org.jboss.marshalling/jboss-marshalling-river/2.0.12.Final" REQUIRED="true"/>

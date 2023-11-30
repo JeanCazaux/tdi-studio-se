@@ -87,6 +87,7 @@
         "tIngresConnection",
         "tInterbaseConnection",
         "tJDBCConnection",
+        "JDBCConnection",
         "tMSSqlConnection",
         "tMysqlConnection",
         "tNetezzaConnection",

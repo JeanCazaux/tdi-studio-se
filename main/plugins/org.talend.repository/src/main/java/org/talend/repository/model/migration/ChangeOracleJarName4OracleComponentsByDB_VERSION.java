@@ -50,7 +50,7 @@ public class ChangeOracleJarName4OracleComponentsByDB_VERSION extends AbstractJo
                 ElementParameterType dbVersion = ComponentUtilities.getNodeProperty(node, "DB_VERSION"); //$NON-NLS-1$
                 if (dbVersion != null) {
                     String jarValue = dbVersion.getValue();
-                    if ("ojdbc6.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
+                    if ("ojdbc6-11.2.0.4.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
                         dbVersion.setValue("ORACLE_11-6"); //$NON-NLS-1$
                     } else if ("ojdbc5.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
                         dbVersion.setValue("ORACLE_11"); //$NON-NLS-1$

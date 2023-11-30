@@ -181,17 +181,17 @@ public class GenericTableUtilsTest {
     @Test
     public void testGetDriverJarsPath() {
         List<String> listString = new ArrayList<String>();
-        listString.add("mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0");
+        listString.add("mvn:mysql/mysql-connector-java/5.1.30");
         listString.add("mvn:org.talend.libraries/mysql-connector-java-5.1.40-bin/6.0.0");
         String jars = GenericTableUtils.getDriverJarPaths(listString);
         assertEquals(jars,
-                "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0;mvn:org.talend.libraries/mysql-connector-java-5.1.40-bin/6.0.0");
+                "mvn:mysql/mysql-connector-java/5.1.30;mvn:org.talend.libraries/mysql-connector-java-5.1.40-bin/6.0.0");
 
         listString = new ArrayList<String>();
-        listString.add("mysql-connector-java-5.1.30-bin.jar");
+        listString.add("mysql-connector-java-5.1.30.jar");
         listString.add("mysql-connector-java-5.1.40-bin.jar");
         jars = GenericTableUtils.getDriverJarPaths(listString);
-        assertEquals(jars, "mysql-connector-java-5.1.30-bin.jar;mysql-connector-java-5.1.40-bin.jar");
+        assertEquals(jars, "mysql-connector-java-5.1.30.jar;mysql-connector-java-5.1.40-bin.jar");
 
         listString = new ArrayList<String>();
         listString.add("context.jdbc1_drivers");

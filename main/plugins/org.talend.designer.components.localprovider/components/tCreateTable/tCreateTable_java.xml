@@ -852,12 +852,12 @@
 		<IMPORT NAME="Driver-MYSQL5" MODULE="mysql-connector-java-5.1.49.jar" MVN="mvn:mysql/mysql-connector-java/5.1.49"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') and (DBTYPE=='MYSQL') and (DB_MYSQL_VERSION=='MYSQL_5')"/>
 		<IMPORT NAME="Driver-MYSQL8"  MODULE="mysql-connector-j-8.0.33.jar" MVN="mvn:com.mysql/mysql-connector-j/8.0.33" REQUIRED_IF="(DB_MYSQL_VERSION == 'MYSQL_8') AND (USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='MYSQL')" />
 		<IMPORT NAME="Driver-MARIADB"  MODULE="mariadb-java-client-3.1.4.jar" MVN="mvn:org.mariadb.jdbc/mariadb-java-client/3.1.4"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') and (DBTYPE=='MYSQL') and (DB_MYSQL_VERSION=='MARIADB')" />
-        <IMPORT NAME="Driver-Oracle11g" MODULE="ojdbc6.jar" MVN="mvn:org.talend.libraries/ojdbc6/6.0.0"  REQUIRED_IF="(DBTYPE=='DBORACLE') AND (DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
+        <IMPORT NAME="Driver-Oracle11g" MODULE="ojdbc6-11.2.0.4.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc6/11.2.0.4"  REQUIRED_IF="(DBTYPE=='DBORACLE') AND (DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
         <IMPORT NAME="Driver-Oracle12c" MODULE="ojdbc7.jar" MVN="mvn:org.talend.libraries/ojdbc7/6.0.0"  REQUIRED_IF="(DBTYPE=='DBORACLE') AND (DB_VERSION == 'ORACLE_12') AND (USE_EXISTING_CONNECTION == 'false')" />
         <IMPORT NAME="ORACLE_18"        MODULE="ojdbc8-19.19.0.0.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc8/19.19.0.0" REQUIRED_IF="(DBTYPE=='DBORACLE') AND (DB_VERSION == 'ORACLE_18') AND (USE_EXISTING_CONNECTION == 'false')" />
 		<IMPORT NAME="Driver-POSTGRESQL" MODULE="postgresql-8.4-703.jdbc4.jar" MVN="mvn:postgresql/postgresql/8.4-703.jdbc4" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (((DBTYPE=='POSTGRE') AND (DB_POSTGRE_VERSION =='PRIOR_TO_V9')) or (DBTYPE=='GREENPLUM'))" />
 		<IMPORT NAME="Driver-Postgres9" MODULE="postgresql-42.6.0.jar" MVN="mvn:org.postgresql/postgresql/42.6.0" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND ((DBTYPE=='POSTGRE') AND (DB_POSTGRE_VERSION =='V9_X'))" />
-		<IMPORT NAME="Driver-FIREBIRD" MODULE="jaybird-full-2.1.1.jar" MVN="mvn:org.talend.libraries/jaybird-full-2.1.1/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jdbc.firebird/lib/jaybird-full-2.1.1.jar" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='FIREBIRD')" />
+		<IMPORT NAME="Driver-FIREBIRD" MODULE="jaybird-2.1.1.jar" MVN="mvn:net.sf.squirrel-sql.thirdparty-non-maven/jaybird/2.1.1"  UrlPath="platform:/plugin/org.talend.libraries.jdbc.firebird/lib/jaybird-full-2.1.1.jar" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='FIREBIRD')" />
 		<IMPORT NAME="Driver-HSQLDb" MODULE="hsqldb-2.7.1.jar" MVN="mvn:org.hsqldb/hsqldb/2.7.1" REQUIRED_IF="DBTYPE=='HSQLDB'"/>
 		<IMPORT NAME="Driver-INFORMIX-JDBC" MODULE="ifxjdbc.jar" MVN="mvn:org.talend.libraries/ifxjdbc/6.0.0"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='INFORMIX')" />
 		<IMPORT NAME="Driver-INFORMIX-JDBCX" MODULE="ifxjdbcx.jar" MVN="mvn:org.talend.libraries/ifxjdbcx/6.0.0"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='INFORMIX')" />
@@ -866,9 +866,9 @@
 		<IMPORT NAME="Driver-INFORMIX-SQLJ" MODULE="ifxsqlj.jar" MVN="mvn:org.talend.libraries/ifxsqlj/6.0.0"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='INFORMIX')" />
 		<IMPORT NAME="Driver-INFORMIX-TOOLS" MODULE="ifxtools.jar" MVN="mvn:org.talend.libraries/ifxtools/6.0.0"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='INFORMIX')"/>
 		<IMPORT NAME="Driver-Ingres" MODULE="iijdbc-10.2-4.1.10.jar" MVN="mvn:com.ingres.jdbc/iijdbc/10.2-4.1.10" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='INGRES')"/>
-		<IMPORT NAME="Driver-JAVADB-DERBY" MODULE="derby.jar" MVN="mvn:org.talend.libraries/derby/6.0.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
-		<IMPORT NAME="Driver-JAVADB-DERBYCLIENT" MODULE="derbyclient.jar" MVN="mvn:org.talend.libraries/derbyclient/6.0.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
-		<IMPORT NAME="Driver-JAVADB-DERBYNET" MODULE="derbynet.jar" MVN="mvn:org.talend.libraries/derbynet/6.0.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
+		<IMPORT NAME="Driver-JAVADB-DERBY" MODULE="derby-10.14.2.0.jar" MVN="mvn:org.apache.derby/derby/10.14.2.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
+		<IMPORT NAME="Driver-JAVADB-DERBYCLIENT" MODULE="derbyclient-10.14.2.0.jar" MVN="mvn:org.apache.derby/derbyclient/10.14.2.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
+		<IMPORT NAME="Driver-JAVADB-DERBYNET" MODULE="derbynet-10.14.2.0.jar" MVN="mvn:org.apache.derby/derbynet/10.14.2.0" REQUIRED_IF="DBTYPE=='JAVADB'"/>
 		<IMPORT NAME="Driver-SQLite" MODULE="sqlite-jdbc-3.40.0.0.jar" MVN="mvn:org.xerial/sqlite-jdbc/3.40.0.0"  REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='SQLITE')" />
 		<IMPORT NAME="Driver-SYBASE-JCONN3" MODULE="jconn3.jar" MVN="mvn:org.talend.libraries/jconn3/6.0.0" BundleID="" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='SYBASE') AND (DB_SYBASE_VERSION == 'SYBSEIQ_12_15')" />
 		<IMPORT NAME="Driver-SYBASE-JCONN4" MODULE="jconn4.jar" MVN="mvn:org.talend.libraries/jconn4/6.0.0" BundleID="" REQUIRED_IF="(USE_EXISTING_CONNECTION == 'false') AND (DBTYPE=='SYBASE') AND (DB_SYBASE_VERSION == 'SYBSEIQ_16')" />

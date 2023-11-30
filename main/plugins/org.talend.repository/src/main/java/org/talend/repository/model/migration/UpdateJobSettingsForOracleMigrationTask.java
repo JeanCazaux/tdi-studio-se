@@ -38,7 +38,7 @@ public class UpdateJobSettingsForOracleMigrationTask extends AbstractJobMigratio
 
     private boolean updateJarValue(ElementParameterType param) {
         if ("ojdbc6-11g.jar".equalsIgnoreCase(param.getValue())) { //$NON-NLS-1$
-            param.setValue("ojdbc6.jar"); //$NON-NLS-1$
+            param.setValue("ojdbc6-11.2.0.4.jar"); //$NON-NLS-1$
             return true;
         } else if ("ojdbc5-11g.jar".equalsIgnoreCase(param.getValue())) { //$NON-NLS-1$
             param.setValue("ojdbc5.jar"); //$NON-NLS-1$

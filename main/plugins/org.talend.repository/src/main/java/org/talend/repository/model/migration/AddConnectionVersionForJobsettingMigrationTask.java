@@ -69,7 +69,7 @@ public class AddConnectionVersionForJobsettingMigrationTask extends AbstractJobM
 
             if (!implicitSame) {
                 if (dbTypeImplicit.toUpperCase().contains("MYSQL")) { //$NON-NLS-N$
-                    setParameterValue(elementParameter, "DB_VERSION_IMPLICIT_CONTEXT", "mysql-connector-java-5.1.0-bin.jar"); //$NON-NLS-N$//$NON-NLS-N$
+                    setParameterValue(elementParameter, "DB_VERSION_IMPLICIT_CONTEXT", "mysql-connector-java-5.1.13.jar"); //$NON-NLS-N$//$NON-NLS-N$
                 } else if (dbTypeImplicit.toUpperCase().contains("ORACLE")) { //$NON-NLS-N$
                     setParameterValue(elementParameter, "DB_VERSION_IMPLICIT_CONTEXT", "ojdbc14-10g.jar"); //$NON-NLS-N$//$NON-NLS-N$
                 } else if (dbTypeImplicit.toUpperCase().contains("ACCESS")) { //$NON-NLS-N$
@@ -78,7 +78,7 @@ public class AddConnectionVersionForJobsettingMigrationTask extends AbstractJobM
             }
             if (!stasLogSame) {
                 if (dbTypeStatsLog.toUpperCase().contains("MYSQL")) { //$NON-NLS-N$
-                    setParameterValue(elementParameter, "DB_VERSION", "mysql-connector-java-5.1.0-bin.jar"); //$NON-NLS-N$//$NON-NLS-N$
+                    setParameterValue(elementParameter, "DB_VERSION", "mysql-connector-java-5.1.13.jar"); //$NON-NLS-N$//$NON-NLS-N$
                 } else if (dbTypeStatsLog.toUpperCase().contains("ORACLE")) { //$NON-NLS-N$
                     setParameterValue(elementParameter, "DB_VERSION", "ojdbc14-10g.jar"); //$NON-NLS-N$//$NON-NLS-N$
                 } else if (dbTypeStatsLog.toUpperCase().contains("ACCESS")) { //$NON-NLS-N$

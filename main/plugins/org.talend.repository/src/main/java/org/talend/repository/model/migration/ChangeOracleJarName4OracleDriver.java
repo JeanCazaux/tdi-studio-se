@@ -86,7 +86,7 @@ public class ChangeOracleJarName4OracleDriver extends AbstractJobMigrationTask {
              */
             String convert(String source) {
                 if ("\"ojdbc6-11g.jar\"".equalsIgnoreCase(source)) { //$NON-NLS-1$
-                    return "\"ojdbc6.jar\""; //$NON-NLS-1$
+                    return "\"ojdbc6-11.2.0.4.jar\""; //$NON-NLS-1$
                 } else if ("\"ojdbc5-11g.jar\"".equalsIgnoreCase(source)) { //$NON-NLS-1$
                     return "\"ojdbc5.jar\""; //$NON-NLS-1$
                 } else if ("\"ojdbc14-10g.jar\"".equalsIgnoreCase(source)) { //$NON-NLS-1$
@@ -104,7 +104,7 @@ public class ChangeOracleJarName4OracleDriver extends AbstractJobMigrationTask {
              */
             String convert2(String source) {
                 if ("ojdbc6-11g.jar".equalsIgnoreCase(source)) { //$NON-NLS-1$
-                    return "ojdbc6.jar"; //$NON-NLS-1$
+                    return "ojdbc6-11.2.0.4.jar"; //$NON-NLS-1$
                 } else if ("ojdbc5-11g.jar".equalsIgnoreCase(source)) { //$NON-NLS-1$
                     return "ojdbc5.jar"; //$NON-NLS-1$
                 } else if ("ojdbc14-10g.jar".equalsIgnoreCase(source)) { //$NON-NLS-1$

@@ -405,7 +405,7 @@
 			<IMPORT NAME="gson"
 				MODULE="gson-2.8.9.jar" MVN="mvn:com.google.code.gson/gson/2.8.9" REQUIRED="true"/>
 			<IMPORT NAME="json"
-				MODULE="json-20230227.jar" MVN="mvn:org.json/json/20230227" REQUIRED="true"/>
+				MODULE="json-20231013.jar" MVN="mvn:org.json/json/20231013" REQUIRED="true"/>
 			<IMPORT NAME="guava"
 				MODULE="guava-32.1.2-jre.jar" MVN="mvn:com.google.guava/guava/32.1.2-jre" REQUIRED="true"/>
 			<IMPORT NAME="jackson-core"

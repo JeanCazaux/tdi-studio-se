@@ -80,7 +80,7 @@
    <CODEGENERATION>
       	<IMPORTS>
                <IMPORT NAME="dropbox-core-sdk"
-                    MODULE="dropbox-core-sdk-2.1.2.jar" MVN="mvn:org.talend.libraries/dropbox-core-sdk-2.1.2/6.3.0" 
+                    MODULE="dropbox-core-sdk-2.1.2.jar" MVN="mvn:com.dropbox.core/dropbox-core-sdk/2.1.2" 
                     REQUIRED_IF="USE_EXISTING_CONNECTION == 'false'" />
                <IMPORT NAME="jackson-core"
                     MODULE="jackson-core-2.14.3.jar" MVN="mvn:com.fasterxml.jackson.core/jackson-core/2.14.3"

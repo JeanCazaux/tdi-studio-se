@@ -32,8 +32,8 @@ public class MinLengthValidator extends PropertyValidator {
 
     @Override
     boolean validate(final Object newValue) {
-        if (newValue == null) {
-            return false;
+        if (isEmpty(newValue)) {
+            return true;
         }
         String value = (String) newValue;
         return minLength.compareTo(value.length()) <= 0;

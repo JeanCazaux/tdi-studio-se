@@ -244,11 +244,6 @@ org.apache.http.client.CredentialsProvider credsProvider_<%=cid %> = new org.apa
 	<%}%>
 	final org.apache.http.client.config.RequestConfig.Builder builder_<%=cid%> = org.apache.http.client.config.RequestConfig.custom();
 	builder_<%=cid%>.setConnectTimeout(<%=timeout %>);
-	<%if(isLog4jEnabled){%>
-		log.info("<%=cid%> - Connection to '" +  <%=uri %> + "' has succeeded.");
-	<%
-	}
-	%>
         org.apache.http.conn.util.PublicSuffixMatcher publicSuffixMatcher_<%=cid%> = org.apache.http.conn.util.PublicSuffixMatcherLoader.getDefault();
         org.apache.http.config.Registry<org.apache.http.cookie.CookieSpecProvider> cookieSpecReg_<%=cid%> = org.apache.http.config.RegistryBuilder.<org.apache.http.cookie.CookieSpecProvider>create()
                 .register(org.apache.http.client.config.CookieSpecs.DEFAULT, new org.apache.http.impl.cookie.DefaultCookieSpecProvider(org.apache.http.impl.cookie.DefaultCookieSpecProvider.CompatibilityLevel.DEFAULT, publicSuffixMatcher_<%=cid%>, null, <%=singleCookie%>))
@@ -258,7 +253,7 @@ org.apache.http.client.CredentialsProvider credsProvider_<%=cid %> = new org.apa
         final org.apache.http.client.protocol.HttpClientContext context_<%=cid%> = org.apache.http.client.protocol.HttpClientContext.create();
         context_<%=cid%>.setCookieSpecRegistry(cookieSpecReg_<%=cid%>);
         context_<%=cid%>.setCookieStore(cookieStore_<%=cid%>);
-
+        context_<%=cid%>.setRequestConfig(builder_<%=cid%>.build());
 
 	<%if (readCookie) {%>
 		List<org.apache.http.cookie.Cookie> cookieList_<%=cid%> = null;

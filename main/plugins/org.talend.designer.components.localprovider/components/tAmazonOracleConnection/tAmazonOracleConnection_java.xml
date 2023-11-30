@@ -242,7 +242,7 @@
        <IMPORT NAME="TNS" MODULE="tns.jar" MVN="mvn:org.talend.libraries/tns/6.0.0"  REQUIRED="true" />
        <IMPORT NAME="ORACLE_18"     MODULE="ojdbc8-19.19.0.0.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc8/19.19.0.0" REQUIRED_IF="(DB_VERSION == 'ORACLE_18')" />
        <IMPORT NAME="Driver-Ojdbc7" MODULE="ojdbc7.jar" MVN="mvn:org.talend.libraries/ojdbc7/6.0.0"  REQUIRED_IF="(DB_VERSION == 'ORACLE_12')" />
-       <IMPORT NAME="Driver-Ojdbc6" MODULE="ojdbc6.jar" MVN="mvn:org.talend.libraries/ojdbc6/6.0.0"  REQUIRED_IF="(DB_VERSION == 'ORACLE_11')" />
+       <IMPORT NAME="Driver-Ojdbc6" MODULE="ojdbc6-11.2.0.4.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc6/11.2.0.4"  REQUIRED_IF="(DB_VERSION == 'ORACLE_11')" />
        <IMPORT NAME="slf4j-api-1.7.34.jar" MODULE="slf4j-api-1.7.34.jar" MVN="mvn:org.slf4j/slf4j-api/1.7.34" REQUIRED_IF="USE_SHARED_CONNECTION =='true'" />
        <IMPORT NAME="slf4j-reload4j-1.7.34.jar" MODULE="slf4j-reload4j-1.7.34.jar" MVN="mvn:org.slf4j/slf4j-reload4j/1.7.34" REQUIRED_IF="USE_SHARED_CONNECTION =='true'" />
     </IMPORTS>

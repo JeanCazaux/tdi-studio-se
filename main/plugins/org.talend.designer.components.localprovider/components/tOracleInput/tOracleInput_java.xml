@@ -216,7 +216,7 @@
 	</ADVANCED_PARAMETERS>
 	<CODEGENERATION>
      <IMPORTS>
-       <IMPORT NAME="Driver-Oracle11g" MODULE="ojdbc6.jar" MVN="mvn:org.talend.libraries/ojdbc6/6.0.0"  BundleID="" REQUIRED_IF="(DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
+       <IMPORT NAME="Driver-Oracle11g" MODULE="ojdbc6-11.2.0.4.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc6/11.2.0.4"  BundleID="" REQUIRED_IF="(DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
        <IMPORT NAME="Driver-Oracle12c" MODULE="ojdbc7.jar" MVN="mvn:org.talend.libraries/ojdbc7/6.0.0"  BundleID="" REQUIRED_IF="(DB_VERSION == 'ORACLE_12') AND (USE_EXISTING_CONNECTION == 'false')" />
        <IMPORT NAME="ORACLE_18"        MODULE="ojdbc8-19.19.0.0.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc8/19.19.0.0" REQUIRED_IF="(DB_VERSION == 'ORACLE_18') AND (USE_EXISTING_CONNECTION == 'false')" />
        <IMPORT NAME="ORACLE_i18n" MODULE="orai18n-19.19.0.0.jar" MVN="mvn:com.oracle.database.nls/orai18n/19.19.0.0" REQUIRED_IF="(SUPPORT_NLS == 'true') AND (DB_VERSION == 'ORACLE_18') AND (USE_EXISTING_CONNECTION == 'false')" />

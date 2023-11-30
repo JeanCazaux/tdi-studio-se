@@ -118,7 +118,7 @@ public class ChangeOracleVersionForProjectSetting extends AbstractMigrationTask 
 
     private boolean updateJarValue(ElementParameterType param) {
         String jarValue = param.getValue();
-        if ("ojdbc6.jar".equalsIgnoreCase(jarValue) || "ojdbc6-11g.jar".equalsIgnoreCase(param.getValue())) { //$NON-NLS-1$ //$NON-NLS-2$
+        if ("ojdbc6-11.2.0.4.jar".equalsIgnoreCase(jarValue) || "ojdbc6-11g.jar".equalsIgnoreCase(param.getValue())) { //$NON-NLS-1$ //$NON-NLS-2$
             param.setValue("ORACLE_11"); //$NON-NLS-1$
             // no ORACLE_11-6 from repositoy for now
             //param.setValue("ORACLE_11-6"); //$NON-NLS-1$

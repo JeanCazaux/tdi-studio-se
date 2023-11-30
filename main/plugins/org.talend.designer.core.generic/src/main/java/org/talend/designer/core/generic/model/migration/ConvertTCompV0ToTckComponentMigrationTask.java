@@ -39,6 +39,7 @@ import org.talend.core.model.properties.Item;
 import org.talend.core.model.utils.ContextParameterUtils;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.runtime.util.GenericTypeUtils;
+import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
 import org.talend.daikon.properties.property.PropertyValueEvaluator;
@@ -120,16 +121,6 @@ public abstract class ConvertTCompV0ToTckComponentMigrationTask extends Abstract
                 //get the new tck component define model
                 //final IComponent component = ComponentsFactoryProvider.getInstance().get(newComponentName, category.getName());
                 
-                //if use label format in current component instance, and label is a defined as a var like tcompv0 model "__sql__", 
-                //the code below for that:
-                String label = ParameterUtilTool.getParameterValue(nodeType, "LABEL");
-                if (label != null) {
-                    ElementParameterType paraType = ParameterUtilTool.findParameterType(nodeType, label.replaceAll("_", ""));
-                    if (paraType != null) {
-                        ParameterUtilTool.findParameterType(nodeType, "LABEL").setValue(paraType.getValue());
-                    }
-                }
-                
                 ElementParameterType tcompV0PropertiesElement = ParameterUtilTool.findParameterType(nodeType, "PROPERTIES");
                 final String jsonProperties = tcompV0PropertiesElement.getValue();
                 final ComponentProperties compProperties = Properties.Helper.fromSerializedPersistent(jsonProperties, ComponentProperties.class, new PostDeserializeSetup() {
@@ -188,7 +179,7 @@ public abstract class ConvertTCompV0ToTckComponentMigrationTask extends Abstract
                                             List<?> propertyPossibleValues = ((Property<?>) newProperty).getPossibleValues();
                                             if (propertyPossibleValues != null) {
                                                 for (Object possibleValue : propertyPossibleValues) {
-                                                    if (possibleValue.toString().equals(storedValue)) {
+                                                    if (possibleValue != null && possibleValue.toString().equals(storedValue)) {
                                                         property.setStoredValue(possibleValue);
                                                         return possibleValue;
                                                     }
@@ -208,6 +199,39 @@ public abstract class ConvertTCompV0ToTckComponentMigrationTask extends Abstract
                     }
 
                 }).object;
+                
+                if(compProperties == null) {
+                    return;
+                }
+                
+                //if use label format in current component instance, and label is a defined as a var like tcompv0 model "__sql__", 
+                //the code below for that:
+                String label = ParameterUtilTool.getParameterValue(nodeType, "LABEL");
+                if (label != null && label.contains("_")) {
+                    final String oldPath = label.replaceAll("_", "");
+                    String value = null;
+                    
+                    //find from javajet style element parameter
+                    ElementParameterType paraType = ParameterUtilTool.findParameterType(nodeType, oldPath);
+                    if (paraType != null) {
+                        value = paraType.getValue();
+                    } else {
+                        //find from tcompv0 model json
+                        NamedThing nt = compProperties.getProperty(oldPath);
+                        if(nt != null) {
+                            if(nt instanceof Property) {
+                                Object storedValue = Property.class.cast(nt).getStoredValue();
+                                if(storedValue != null) {
+                                    value = storedValue.toString();
+                                }
+                            }
+                        }
+                    }
+                    
+                    if(value != null) {
+                        ParameterUtilTool.findParameterType(nodeType, "LABEL").setValue(value);
+                    }
+                }
                 
                 final TalendFileFactory fileFact = TalendFileFactory.eINSTANCE;
                 

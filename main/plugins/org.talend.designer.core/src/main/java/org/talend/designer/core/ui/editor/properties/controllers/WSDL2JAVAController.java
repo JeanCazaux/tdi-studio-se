@@ -473,7 +473,7 @@ public class WSDL2JAVAController extends AbstractElementPropertySectionControlle
         type1.setNAME(routineItem.getProperty().getLabel());
         wsdlNeedImport.add(type1);
         IMPORTType type2 = ComponentFactory.eINSTANCE.createIMPORTType();
-        type2.setMODULE("jaxrpc.jar");
+        type2.setMODULE("axis-jaxrpc-1.4.jar");
         type2.setREQUIRED(true);
         type2.setNAME(routineItem.getProperty().getLabel());
         wsdlNeedImport.add(type2);

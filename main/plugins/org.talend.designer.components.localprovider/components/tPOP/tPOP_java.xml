@@ -254,7 +254,7 @@
   <CODEGENERATION>
     <IMPORTS>
       <IMPORT NAME="jakartaMail" MODULE="jakarta.mail-1.6.7.jar" MVN="mvn:com.sun.mail/jakarta.mail/1.6.7" REQUIRED="true" />
-      <IMPORT NAME="JAF" MODULE="activation.jar" MVN="mvn:org.talend.libraries/activation/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.axis2/lib/activation.jar" REQUIRED="true" />
+      <IMPORT NAME="JAF" MODULE="activation-1.1.jar" MVN="mvn:javax.activation/activation/1.1/jar"  UrlPath="platform:/plugin/org.talend.libraries.apache.axis2/lib/activation.jar" REQUIRED="true" />
 
       <IMPORT NAME="msal4j" MODULE="msal4j-1.11.0.jar" MVN="mvn:com.microsoft.azure/msal4j/1.11.0" REQUIRED_IF="(AUTH_MODE == 'MSEXCHANGE')" />
       <IMPORT NAME="jackson-core" MODULE="jackson-core-2.14.3.jar" MVN="mvn:com.fasterxml.jackson.core/jackson-core/2.14.3" REQUIRED_IF="(AUTH_MODE == 'MSEXCHANGE')" />

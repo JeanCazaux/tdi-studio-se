@@ -52,15 +52,15 @@
         <libraryNeeded
             context="plugin:org.talend.libraries.jackson"
             id="json_simple-1.1.jar"
-            name="json_simple-1.1.jar"
-            mvn_uri="mvn:org.talend.libraries/json_simple-1.1/6.0.0"
+            name="json-simple-1.1.jar"
+            mvn_uri="mvn:com.googlecode.json-simple/json-simple/1.1"
             uripath="platform:/plugin/org.talend.libraries.jackson/lib/json_simple-1.1.jar">
         </libraryNeeded>
         <libraryNeeded
             context=""
             id="javax.ws.rs-api-2.0-m10.jar"
             name="javax.ws.rs-api-2.0-m10.jar"
-            mvn_uri="mvn:org.talend.libraries/javax.ws.rs-api-2.0-m10/6.0.0">
+            mvn_uri="mvn:javax.ws.rs/javax.ws.rs-api/2.0-m10">
         </libraryNeeded>
         <libraryNeeded
               bundleID="org.apache.servicemix.bundles.wsdl4j"
@@ -90,7 +90,7 @@
         </libraryNeeded>
         <libraryNeeded
             id="jopt-simple-3.2.jar"
-            name="jopt-simple-3.2.jar" mvn_uri="mvn:org.talend.libraries/jopt-simple-3.2/6.0.0"
+            name="jopt-simple-3.2.jar" mvn_uri="mvn:net.sf.jopt-simple/jopt-simple/3.2"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <!-- Kafka 2.10-0.8.2.0 -->
@@ -101,17 +101,17 @@
         </libraryNeeded>
         <libraryNeeded
             id="scala-library-2.10.4.jar"
-            name="scala-library-2.10.4.jar" mvn_uri="mvn:org.talend.libraries/scala-library-2.10.4/6.0.0"
+            name="scala-library-2.10.4.jar" mvn_uri="mvn:org.scala-lang/scala-library/2.10.4"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
             id="kafka-clients-0.8.2.0.jar"
-            name="kafka-clients-0.8.2.0.jar" mvn_uri="mvn:org.talend.libraries/kafka-clients-0.8.2.0/6.0.0"
+            name="kafka-clients-0.8.2.0.jar" mvn_uri="mvn:org.apache.kafka/kafka-clients/0.8.2.0"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
             id="lz4-1.2.0.jar"
-            name="lz4-1.2.0.jar" mvn_uri="mvn:org.talend.libraries/lz4-1.2.0/6.0.0"
+            name="lz4-1.2.0.jar" mvn_uri="mvn:net.jpountz.lz4/lz4/1.2.0"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
@@ -126,17 +126,17 @@
         </libraryNeeded>
         <libraryNeeded
             id="zkclient-0.3.jar"
-            name="zkclient-0.3.jar" mvn_uri="mvn:org.talend.libraries/zkclient-0.3/6.0.0"
+            name="zkclient-0.3.jar" mvn_uri="mvn:com.101tec/zkclient/0.3"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>            
         <libraryNeeded
             id="slf4j-api-1.7.6.jar"
-            name="slf4j-api-1.7.6.jar" mvn_uri="mvn:org.talend.libraries/slf4j-api-1.7.6/6.0.0"
+            name="slf4j-api-1.7.6.jar" mvn_uri="mvn:org.slf4j/slf4j-api/1.7.6"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded
             id="slf4j-log4j12-1.6.1.jar"
-            name="slf4j-log4j12-1.6.1.jar" mvn_uri="mvn:org.talend.libraries/slf4j-log4j12-1.6.1/6.0.0"
+            name="slf4j-log4j12-1.6.1.jar" mvn_uri="mvn:org.slf4j/slf4j-log4j12/1.6.1"
             context="org.talend.designer.components.bigdata">
         </libraryNeeded>
         <libraryNeeded

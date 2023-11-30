@@ -17,7 +17,7 @@
 		<pathelement location="${component.plugin.home}/tMomInput/activemq-all-5.1.0.jar" />
 		<pathelement location="${component.plugin.home}/tMomInput/jnp-client.jar" />
 		<pathelement location="${component.plugin.home}/tMomInput/websphere-connector-1_5.jar" />
-		<pathelement location="${component.plugin.home}/tMomInput/trove.jar" />
+		<pathelement location="${component.plugin.home}/tMomInput/trove-1.0.2.jar" />
 		<pathelement location="${component.plugin.home}/tMomInput/log4j-1.2.13.jar" />
 	</path>
 

@@ -17,6 +17,7 @@ import java.util.GregorianCalendar;
 import java.util.Map;
 
 import org.talend.commons.exception.ExceptionHandler;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.migration.AbstractItemMigrationTask;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
@@ -44,6 +45,10 @@ public class EncryptTckMetadataMigrationTask extends AbstractItemMigrationTask {
         if (item instanceof ConnectionItem) {
             try {
                 ConnectionItem conItem = (ConnectionItem) item;
+                Connection connection = conItem.getConnection();
+                if (!TaCoKitConfigurationModel.isTacokit(connection)) {
+                    return ExecutionResult.NOTHING_TO_DO;
+                }
                 TaCoKitConfigurationModel configModel = new TaCoKitConfigurationModel(conItem.getConnection());
                 configModel.setPrintEncryptionException(false);
                 Map<String, PropertyDefinitionDecorator> keyMap = configModel.buildPropertyTree();

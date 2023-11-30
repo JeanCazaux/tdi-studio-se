@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.PersistenceException;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.relationship.Relation;
@@ -94,6 +95,10 @@ public class TaCoKitUpdateManager extends RepositoryUpdateManager {
         if (object instanceof ConnectionItem && parameter instanceof ConnectionItem) {
             ConnectionItem parentConnItem = (ConnectionItem) parameter;
             ConnectionItem childConnItem = (ConnectionItem) object;
+            Connection connection = childConnItem.getConnection();
+            if (!TaCoKitConfigurationModel.isTacokit(connection)) {
+                return false;
+            }
             TaCoKitConfigurationModel configuration = new TaCoKitConfigurationModel(childConnItem.getConnection());
             if (configuration != null && parentConnItem.getProperty() != null) {
                 String parentItemId = parentConnItem.getProperty().getId();

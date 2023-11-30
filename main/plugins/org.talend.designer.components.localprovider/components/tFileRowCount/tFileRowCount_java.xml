@@ -62,7 +62,7 @@
 
   <CODEGENERATION>
     <IMPORTS>
-      <IMPORT NAME="Java_Excel" MODULE="jxl.jar" MVN="mvn:org.talend.libraries/jxl/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jexcel/lib/jxl.jar" REQUIRED="true" />
+      <IMPORT NAME="Java_Excel" MODULE="jxl-2.6.12.jar" MVN="mvn:net.sourceforge.jexcelapi/jxl/2.6.12"  UrlPath="platform:/plugin/org.talend.libraries.jexcel/lib/jxl.jar" REQUIRED="true" />
     </IMPORTS>
   </CODEGENERATION>
 

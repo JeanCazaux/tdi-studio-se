@@ -661,7 +661,12 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                         }
                         if (elem instanceof Node) {
                             if (!ProcessUpdateManager.isIgnoreJDBCRepositoryParameter((Node)elem, param.getName())) {
-                                param.setRepositoryValueUsed(true);
+                                boolean update = true;
+                                if (connection instanceof TacokitDatabaseConnection) {
+                                    update = RepositoryToComponentProperty.isGenericRepositoryValue(connection, null,
+                                            param.getName());
+                                }
+                                param.setRepositoryValueUsed(update);
                             }
                         } else {
                             param.setRepositoryValueUsed(true);

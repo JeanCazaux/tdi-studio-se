@@ -283,15 +283,7 @@ public class GenericConnWizard extends CheckLastVersionRepositoryWizard {
         if (pages.length > 0 && pages[0] instanceof GenericWizardPage) {
             GenericWizardPage namePage = (GenericWizardPage) pages[0];
             boolean nameModifiedByUser = namePage.nameModifiedByUser();
-            if (nameModifiedByUser) {
-                if (GlobalServiceRegister.getDefault().isServiceRegistered(IDesignerCoreService.class)) {
-                    IDesignerCoreService service = (IDesignerCoreService) GlobalServiceRegister.getDefault()
-                            .getService(IDesignerCoreService.class);
-                    if (service != null) {
-                        service.refreshComponentView(connectionItem);
-                    }
-                }
-            }
+            refreshInFinish(nameModifiedByUser);
         }
 
         closeLockStrategy();

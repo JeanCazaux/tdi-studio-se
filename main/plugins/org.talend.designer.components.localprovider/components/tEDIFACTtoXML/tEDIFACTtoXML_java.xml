@@ -172,11 +172,11 @@
 				REQUIRED="true" />
 			<IMPORT NAME="d99b-mapping-1.4" MODULE="d99b-mapping-1.4-20101231.032348-1.jar" MVN="mvn:org.talend.libraries/d99b-mapping-1.4-20101231.032348-1/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.edifact/lib/d99b-mapping-1.4-20101231.032348-1.jar"
 				REQUIRED="true" />
-			<IMPORT NAME="mylin-smooks" MODULE="milyn-smooks-all-1.7.0.jar" MVN="mvn:org.talend.libraries/milyn-smooks-all-1.7.0/6.0.0"
+			<IMPORT NAME="mylin-smooks" MODULE="milyn-smooks-all-1.7.0.jar" MVN="mvn:org.milyn/milyn-smooks-all/1.7.0"
 				REQUIRED="true" />
 			<IMPORT NAME="jaxen" MODULE="jaxen-1.1.6.jar" MVN="mvn:jaxen/jaxen/1.1.6" BundleID="org.apache.servicemix.bundles.jaxen"
 				REQUIRED="true" />
-			<IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.jar" MVN="mvn:org.talend.libraries/commons-logging-1.1/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-logging-1.1.jar"
+			<IMPORT NAME="commons-logging" MODULE="commons-logging-1.1.jar" MVN="mvn:commons-logging/commons-logging/1.1"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-logging-1.1.jar"
 				REQUIRED="true" />
 			<IMPORT NAME="commons-collections" MODULE="commons-collections-3.2.2.jar" MVN="mvn:commons-collections/commons-collections/3.2.2"  UrlPath="platform:/plugin/org.talend.libraries.apache.common/lib/commons-collections-3.2.2.jar"
 				REQUIRED="true" />

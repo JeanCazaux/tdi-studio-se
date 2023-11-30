@@ -55,7 +55,7 @@ public class ChangeMysqlJarReference4MysqlComponents extends
 	                ElementParameterType dbVersion = ComponentUtilities.getNodeProperty(node, "DB_MYSQL_VERSION"); //$NON-NLS-1$
 	                if (dbVersion != null) {
 	                    String jarValue = dbVersion.getValue();
-	                    if ("mysql-connector-java-5.1.0-bin.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
+	                    if ("mysql-connector-java-5.1.13.jar".equalsIgnoreCase(jarValue)) { //$NON-NLS-1$
 	                        dbVersion.setValue("MYSQL_5"); //$NON-NLS-1$
 	                    }
 	                }
@@ -64,7 +64,7 @@ public class ChangeMysqlJarReference4MysqlComponents extends
 	        	ElementParameterType dbVersion = ComponentUtilities.getNodeProperty(node, "DB_VERSION"); //$NON-NLS-1$
 	        	if (dbVersion != null) {
 	        		String jarValue = dbVersion.getValue();
-	        		if ("mysql-connector-java-5.1.0-bin.jar".equalsIgnoreCase(jarValue)) {//$NON-NLS-1$
+	        		if ("mysql-connector-java-5.1.13.jar".equalsIgnoreCase(jarValue)) {//$NON-NLS-1$
 	        			dbVersion.setValue("MYSQL_5");//$NON-NLS-1$
 	        		}
 	        	}

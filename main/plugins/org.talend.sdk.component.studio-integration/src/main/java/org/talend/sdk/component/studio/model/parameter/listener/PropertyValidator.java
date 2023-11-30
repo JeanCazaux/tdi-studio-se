@@ -60,6 +60,11 @@ public abstract class PropertyValidator implements PropertyChangeListener {
         }
     }
     
+    protected void hideConstraint() {
+        label.hideConstraint(validationMessage);
+        label.clearConstraint();
+    }
+
     /**
      * Check if the source parameter is hidden. 
      * If it is hidden we need to disable validation for it.
@@ -104,6 +109,14 @@ public abstract class PropertyValidator implements PropertyChangeListener {
      */
     private boolean isContextVariable(final String token) {
         return CONTEXT_PATTERN.matcher(token).matches();
+    }
+
+    boolean isEmpty(final Object newValue) {
+        if (newValue == null) {
+            return true;
+        }
+        String value = (String) newValue;
+        return value.isEmpty();
     }
 
     abstract boolean validate(final Object newValue);

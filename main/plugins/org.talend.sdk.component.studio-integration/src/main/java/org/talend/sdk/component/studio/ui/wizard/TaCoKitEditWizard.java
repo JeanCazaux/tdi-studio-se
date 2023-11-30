@@ -69,9 +69,11 @@ public class TaCoKitEditWizard extends TaCoKitConfigurationWizard {
     }
 
     private void updateConfigurationItem() throws Exception {
+        String originaleObjectLabel = connectionItem.getConnection().getName();
         if (connectionItem.getConnection() instanceof TacokitDatabaseConnection) {
             connectionItem.getConnection().setName(getWizardPropertiesPage().getNameText().getText());
         }
+        updateDQDependency(getWizardPropertiesPage().isNameModifiedByUser(), originaleObjectLabel);
         updateConnectionItem();
         refreshInFinish(getWizardPropertiesPage().isNameModifiedByUser());
         TaCoKitUpdateManager.updateTaCoKitSubConnection(getRuntimeData());

@@ -33,11 +33,13 @@ public class TaCoKitSpeicalManager {
 
     public final static String[] CAN_PARALLELIZE_COMPONENTS = { "JDBCOutput", "DeltaLakeOutput", "SingleStoreOutput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
     
+    public final static String[] SUPPORT_ITERATE_PROCESSOR_COMPONENTS = { "JDBCSP", "JDBCRow" }; //$NON-NLS-1$ //$NON-NLS-2$
+    
     public final static String JDBC = "JDBC"; //$NON-NLS-1$
 
     public final static String PROXY_D = "-D";//$NON-NLS-1$
 
-    public final static String HTTP_PROXYSET = "http.proxySet";//$NON-NLS-1$
+    public final static String HTTPS_PROXYSET = "https.proxySet";//$NON-NLS-1$
 
     public final static String HTTPS_PROXYHOST = "https.proxyHost";//$NON-NLS-1$
 
@@ -46,6 +48,8 @@ public class TaCoKitSpeicalManager {
     public final static String HTTPS_PROXYUSER = "https.proxyUser";//$NON-NLS-1$
 
     public final static String HTTPS_PROXYPASSWORD = "https.proxyPassword";//$NON-NLS-1$
+
+    public final static String HTTP_PROXYSET = "http.proxySet";//$NON-NLS-1$
 
     public final static String HTTP_PROXYHOST = "http.proxyHost";//$NON-NLS-1$
 
@@ -92,54 +96,66 @@ public class TaCoKitSpeicalManager {
         }
         return false;
     }
+    
+    public static boolean supportIterateProcessor(String name) {
+        if (StringUtils.isNotBlank(name)) {
+            if (ArrayUtils.contains(SUPPORT_ITERATE_PROCESSOR_COMPONENTS, name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public static String[] getProxyForGuessSchema() {
         List<String> proxys = new ArrayList<String>();
         String proxyHost, proxyPort, proxyUsername, proxyPassword;
-        if (Boolean.getBoolean("http.proxySet")) {//$NON-NLS-1$
-            proxys.add(PROXY_D + HTTP_PROXYSET + "=true"); //$NON-NLS-1$
-            proxyHost = System.getProperty("https.proxyHost");//$NON-NLS-1$
+        boolean enableHttp = Boolean.getBoolean(HTTP_PROXYSET);
+        boolean enableHttps = Boolean.getBoolean(HTTPS_PROXYSET);
+        if (enableHttp || enableHttps) {
+            proxys.add(PROXY_D + HTTP_PROXYSET + "=" + enableHttp); //$NON-NLS-1$
+            proxys.add(PROXY_D + HTTPS_PROXYSET + "=" + enableHttps); //$NON-NLS-1$
+            proxyHost = System.getProperty(HTTPS_PROXYHOST);
             if (proxyHost != null) {
                 proxys.add(PROXY_D + HTTPS_PROXYHOST + "=" + proxyHost); //$NON-NLS-1$
             }
-            proxyPort = System.getProperty("https.proxyPort");//$NON-NLS-1$
+            proxyPort = System.getProperty(HTTPS_PROXYPORT);
             if (proxyPort != null) {
                 proxys.add(PROXY_D + HTTPS_PROXYPORT + "=" + proxyPort); //$NON-NLS-1$
             }
-            proxyUsername = System.getProperty("https.proxyUser"); //$NON-NLS-1$
+            proxyUsername = System.getProperty(HTTPS_PROXYUSER);
             if (proxyUsername != null) {
                 proxys.add(PROXY_D + HTTPS_PROXYUSER + "=" + proxyUsername); //$NON-NLS-1$
             }
-            proxyPassword = System.getProperty("https.proxyPassword");//$NON-NLS-1$
+            proxyPassword = System.getProperty(HTTPS_PROXYPASSWORD);
             if (proxyPassword != null) {
                 String encryptedPassword = StudioEncryption.getStudioEncryption(StudioEncryption.EncryptionKeyName.SYSTEM)
                         .encrypt(proxyPassword);
                 proxys.add(PROXY_D + HTTPS_PROXYPASSWORD + "=" + encryptedPassword); //$NON-NLS-1$
             }
-            proxyHost = System.getProperty("http.proxyHost");//$NON-NLS-1$
+            proxyHost = System.getProperty(HTTP_PROXYHOST);
             if (proxyHost != null) {
                 proxys.add(PROXY_D + HTTP_PROXYHOST + "=" + proxyHost); //$NON-NLS-1$
             }
-            proxyPort = System.getProperty("http.proxyPort");//$NON-NLS-1$
+            proxyPort = System.getProperty(HTTP_PROXYPORT);
             if (proxyPort != null) {
                 proxys.add(PROXY_D + HTTP_PROXYPORT + "=" + proxyPort); //$NON-NLS-1$
             }
-            proxyUsername = System.getProperty("http.proxyUser"); //$NON-NLS-1$
+            proxyUsername = System.getProperty(HTTP_PROXYUSER);
             if (proxyUsername != null) {
                 proxys.add(PROXY_D + HTTP_PROXYUSER + "=" + proxyUsername); //$NON-NLS-1$
             }
-            proxyPassword = System.getProperty("http.proxyPassword");//$NON-NLS-1$
+            proxyPassword = System.getProperty(HTTP_PROXYPASSWORD);
             if (proxyPassword != null) {
                 String encryptedPassword = StudioEncryption.getStudioEncryption(StudioEncryption.EncryptionKeyName.SYSTEM)
                         .encrypt(proxyPassword);
                 proxys.add(PROXY_D + HTTP_PROXYPASSWORD + "=" + encryptedPassword); //$NON-NLS-1$
             }
             proxys.add(PROXY_D + SOCKS_PROXYSET + "=true"); //$NON-NLS-1$
-            proxyHost = System.getProperty("socksProxyHost");//$NON-NLS-1$
+            proxyHost = System.getProperty(SOCKS_PROXYHOST);
             if (proxyHost != null) {
                 proxys.add(PROXY_D + SOCKS_PROXYHOST + "=" + proxyHost); //$NON-NLS-1$
             }
-            proxyPort = System.getProperty("socksProxyPort");//$NON-NLS-1$
+            proxyPort = System.getProperty(SOCKS_PROXYPORT);
             if (proxyPort != null) {
                 proxys.add(PROXY_D + SOCKS_PROXYPORT + "=" + proxyPort); //$NON-NLS-1$
             }
