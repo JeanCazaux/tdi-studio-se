@@ -37,7 +37,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.IElementParameter;
@@ -374,7 +373,6 @@ public class OpenedListController extends AbstractElementPropertySectionControll
         }
         if (isTacokit(param) || param.isContextMode()) {
             combo.setEnabled(isWidgetEnabled(param));
-            combo.setBackground(getWidgetBackground(param, null, Display.getDefault().getSystemColor(SWT.COLOR_YELLOW)));
         }
     }
 

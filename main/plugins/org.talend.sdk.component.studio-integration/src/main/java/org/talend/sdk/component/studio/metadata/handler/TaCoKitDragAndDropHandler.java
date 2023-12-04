@@ -395,6 +395,9 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
     @SuppressWarnings("unchecked")
     @Override
     public void setComponentValue(final Connection connection, final INode node, final IElementParameter param) {
+        if (!TacokitDatabaseConnection.class.isInstance(connection)) {
+            return;
+        }
         TacokitDatabaseConnection tckConnection = TacokitDatabaseConnection.class.cast(connection);
         String paramName = param.getName();
         if (param.getValue() == null) {

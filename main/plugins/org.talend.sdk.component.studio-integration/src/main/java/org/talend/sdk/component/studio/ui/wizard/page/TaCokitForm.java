@@ -12,6 +12,7 @@
  */
 package org.talend.sdk.component.studio.ui.wizard.page;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,6 +27,7 @@ import org.talend.metadata.managment.ui.model.AbsConnParamName;
 import org.talend.metadata.managment.ui.model.IConnParamName;
 import org.talend.metadata.managment.ui.wizard.AbstractForm;
 import org.talend.sdk.component.studio.ui.composite.TaCoKitWizardComposite;
+import org.talend.sdk.component.studio.util.TacokitContextUtil;
 
 public class TaCokitForm extends AbstractForm {
 
@@ -52,23 +54,26 @@ public class TaCokitForm extends AbstractForm {
         super.exportAsContext();
     }
 
+    @Override
+    protected void revertContext() {
+        collectConParameters();
+        super.revertContext();
+    }
+
     protected void collectConParameters() {
         TaCoKitPageBuildHelper help = composite.getTaCoKitPageBuildHelper();
         if (help != null) {
-            Set<IConnParamName> set = new HashSet<IConnParamName>();
+            Set<IConnParamName> set = new HashSet<>();
             for (IElementParameter param : help.getParameters()) {
-                if (((ElementParameter) param).isDisplayedByDefault()) {
-                    EParameterFieldType eParameterFieldType = param.getFieldType();
-                    if (composite.isSupportContextFieldType(param)) {
-                        TaCoKitParamName taCoKitParamName = new TaCoKitParamName(param.getName(), eParameterFieldType);
-                        taCoKitParamName.setValue(param.getValue() == null ? null : String.valueOf(param.getValue()));
-                        set.add(taCoKitParamName);
-                    }
+                if (param.isShow(Collections.emptyList()) && ((ElementParameter) param).isDisplayedByDefault()
+                        && TacokitContextUtil.isSupportContextFieldType(param.getFieldType())) {
+                    TaCoKitParamName taCoKitParamName = new TaCoKitParamName(param.getName(), param.getFieldType());
+                    taCoKitParamName.setValue(param.getValue() == null ? null : String.valueOf(param.getValue()));
+                    set.add(taCoKitParamName);
                 }
             }
-            set.forEach(p -> {
-                addContextParams(p, true);
-            });
+            clearContextParams();
+            set.forEach(p -> addContextParams(p, true));
         }
     }
 
@@ -93,6 +98,11 @@ public class TaCokitForm extends AbstractForm {
     @Override
     protected void addFieldsListeners() {
         // nothing to do
+    }
+
+    @Override
+    public void adaptFormToEditable() {
+        super.adaptFormToEditable();
     }
 
     @Override

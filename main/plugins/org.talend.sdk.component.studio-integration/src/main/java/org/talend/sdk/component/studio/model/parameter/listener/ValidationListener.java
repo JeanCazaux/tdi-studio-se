@@ -17,14 +17,13 @@ package org.talend.sdk.component.studio.model.parameter.listener;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.model.action.Action;
-import org.talend.sdk.component.studio.model.parameter.TaCoKitElementParameter;
 import org.talend.sdk.component.studio.model.parameter.ValidationLabel;
+import org.talend.sdk.component.studio.util.TacokitContextUtil;
 
 public class ValidationListener extends Action<String> implements PropertyChangeListener {
 
@@ -40,8 +39,7 @@ public class ValidationListener extends Action<String> implements PropertyChange
         if(!"value".equals(event.getPropertyName())){
             return;
         }
-        if(event.getSource() instanceof TaCoKitElementParameter 
-        		&& !((TaCoKitElementParameter)event.getSource()).isShow(Collections.emptyList())) {
+        if (TacokitContextUtil.isContextualValue(event.getNewValue()) || ValidationHelper.hideValidation(event.getSource())) {
             label.hideValidation();
             return;
         }

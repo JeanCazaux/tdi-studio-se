@@ -34,7 +34,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.talend.core.model.metadata.Dbms;
 import org.talend.core.model.metadata.MetadataTalendType;
@@ -291,7 +290,6 @@ public class MappingTypeController extends AbstractElementPropertySectionControl
             combo.setText("".equals(strValue) ? (String) value : strValue);
             if (isTacokit(param) || param.isContextMode()) {
                 combo.setEnabled(isWidgetEnabled(param));
-                combo.setBackground(getWidgetBackground(param, null, Display.getDefault().getSystemColor(SWT.COLOR_YELLOW)));
             }
         }       
     }

@@ -20,13 +20,13 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.commons.ui.runtime.image.IImage;
@@ -50,16 +50,14 @@ import org.talend.core.model.repository.RepositoryViewObject;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.repository.utils.XmiResourceManager;
 import org.talend.core.runtime.services.IGenericWizardService;
+import org.talend.core.service.ITCKUIService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.IRepositoryNode.EProperties;
 import org.talend.repository.model.RepositoryNode;
-import org.talend.sdk.component.studio.metadata.action.CreateTaCoKitConfigurationAction;
-import org.talend.sdk.component.studio.metadata.action.EditTaCoKitConfigurationAction;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationItemModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.ValueModel;
-import org.talend.sdk.component.studio.metadata.node.ITaCoKitRepositoryNode;
 import org.talend.sdk.component.studio.util.ETaCoKitImage;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
@@ -352,6 +350,15 @@ public class TaCoKitRepositoryContentHandler extends AbstractRepositoryContentHa
             return wizardService.newSchemaWizard(workbench, creation, object, metadataTable, existingNames, forceReadOnly);
         }
         return null;
+    }
+
+    @Override
+    public IWizard newWizard(IWorkbench workbench, boolean creation, RepositoryNode node, String[] existingNames) {
+        if (creation) {
+            // reserve
+            return ITCKUIService.get().createTCKWizard(node.getContentType().getLabel(), new Path(""), false);
+        }
+        return ITCKUIService.get().editTCKWizard(node);
     }
 
 }

@@ -49,6 +49,7 @@ import org.talend.designer.core.ui.views.properties.composites.MissingSettingsMu
 import org.talend.sdk.component.studio.model.parameter.Layout;
 import org.talend.sdk.component.studio.model.parameter.LayoutParameter;
 import org.talend.sdk.component.studio.model.parameter.Level;
+import org.talend.sdk.component.studio.model.parameter.Metadatas;
 import org.talend.sdk.component.studio.model.parameter.TaCoKitElementParameter;
 import org.talend.sdk.component.studio.ui.composite.problemmanager.IProblemManager;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
@@ -70,6 +71,8 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
 
     protected Composite commonComposite;
 
+    private String form;
+
     private PropertyChangeListener redrawListener = evt -> {
         if (!"show".equals(evt.getPropertyName())) {
             return;
@@ -81,6 +84,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
             final Element element, final boolean isCompactView, final IProblemManager problemManager) {
         super(parentComposite, styles, section, element, isCompactView);
         this.problemManager = problemManager;
+        form = section == EComponentCategory.ADVANCED ? Metadatas.ADVANCED_FORM : Metadatas.MAIN_FORM;
         registProblemManager();
         postInit();
     }
@@ -89,6 +93,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
             final boolean isCompactView, final Color backgroundColor, final IProblemManager problemManager) {
         super(parentComposite, styles, section, element, isCompactView, backgroundColor);
         this.problemManager = problemManager;
+        form = section == EComponentCategory.ADVANCED ? Metadatas.ADVANCED_FORM : Metadatas.MAIN_FORM;
         registProblemManager();
         postInit();
     }
@@ -126,6 +131,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
                 .filter(Objects::nonNull)
                 .filter(TaCoKitElementParameter.class::isInstance)
                 .map(TaCoKitElementParameter.class::cast)
+                .filter(p -> p.getForm() == null || p.getForm().equals(form))
                 .forEach(p -> p.registerRedrawListener("show", redrawListener));
     }
 
@@ -134,6 +140,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
                 .filter(Objects::nonNull)
                 .filter(TaCoKitElementParameter.class::isInstance)
                 .map(TaCoKitElementParameter.class::cast)
+                .filter(p -> p.getForm() == null || p.getForm().equals(form))
                 .forEach(p -> p.unregisterRedrawListener("show", redrawListener));
     }
 

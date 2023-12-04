@@ -116,7 +116,7 @@ public class TableElementParameter extends TaCoKitElementParameter {
             List<Map<String, Object>> table = ValueConverter.toTable((String) newValue);
             if (table == null || table.size() == 0 || table.get(0).isEmpty()) {
                 List<Map<String, Object>> tableValue1 = new ArrayList<Map<String, Object>>();
-                HashMap<String, Object> hashMap = new HashMap<String, Object>();
+                HashMap<String, Object> hashMap = new LinkedHashMap<String, Object>();
                 String[] listItemsDisplayCodeName = getListItemsDisplayCodeName();
                 if (listItemsDisplayCodeName != null && listItemsDisplayCodeName.length > 0) {
                     for (String s : listItemsDisplayCodeName) {
@@ -227,7 +227,7 @@ public class TableElementParameter extends TaCoKitElementParameter {
         }
         final List<Map<String, Object>> converted = new ArrayList<>(table.size());
         for (final Map<String, Object> row : table) {
-            final Map<String, Object> convertedRow = new HashMap<>();
+            final Map<String, Object> convertedRow = new LinkedHashMap<>();
             for (final Map.Entry<String, Object> cell : row.entrySet()) {
                 final String newKey = cell.getKey().replace(repositoryKey.get(), getName());
                 convertedRow.put(newKey, cell.getValue());

@@ -51,6 +51,7 @@ import org.talend.sdk.component.studio.model.parameter.LayoutParameter;
 import org.talend.sdk.component.studio.model.parameter.Metadatas;
 import org.talend.sdk.component.studio.model.parameter.PropertyNode;
 import org.talend.sdk.component.studio.model.parameter.PropertyTreeCreator;
+import org.talend.sdk.component.studio.model.parameter.TextElementParameter;
 import org.talend.sdk.component.studio.model.parameter.VersionParameter;
 import org.talend.sdk.component.studio.ui.composite.TaCoKitWizardComposite;
 import org.talend.sdk.component.studio.ui.composite.problemmanager.WizardProblemManager;
@@ -76,6 +77,8 @@ public class TaCoKitConfigurationWizardPage extends AbsTaCoKitWizardPage {
     private final EComponentCategory category;
 
     private WizardProblemManager problemManager;
+
+    TaCokitForm taCokitForm;
 
     private TaCoKitWizardComposite tacokitComposite;
 
@@ -164,7 +167,7 @@ public class TaCoKitConfigurationWizardPage extends AbsTaCoKitWizardPage {
             final DummyComponent component = new DummyComponent(configTypeNode.getDisplayName());
             final DataNode node = new DataNode(component, component.getName());
             boolean hasContextBtn = supportContextBtn(configTypeNode);
-            TaCokitForm taCokitForm = new TaCokitForm(container, runtimeData.getConnectionItem(), hasContextBtn, SWT.NONE);
+            taCokitForm = new TaCokitForm(container, runtimeData.getConnectionItem(), hasContextBtn, SWT.NONE);
 
             //add version params
             Map<String, ConfigTypeNode> nodes = Lookups.taCoKitCache().getConfigTypeNodeMap();
@@ -189,14 +192,13 @@ public class TaCoKitConfigurationWizardPage extends AbsTaCoKitWizardPage {
             throw new IllegalStateException(e);
         }
     }
-    
+
     private boolean supportContextBtn(ConfigTypeNode configTypeNode) {
-        boolean supportContext = EComponentCategory.BASIC == category
-                && "datastore".equalsIgnoreCase(configTypeNode.getConfigurationType());
-        if (supportContext && TacokitDatabaseConnection.KEY_JDBC_DATASTORE_NAME.equals(configTypeNode.getName())) {
-            return true;
-        }
-        return false;
+        boolean supportContext = "datastore".equalsIgnoreCase(configTypeNode.getConfigurationType())
+                && TaCoKitConfigurationWizard.class.cast(getWizard()).getHelper().getParameters().stream()
+                        .anyMatch(TextElementParameter.class::isInstance);
+        // supportContext &= EComponentCategory.BASIC == category;
+        return supportContext;
     }
 
     private TaCoKitConfigurationModel getConfigurationItemModel() {
@@ -251,6 +253,7 @@ public class TaCoKitConfigurationWizardPage extends AbsTaCoKitWizardPage {
     public IWizardPage getNextPage() {
         IWizardPage next = super.getNextPage();
         if (EComponentCategory.ADVANCED == category && next == null && tacokitComposite != null) {
+            taCokitForm.adaptFormToEditable();
             tacokitComposite.setPropertyResized(true);
             tacokitComposite.addComponents(true);
             tacokitComposite.refresh();
@@ -263,6 +266,7 @@ public class TaCoKitConfigurationWizardPage extends AbsTaCoKitWizardPage {
     public IWizardPage getPreviousPage() {
         IWizardPage previousPage = super.getPreviousPage();
         if (EComponentCategory.BASIC == category && !isUpdating && tacokitComposite != null) {
+            taCokitForm.adaptFormToEditable();
             tacokitComposite.setPropertyResized(true);
             tacokitComposite.addComponents(true);
             tacokitComposite.refresh();
