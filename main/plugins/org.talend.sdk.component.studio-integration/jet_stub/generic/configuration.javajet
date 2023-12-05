@@ -83,7 +83,9 @@ globalMap.put("<%=cid %>_MAPPINGS_URL", mappings_url_<%=cid %>);
                             value = org.talend.core.model.utils.TalendTextUtils.addQuotes(value);
                         }
 %>
-                        configuration_<%=cid%>.put("<%=key%>",<%=value%>);
+                        if (<%=value%> != null) {
+                            configuration_<%=cid%>.put("<%=key%>",<%=value%>);
+                        }
 <%
                     }
                 }
@@ -296,7 +298,9 @@ globalMap.put("<%=cid %>_MAPPINGS_URL", mappings_url_<%=cid %>);
                     conn_param_prefix = key.substring(0, key.lastIndexOf(".__version"));
                 }
 %>
+                if (<%=value%> != null) {
                     configuration_<%=cid%>.put("<%=key%>", <%=value%>);
+                }
 <%
                 } // else do not put value in configuration
             }
