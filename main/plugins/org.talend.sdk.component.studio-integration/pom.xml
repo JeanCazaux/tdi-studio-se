@@ -234,10 +234,11 @@
               <goal>copy-dependencies</goal>
             </goals>
             <configuration>
-			  <excludeGroupIds>org.talend.studio</excludeGroupIds>
+	      <excludeGroupIds>org.talend.studio</excludeGroupIds>
               <includeScope>runtime</includeScope>
               <outputDirectory>${project.basedir}/lib</outputDirectory>
               <stripVersion>true</stripVersion>
+	      <includeGroupIds>org.talend.sdk.component,org.asciidoctor,org.jruby,org.mozilla,org.apache.commons,oro,org.apache.tomcat,org.apache.geronimo.specs,org.apache.johnzon,org.junit.jupiter,com.github.stefanbirkner,commons-io,org.apache.tomee,org.talend.sdk.component,org.mockito,commons-lang,org.apache.xbean</includeGroupIds>
             </configuration>
           </execution>
         </executions>

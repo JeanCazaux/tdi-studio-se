@@ -31,10 +31,11 @@
                         </goals>
                         <configuration>
                             <excludeTypes>pom</excludeTypes>
-						    <excludeGroupIds>org.talend.studio</excludeGroupIds>
-			                <includeScope>runtime</includeScope>
+			    <excludeGroupIds>org.talend.studio</excludeGroupIds>
+			    <includeScope>runtime</includeScope>
                             <excludeTransitive>true</excludeTransitive>
                             <outputDirectory>${basedir}/lib</outputDirectory>
+			    <includeGroupIds>org.apache.velocity</includeGroupIds>
                         </configuration>
                     </execution>
                 </executions>
