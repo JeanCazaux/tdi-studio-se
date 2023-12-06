@@ -23,7 +23,7 @@ imports="
 	String ignoreNewLines = ElementParameterParser.getValue(node, "__IGNORE_NEW_LINE__");
 %>
 
-String modelURI_<%=cid%> = "urn:org.milyn.edi.unedifact:"+"<%=version%>"+"-mapping:1.4-SNAPSHOT";
+String modelURI_<%=cid%> = "urn:org.milyn.edi.unedifact:"+"<%=version%>"+"-mapping:1.4";
 
 org.milyn.edisax.unedifact.UNEdifactInterchangeParser parser_<%=cid%> = new org.milyn.edisax.unedifact.UNEdifactInterchangeParser();
 

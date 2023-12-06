@@ -35,6 +35,7 @@ Licensed under the Apache-2.0 license.
    <requires>
       <import plugin="org.talend.designer.maven.repo.tck"/>
       <import plugin="org.talend.studio.components.tck.jdbc"/>
+      <import plugin="org.talend.components.jdbc.definition"/>
    </requires>
 
 </feature>
