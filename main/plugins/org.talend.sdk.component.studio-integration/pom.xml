@@ -236,6 +236,7 @@
             <configuration>
 			  <excludeGroupIds>org.talend.studio</excludeGroupIds>
               <includeScope>runtime</includeScope>
+              <excludeScope>system</excludeScope>
               <outputDirectory>${project.basedir}/lib</outputDirectory>
               <stripVersion>true</stripVersion>
             </configuration>
