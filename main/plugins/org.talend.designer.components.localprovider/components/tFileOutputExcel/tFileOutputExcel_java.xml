@@ -240,7 +240,7 @@
 
   <CODEGENERATION>
     <IMPORTS>
-      <IMPORT NAME="Java_Excel" MODULE="jxl.jar" MVN="mvn:org.talend.libraries/jxl/6.0.0" UrlPath="platform:/plugin/org.talend.libraries.jexcel/lib/jxl.jar" REQUIRED_IF="(VERSION_2007 == 'false')" />
+      <IMPORT NAME="Java_Excel" MODULE="jxl-2.6.12.jar" MVN="mvn:net.sourceforge.jexcelapi/jxl/2.6.12" UrlPath="platform:/plugin/org.talend.libraries.jexcel/lib/jxl.jar" REQUIRED_IF="(VERSION_2007 == 'false')" />
       <IMPORT NAME="TALEND_EXCEL" MODULE="talendExcel-1.15-20230117.jar" MVN="mvn:org.talend.components/talendExcel/1.15-20230117" REQUIRED_IF="(VERSION_2007 == 'true')" />
       <IMPORT NAME="xlsx-streamer" MODULE="xlsx-streamer-2.1.0-20201125.jar" MVN="mvn:com.monitorjbl/xlsx-streamer/2.1.0-20201125" REQUIRED_IF="(VERSION_2007 == 'true') AND (STREAMING_APPEND == 'true')" />
       

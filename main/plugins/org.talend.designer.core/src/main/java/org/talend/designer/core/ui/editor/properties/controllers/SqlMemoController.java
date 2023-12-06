@@ -140,7 +140,7 @@ public class SqlMemoController extends AbstractElementPropertySectionController 
         IElementParameter basePropertyParameter = null;
         for (IElementParameter param : elem.getElementParameters()) {
             if (param.getFieldType() == EParameterFieldType.PROPERTY_TYPE) {
-                if (param.getRepositoryValue().startsWith("DATABASE")) {
+                if (param.calcRepositoryValue().startsWith("DATABASE")) {
                     basePropertyParameter = param;
                     break;
                 }
@@ -590,8 +590,7 @@ public class SqlMemoController extends AbstractElementPropertySectionController 
             if (curParameter instanceof ElementParameter) {
                 Object sourceName = ((ElementParameter) curParameter).getTaggedValue("org.talend.sdk.component.source");//$NON-NLS-1$
                 if ("tacokit".equalsIgnoreCase(String.valueOf(sourceName))) {//$NON-NLS-1$
-                    Object familyValue = elem.getPropertyValue(EParameterName.FAMILY.getName());
-                    if (isInWizard() || "jdbc".equalsIgnoreCase(String.valueOf(familyValue))) { //$NON-NLS-1$
+                    if (isInWizard()) { // $NON-NLS-1$
                         return false;
                     }
                 }

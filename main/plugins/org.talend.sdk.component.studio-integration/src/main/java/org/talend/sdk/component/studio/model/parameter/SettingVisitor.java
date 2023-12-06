@@ -19,7 +19,6 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.ofNullable;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 import java.beans.PropertyChangeEvent;
@@ -28,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,11 +37,16 @@ import java.util.TreeMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.talend.core.model.components.IComponent;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EConnectionType;
+import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.IElement;
 import org.talend.core.model.process.IElementParameter;
+import org.talend.core.model.process.INode;
 import org.talend.designer.core.model.FakeElement;
+import org.talend.designer.core.model.components.DummyComponent;
 import org.talend.designer.core.model.components.ElementParameter;
 import org.talend.designer.core.model.process.DataNode;
 import org.talend.designer.core.ui.editor.nodes.Node;
@@ -150,18 +155,7 @@ public class SettingVisitor implements PropertyVisitor {
 
         final ConditionGroup group = node.getProperty().getConditions();
         if (!group.getConditions().isEmpty()) {
-            if (rootConfigNode != null) { // wizard context. filter condition to keep only valid ones
-                rootConfigNode.getProperties().stream()
-                        .filter(p -> p.getPath().equals(p.getName()))
-                        .findFirst()
-                        .map(root -> group.getConditions().stream().filter(c -> c.getTargetPath().startsWith(root.getPath())))
-                        .map(c -> c.collect(toList()))
-                        .filter(conditions -> !conditions.isEmpty())
-                        .ifPresent(validConditions -> activations.computeIfAbsent(origin.getProperty().getPath(), key -> new ArrayList<>())
-                                .add(new ConditionGroup(validConditions, group.getAggregator())));
-            } else {
-                activations.computeIfAbsent(origin.getProperty().getPath(), key -> new ArrayList<>()).add(group);
-            }
+            activations.computeIfAbsent(origin.getProperty().getPath(), key -> new ArrayList<>()).add(group);
         }
 
         buildActivationCondition(node.getParent(), origin);
@@ -201,13 +195,13 @@ public class SettingVisitor implements PropertyVisitor {
                     .collect(toMap(ElementParameter::getName, identity(), (a, b) -> a));
 
             for (String key : hasUIScopeList) {
-                if (targetParams.size() == 0) {
+                if (targetParams.size() == 0 || !targetParams.containsKey(key)) {
                     IElementParameter elem = this.settings.get(key);
                     if (elem != null && elem instanceof TaCoKitElementParameter) {
-                        targetParams.put(key, (TaCoKitElementParameter) elem);
-                        final ActiveIfListener activationListener = new ActiveIfListener(conditionGroups, param, targetParams);
+                        Map<String, TaCoKitElementParameter> newTargetParams = new HashMap<>();
+                        newTargetParams.put(key, (TaCoKitElementParameter) elem);
+                        final ActiveIfListener activationListener = new ActiveIfListener(conditionGroups, param, newTargetParams);
                         activationListener.propertyShow();
-                        targetParams.clear();
                     }
                 }
             }
@@ -279,10 +273,22 @@ public class SettingVisitor implements PropertyVisitor {
                 final TaCoKitElementParameter valueSelection = visitTextAreaSelection(node);
                 settings.put(valueSelection.getName(), valueSelection);
                 break;
+            case FILE:
+                final TaCoKitElementParameter file = visitFile(node);
+                settings.put(file.getName(), file);
+                break;
+            case DIRECTORY:
+                final TaCoKitElementParameter directory = visitDirectory(node);
+                settings.put(directory.getName(), directory);
+                break;
             default:
                 final IElementParameter text;
                 if (node.getProperty().getPlaceholder() == null) {
                     text = new TaCoKitElementParameter(element);
+                } else if (node.getProperty().getPlaceholder().equalsIgnoreCase("dbMapping")) { //$NON-NLS-1$
+                    final TaCoKitElementParameter dbMapping = visitDBMapping(node);
+                    settings.put(dbMapping.getName(), dbMapping);
+                    break;
                 } else {
                     final TextElementParameter advancedText = new TextElementParameter(element);
                     advancedText.setMessage(node.getProperty().getPlaceholder());
@@ -516,6 +522,28 @@ public class SettingVisitor implements PropertyVisitor {
     private TaCoKitElementParameter visitInSchema(final PropertyNode node) {
         return new InputSchemaParameter(getNode(), node.getProperty().getPath(), getConnectionName(node), node.getChildrenNames());
     }
+    
+    private TaCoKitElementParameter visitDBMapping(final PropertyNode node) {
+        final TaCoKitElementParameter parameter = new TaCoKitElementParameter(element);
+        commonSetup(parameter, node);
+        parameter.setFieldType(EParameterFieldType.MAPPING_TYPE);
+        parameter.setValue("mysql_id"); //$NON-NLS-1$
+        return parameter;
+    }
+
+    private TaCoKitElementParameter visitFile(final PropertyNode node) {
+        final TaCoKitElementParameter parameter = new TaCoKitElementParameter(element);
+        commonSetup(parameter, node);
+        parameter.setFieldType(EParameterFieldType.FILE);
+        return parameter;
+    }
+
+    private TaCoKitElementParameter visitDirectory(final PropertyNode node) {
+        final TaCoKitElementParameter parameter = new TaCoKitElementParameter(element);
+        commonSetup(parameter, node);
+        parameter.setFieldType(EParameterFieldType.DIRECTORY);
+        return parameter;
+    }
 
     /**
      * Computes Node connection name. This name is used to get connection by name and then get schema from
@@ -540,7 +568,16 @@ public class SettingVisitor implements PropertyVisitor {
     }
 
     private SuggestionsAction createSuggestionsAction(final PropertyNode node) {
-        final SuggestionsAction action = new SuggestionsAction(node.getProperty().getSuggestions().getName(), family);
+        Connection connection = null;
+        if (element instanceof INode) {
+            INode dataNode = (INode) element;
+            IComponent component = dataNode.getComponent();
+            if (component instanceof DummyComponent) {
+                DummyComponent dc = (DummyComponent) component;
+                connection = dc.getConnection();
+            }
+        }
+        final SuggestionsAction action = new SuggestionsAction(node.getProperty().getSuggestions().getName(), family, connection);
         final SuggestionsResolver resolver = new SuggestionsResolver(action, node, actions);
         parameterResolvers.add(resolver);
         return action;
@@ -623,6 +660,16 @@ public class SettingVisitor implements PropertyVisitor {
                 new SettingVisitor(new FakeElement("table"), redrawParameter, actions).withCategory(category);
         columns.forEach(creator::visit);
         parameterResolvers.addAll(creator.getParameterResolvers());
+        // BasedOnSchema
+        columns.forEach(l -> {
+            String basedonschema = l.getProperty().getMetadata().get(Metadatas.UI_BASEDONSCHEMA);
+            if (basedonschema != null && basedonschema.equalsIgnoreCase(Boolean.TRUE.toString())) {
+                IElementParameter param = creator.settings.get(l.getProperty().getPath());
+                if (param != null) {
+                    param.setBasedOnSchema(true);
+                }
+            }
+        });
         return unmodifiableList(new ArrayList<>(creator.settings.values()));
     }
 

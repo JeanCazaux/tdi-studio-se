@@ -777,7 +777,7 @@ public class JobSettingsManager {
         paramList.add(param);
 
         for (IElementParameter currentParam : paramList) {
-            if (currentParam.getRepositoryValue() != null) {
+            if (currentParam.calcRepositoryValue() != null) {
                 // if any of the parameter of stat&logs is using repository, then force to link it to the name of the
                 // property for implicit
                 currentParam.setRepositoryProperty(parentPropertyType.getName());

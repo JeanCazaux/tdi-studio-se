@@ -32,6 +32,8 @@ public final class Metadatas {
 
     public static final String ACTION_SUGGESTIONS_PARAMETERS = "action::suggestions::parameters";
 
+    public static final String ACTION_BUILT_IN_SUGGESTABLE = "action::built_in_suggestable";
+
     public static final String ACTION_VALIDATION_NAME = "action::validation";
 
     public static final String ACTION_VALIDATION_PARAMETERS = "action::validation::parameters";
@@ -79,6 +81,10 @@ public final class Metadatas {
     public static final String UI_STRUCTURE_DISCOVERSCHEMA = "ui::structure::discoverSchema";
 
     public static final String UI_TEXTAREA = "ui::textarea";
+
+    public static final String UI_BASEDONSCHEMA = "ui::basedonschema";
+
+    public static final String UI_PATH_VALUE = "ui::path::value";
 
     /**
      * Value separator for {@link #UI_OPTIONS_ORDER}

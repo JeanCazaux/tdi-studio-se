@@ -16,7 +16,7 @@
 package org.talend.sdk.component.studio.model.parameter;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -59,7 +59,8 @@ public final class ValueConverter {
         String[] records = trimmed.split("\\},\\s?\\{");
         for (String record : records) {
             record = trimCurlyBrackets(record);
-            String[] entries = record.split(",\\s?");Map<String, Object> element = new HashMap<String, Object>();
+            String[] entries = record.split(",\\s?");
+            Map<String, Object> element = new LinkedHashMap<>();
             for (String entry : entries) {
                 String[] keyValue = new String[] {};
                 if (entry.contains("=")) {
@@ -67,11 +68,11 @@ public final class ValueConverter {
                 } else {
                     keyValue = entry.split(":");
                 }
-                if (keyValue.length < 1) {
+                if (keyValue.length < 2) {
                     continue;
                 }
                 String key = keyValue[0];
-                String value = keyValue[1];
+                String value = "null".equals(keyValue[1]) ? null : keyValue[1];
                 element.put(key, value);
             }
             table.add(element);

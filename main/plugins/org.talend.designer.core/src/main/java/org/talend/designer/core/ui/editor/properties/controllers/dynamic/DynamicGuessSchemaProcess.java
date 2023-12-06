@@ -36,13 +36,11 @@ import org.talend.core.model.metadata.MetadataTable;
 import org.talend.core.model.process.EConnectionType;
 import org.talend.core.model.process.IConnection;
 import org.talend.core.model.process.IContext;
-import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.INode;
 import org.talend.core.model.process.IProcess;
 import org.talend.core.model.properties.Property;
 import org.talend.core.ui.component.ComponentsFactoryProvider;
 import org.talend.designer.core.i18n.Messages;
-import org.talend.designer.core.model.components.EParameterName;
 import org.talend.designer.core.model.process.DataConnection;
 import org.talend.designer.core.model.process.DataProcess;
 import org.talend.designer.core.ui.editor.nodecontainer.NodeContainer;
@@ -142,11 +140,6 @@ public class DynamicGuessSchemaProcess {
             DataProcess dataProcess = new DataProcess(originalProcess);
             dataProcess.buildFromGraphicalProcess(Arrays.asList(node));
             process = Process.class.cast(dataProcess.getDuplicatedProcess());
-            IElementParameter log4jElemParam = process.getElementParameter(EParameterName.LOG4J_ACTIVATE.getName());
-            if (log4jElemParam != null) {
-                Boolean isEnableLog4j = AbstractGuessSchemaProcess.isEnableLog4jForGuessSchema();
-                log4jElemParam.setValue(isEnableLog4j);
-            }
             process.setGeneratingProcess(null);
             process.getContextManager().getListContext().addAll(originalProcess.getContextManager().getListContext());
             process.getContextManager().setDefaultContext(this.context);

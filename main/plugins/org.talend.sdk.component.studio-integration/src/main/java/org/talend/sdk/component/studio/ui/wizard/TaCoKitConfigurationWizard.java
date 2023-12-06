@@ -12,10 +12,13 @@
  */
 package org.talend.sdk.component.studio.ui.wizard;
 
+import java.util.List;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
@@ -27,6 +30,7 @@ import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.ui.runtime.exception.ExceptionMessageDialog;
+import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.metadata.managment.ui.wizard.CheckLastVersionRepositoryWizard;
 import org.talend.metadata.managment.ui.wizard.metadata.connection.Step0WizardPage;
@@ -55,6 +59,8 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
     private TaCoKitConfigurationWizardPage mainPage;
 
     private TaCoKitConfigurationWizardPage advancedPage;
+    
+    private TaCoKitPageBuildHelper helper;
 
     protected abstract boolean isNew();
 
@@ -66,6 +72,7 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
         connectionItem = runtimeData.getConnectionItem();
         this.runtimeData.setReadonly(runtimeData.isReadonly() || !isRepositoryObjectEditable());
         init();
+        helper = new TaCoKitPageBuildHelper(this.runtimeData);
     }
 
     /**
@@ -119,6 +126,12 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
         // nothing todo
     }
 
+    public void setPathToSave(IPath pathToSave) {
+        if (pathToSave != null) {
+            this.pathToSave = pathToSave;
+        }
+    }
+
     /**
      * Part of constructor
      *
@@ -151,7 +164,6 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
         wizardPropertiesPage.setDescription(""); //$NON-NLS-1$
         addPage(wizardPropertiesPage);
         final PropertyNode root = new PropertyTreeCreator(new WizardTypeMapper()).createPropertyTree(configTypeNode);
-        TaCoKitPageBuildHelper helper = new TaCoKitPageBuildHelper(this.runtimeData);
 
         if (root.hasLeaves(Metadatas.ADVANCED_FORM)) {
             helper.infer(Metadatas.ADVANCED_FORM);
@@ -162,18 +174,27 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
         helper.terminate();
         if (root.hasLeaves(Metadatas.MAIN_FORM)) {
 
+            List<IElementParameter> parameters = helper.getParameters(Metadatas.MAIN_FORM);
             mainPage = new TaCoKitConfigurationWizardPage(runtimeData,
                     Metadatas.MAIN_FORM,
                     isNew(),
-                    helper.getParameters(Metadatas.MAIN_FORM));
+                    parameters);
             addPage(mainPage);
         }
         if (root.hasLeaves(Metadatas.ADVANCED_FORM)) {
-            advancedPage = new TaCoKitConfigurationWizardPage(runtimeData,
-                    Metadatas.ADVANCED_FORM,
-                    isNew(),
-                    helper.getParameters(Metadatas.ADVANCED_FORM));
-            addPage(advancedPage);
+            boolean isCreate = false;
+            List<IElementParameter> parametersForAdvanced = helper.getParameters(Metadatas.ADVANCED_FORM);
+            for (IElementParameter param : parametersForAdvanced) {
+                if (param.isShow(parametersForAdvanced)) {
+                    isCreate = true;
+                    break;
+                }
+            }
+            if (isCreate) {
+                advancedPage = new TaCoKitConfigurationWizardPage(runtimeData, Metadatas.ADVANCED_FORM, isNew(),
+                        helper.getParameters(Metadatas.ADVANCED_FORM));
+                addPage(advancedPage);
+            }
         }
     }
 
@@ -277,6 +298,10 @@ public abstract class TaCoKitConfigurationWizard extends CheckLastVersionReposit
 
     protected TaCoKitConfigurationWizardPage getAdvancedPage() {
         return this.advancedPage;
+    }
+ 
+    public TaCoKitPageBuildHelper getHelper() {
+        return helper;
     }
 
 }

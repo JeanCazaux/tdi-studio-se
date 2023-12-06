@@ -23,10 +23,15 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.eclipse.core.runtime.IPath;
+import org.eclipse.jface.wizard.IWizard;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.ui.IWorkbench;
+import org.eclipse.ui.PlatformUI;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.runtime.model.components.IComponentConstants;
 import org.talend.commons.ui.swt.actions.ITreeContextualAction;
@@ -51,6 +56,9 @@ import org.talend.core.model.process.INode;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.repository.ERepositoryObjectType;
+import org.talend.core.model.repository.IRepositoryViewObject;
+import org.talend.core.repository.model.ProjectRepositoryNode;
+import org.talend.core.repository.model.repositoryObject.MetadataTableRepositoryObject;
 import org.talend.core.runtime.services.IGenericService;
 import org.talend.core.runtime.services.IGenericWizardInternalService;
 import org.talend.core.runtime.services.IGenericWizardService;
@@ -73,8 +81,13 @@ import org.talend.repository.generic.action.GenericAction;
 import org.talend.repository.generic.model.genericMetadata.SubContainer;
 import org.talend.repository.generic.ui.DBDynamicComposite;
 import org.talend.repository.generic.ui.DynamicComposite;
+import org.talend.repository.generic.ui.GenericConnWizard;
+import org.talend.repository.generic.ui.GenericSchemaWizard;
+import org.talend.repository.generic.ui.common.GenericWizardDialog;
 import org.talend.repository.generic.util.GenericConnectionUtil;
+import org.talend.repository.generic.util.GenericWizardServiceFactory;
 import org.talend.repository.generic.util.RepTypeMappingManager;
+import org.talend.repository.model.IRepositoryNode.EProperties;
 import org.talend.repository.model.RepositoryNode;
 
 import orgomg.cwm.objectmodel.core.TaggedValue;
@@ -106,13 +119,13 @@ public class GenericWizardService implements IGenericWizardService {
             return false;
         }
         try {
-	        List<String> genericTypeNames = getGenericTypeNames();
-	        if (genericTypeNames != null && genericTypeNames.contains(repObjType.getType())) {
-	            return true;
-	        }
+            List<String> genericTypeNames = getGenericTypeNames();
+            if (genericTypeNames != null && genericTypeNames.contains(repObjType.getType())) {
+                return true;
+            }
         } catch (Exception e) {
-        	// only log the error, might happens during junit execution
-        	ExceptionHandler.process(e);
+            // only log the error, might happens during junit execution
+            ExceptionHandler.process(e);
         }
         return false;
     }
@@ -479,6 +492,46 @@ public class GenericWizardService implements IGenericWizardService {
             }
         }
         return null;
+    }
+    
+
+    @Override
+    public IWizard newSchemaWizard(IWorkbench workbench, boolean creation, IRepositoryViewObject object,
+            MetadataTable metadataTable, String[] existingNames, boolean forceReadOnly) {
+        if (object == null) {
+            return null;
+        }
+        IWorkbench wb = workbench;
+        if (wb == null) {
+            wb = PlatformUI.getWorkbench();
+        }
+        MetadataTable table = metadataTable;
+        if (table == null && object instanceof MetadataTableRepositoryObject) {
+            MetadataTableRepositoryObject metaTableRepObj = (MetadataTableRepositoryObject) object;
+            table = metaTableRepObj.getTable();
+        }
+        if (table == null) {
+            return null;
+        }
+        ConnectionItem connectionItem = (ConnectionItem) object.getProperty().getItem();
+        table = SchemaUtils.getMetadataTable(connectionItem.getConnection(), table, object);
+        return new GenericSchemaWizard(wb, creation, object, connectionItem, table, forceReadOnly);
+    }
+
+    @Override
+    public void openGenericWizard(String type, boolean creation, IPath path, String[] existingNames) {
+        RepositoryNode rootTypeNode = ProjectRepositoryNode.getInstance().getGenericTopNodesMap()
+                .get(ERepositoryObjectType.valueOf(type).getType());
+        ERepositoryObjectType repObjType = (ERepositoryObjectType) rootTypeNode.getProperties(EProperties.CONTENT_TYPE);
+        ComponentWizard compWizard = internalService.getComponentWizard(repObjType.getType(), null);
+        GenericConnWizard wizard = new GenericConnWizard(PlatformUI.getWorkbench(), true, compWizard, rootTypeNode,
+                existingNames);
+        wizard.setPathToSave(path);
+        WizardDialog wizardDialog = new GenericWizardDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                wizard, GenericWizardServiceFactory.getGenericWizardInternalService().getComponentService());
+        wizardDialog.setPageSize(780, 540);
+        wizardDialog.create();
+        wizardDialog.open();
     }
 
 }

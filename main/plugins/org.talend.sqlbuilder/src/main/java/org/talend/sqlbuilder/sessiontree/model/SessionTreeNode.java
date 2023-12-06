@@ -38,6 +38,7 @@ import org.talend.sqlbuilder.dbdetail.DetailTabManager;
 import org.talend.sqlbuilder.dbstructure.DatabaseModel;
 import org.talend.sqlbuilder.dbstructure.nodes.DatabaseNode;
 import org.talend.sqlbuilder.dbstructure.nodes.INode;
+import org.talend.sqlbuilder.repository.utility.SQLBuilderRepositoryNodeManager;
 import org.talend.sqlbuilder.sessiontree.model.utility.Dictionary;
 
 /**
@@ -153,8 +154,7 @@ public class SessionTreeNode implements ISessionTreeNode {
                 || repositoryNode.getObject().getProperty().getItem() == null) {
             return null;
         }
-        DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) repositoryNode.getObject().getProperty().getItem())
-                .getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(repositoryNode);
 
         return connection;
     }

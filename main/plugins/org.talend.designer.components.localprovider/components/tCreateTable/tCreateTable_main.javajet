@@ -176,7 +176,7 @@ abstract class Manager {
                 }
                 createTableSQL.append(suffix);
             } else {
-                boolean isPostgresishDB = ("postgres_id".equalsIgnoreCase(getDBMSId()) || "postgresplus_id".equalsIgnoreCase(getDBMSId()) || "greenplum_id".equalsIgnoreCase(getDBMSId()) );
+                boolean isPostgresishDB = ("postgres_id".equalsIgnoreCase(getDBMSId()) || "greenplum_id".equalsIgnoreCase(getDBMSId()) );
                 if(!lengthIgnored) {
                     if (isPostgresishDB && metadataColumn.getLength() == null) {
                     }else {
@@ -1354,69 +1354,6 @@ class PostgreManager extends Manager {
         return javaCode.toString();        
     }
 }
-class PostgrePlusManager extends Manager {
-    private String host;
-    private String port;
-    private String dbSchema;
-    private boolean useExistingConnection;
-    private String connection;   
-    
-    public PostgrePlusManager(String host, String port, String dbName, String tableName, String dbSchema, String userName, boolean useExistingConnection, String connection, String cid, String additionalParams) {
-        super(dbName, tableName, userName, cid, additionalParams);
-        this.host = host;
-        this.port = port;
-        this.dbSchema = dbSchema;
-        this.useExistingConnection = useExistingConnection;
-        this.connection = connection;
-    }
-    protected String getDriver() {
-        return "org.postgresql.Driver";
-    }
-    public String getSpecificConnectionURL() {
-        return "\"jdbc:postgresql://\" + " + host + " + \":\" + " + port + " + \"/\" + " + dbName;
-    }
-    public String getConnection() {
-        StringBuilder javaCode = new StringBuilder();
-        if(useExistingConnection) {
-            javaCode.append(retrieveTable());
-            javaCode.append("java.sql.Connection conn_" + cid + " = (java.sql.Connection)globalMap.get(\"conn_" + connection + "\");");
-        } else {
-            javaCode.append(super.getConnection());
-        }
-        return javaCode.toString();
-    }        
-    protected String getDBMSId() {
-        return "postgresplus_id";
-    }
-    protected String getLProtectedChar() {
-        return "\\\"";
-    }
-    protected String getRProtectedChar() {
-        return "\\\"";
-    }
-    public String closeConnection() {
-        StringBuilder javaCode = new StringBuilder();
-        if(useExistingConnection) {
-            javaCode.append("");
-        } else {
-            javaCode.append(super.closeConnection());            
-        }
-        return javaCode.toString();
-    }
-    protected String retrieveTable() {
-        StringBuilder javaCode = new StringBuilder();
-        javaCode.append(super.retrieveTable());
-        if(useExistingConnection) {
-            javaCode.append("String dbSchema_" + cid + " = (String)globalMap.get(\"schema_" + connection + "\");\r\n"); 
-        } else {
-            javaCode.append("String dbSchema_" + cid + " = " + dbSchema + ";\r\n");            
-        }
-        javaCode.append("if(dbSchema_" + cid + " != null && dbSchema_" + cid + ".trim().length() != 0) {");
-        javaCode.append("tableName_" + cid + " = dbSchema_" + cid + " + \"" + getLProtectedChar() + "." + getRProtectedChar() + "\" + tableName_" + cid + ";\r\n");
-        javaCode.append("}");
-        return javaCode.toString();        
-    }    
-}
 class SQLiteManager extends Manager {
 	private boolean useExistingConnection;
 	private String connection;
@@ -1695,7 +1632,7 @@ class TeradataManager extends Manager {
                 createTableSQL.append(suffix);
             } else {
                 if(!lengthIgnored) {                
-                	if (("postgres_id".equalsIgnoreCase(getDBMSId()) || "postgresplus_id".equalsIgnoreCase(getDBMSId()) || "greenplum_id".equalsIgnoreCase(getDBMSId()) ) && metadataColumn.getLength() == null) {
+                	if (("postgres_id".equalsIgnoreCase(getDBMSId()) || "greenplum_id".equalsIgnoreCase(getDBMSId()) ) && metadataColumn.getLength() == null) {
                 	}else {
 	                    prefix = "(";
 	                    suffix = ") ";
@@ -1714,7 +1651,7 @@ class TeradataManager extends Manager {
                     createTableSQL.append(comma + precision);
                 }
                 
-                if (("postgres_id".equalsIgnoreCase(getDBMSId()) || "postgresplus_id".equalsIgnoreCase(getDBMSId()) ||"greenplum_id".equalsIgnoreCase(getDBMSId()) ) && metadataColumn.getLength() == null) {                	
+                if (("postgres_id".equalsIgnoreCase(getDBMSId()) ||"greenplum_id".equalsIgnoreCase(getDBMSId()) ) && metadataColumn.getLength() == null) {
                 } else {
                 	createTableSQL.append(suffix);
                 }
@@ -2339,15 +2276,6 @@ class ManagerFactory {
             boolean tempTable = ("true").equals(ElementParameterParser.getValue(node, "__TEMPTABLE__"));
             boolean unloggedTable = ("true").equals(ElementParameterParser.getValue(node, "__UNLOGGED__"));
             manager = new PostgreManager(host, port, dbName, tableName, dbSchema, userName, useExistingConnection, connection, cid, tempTable, unloggedTable, additionalParams);
-        } else if(("POSTGREPLUS").equals(dbType)) {
-            String host = ElementParameterParser.getValue(node, "__HOST__");
-            String port = ElementParameterParser.getValue(node, "__PORT__");
-            String dbSchema = ElementParameterParser.getValue(node, "__SCHEMA_DB__");
-            String dbName = ElementParameterParser.getValue(node, "__DBNAME__");
-            String userName = ElementParameterParser.getValue(node, "__USER__");
-            boolean useExistingConnection = ("true").equals(ElementParameterParser.getValue(node, "__USE_EXISTING_CONNECTION__"));
-            String connection = stringUtil.getString(ElementParameterParser.getValue(node, "__CONNECTION_POSTGREPLUS__"));
-            manager = new PostgrePlusManager(host, port, dbName, tableName, dbSchema, userName, useExistingConnection, connection, cid, additionalParams);            
         } else if(("SQLITE").equals(dbType)) {
             String dbName = ElementParameterParser.getValue(node, "__DBFILE_SQLITE__");
             String userName = ElementParameterParser.getValue(node, "__USER__");
@@ -2446,7 +2374,7 @@ if(columnList != null && columnList.size() > 0) {
     String cid = node.getUniqueName();
     boolean isLog4jEnabled = ("true").equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
     boolean tableNameCaseSensitive=false;
-    if("DB2".equalsIgnoreCase(dbType)||"POSTGRE".equalsIgnoreCase(dbType)||"POSTGREPLUS".equalsIgnoreCase(dbType)||"GREENPLUM".equalsIgnoreCase(dbType)){
+    if("DB2".equalsIgnoreCase(dbType)||"POSTGRE".equalsIgnoreCase(dbType)||"GREENPLUM".equalsIgnoreCase(dbType)){
     	tableNameCaseSensitive=true;
     }
     if(("HSQLDB").equals(dbType)){
@@ -2555,7 +2483,7 @@ if(columnList != null && columnList.size() > 0) {
                     }
                 }
 <%
-            } else if ("GREENPLUM".equalsIgnoreCase(dbType) || "POSTGRE".equalsIgnoreCase(dbType) || "POSTGREPLUS".equalsIgnoreCase(dbType)) {
+            } else if ("GREENPLUM".equalsIgnoreCase(dbType) || "POSTGRE".equalsIgnoreCase(dbType)) {
                 if ("true".equals(ElementParameterParser.getValue(node, "__TEMPTABLE__"))) {
 %>
                     java.sql.PreparedStatement tempTablePs_<%=cid %> = conn_<%=cid %>.prepareStatement("SELECT * FROM information_schema.tables WHERE table_type='LOCAL TEMPORARY' AND table_name = ?");

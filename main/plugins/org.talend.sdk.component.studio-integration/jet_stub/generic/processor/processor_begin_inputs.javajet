@@ -60,8 +60,30 @@
                     connName = additionalName;
                 }
             }
+            
+            String structClassNamePrefix = null;
+            IConnection realConn = connection;
+            int count;
+            do {
+                count = 0;
+                structClassNamePrefix = realConn.getName();
+                INode source = realConn.getSource();
+                if(source != null) {
+                    if(!source.isSubProcessStart() && NodeUtil.isDataAutoPropagated(source)) {
+                        List<? extends IConnection> inputConns = source.getIncomingConnections();
+                        if(inputConns != null) {
+                            for (IConnection inputConn : inputConns) {
+                                if(inputConn.getLineStyle().equals(EConnectionType.FLOW_MAIN)) {
+                                    realConn = inputConn;
+                                    count++;
+                                }
+                            }
+                        }
+                    }
+                }
+            } while(count == 1);
 %>
-            inputsHandler_<%=cid%>.addConnection("<%= connName %>", <%= connection.getName() %>.getClass());
+            inputsHandler_<%=cid%>.addConnection("<%=connName %>", <%=connection.getName() %>!=null ? <%=connection.getName() %>.getClass() : <%=structClassNamePrefix %>Struct.class);
 <%
         }
     }

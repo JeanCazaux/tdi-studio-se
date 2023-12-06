@@ -43,7 +43,7 @@ public class JDBCComponentsUnifier extends AbstractComponentsUnifier {
     public String getComponentName() {
         String componentName = super.getComponentName();
         if (StringUtils.isNotBlank(componentName)) {
-            componentName = componentName.replaceFirst("JDBC", StringUtils.deleteWhitespace(displayName));
+            componentName = "t" + componentName.replaceFirst("JDBC", StringUtils.deleteWhitespace(displayName));
         }
         return componentName;
 

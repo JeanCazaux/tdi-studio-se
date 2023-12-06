@@ -34,7 +34,6 @@ public class CLASS {
     public static final String PARACCEL = "paraccel_id";
     public static final String POSTGRESQL = "postgres_id";
     public static final String REDSHIFT = "redshift_id";
-    public static final String POSTGREPLUS = "postgresplus_id";
     public static final String SQLITE = "sqlite_id";
     public static final String SYBASE = "sybase_id";
     public static final String SNOWFLAKE = "snowflake_id";
@@ -441,7 +440,7 @@ public class CLASS {
                                 }
                                 createSQL.append(suffix);
                             } else {
-                                boolean isSpecialDBAndNotSetLength = (POSTGRESQL.equalsIgnoreCase(getDBMSId()) || POSTGREPLUS.equalsIgnoreCase(getDBMSId())) && column.getColumn().getLength() == null;
+                                boolean isSpecialDBAndNotSetLength = (POSTGRESQL.equalsIgnoreCase(getDBMSId())) && column.getColumn().getLength() == null;
                                 if (!lengthIgnored) {
                                     if (isSpecialDBAndNotSetLength) {
                                     } else { 
@@ -3098,166 +3097,13 @@ public class CLASS {
         }
     }
     
-    public class GreenplumManager extends PostgrePlusManager {
+    public class GreenplumManager extends PostgreManager {
          public GreenplumManager(String cid) {
              super(cid);
          }
          protected String getDBMSId() {
              return GREENPLUM;
          }
-    }
-    public class PostgrePlusManager extends Manager {
-        public PostgrePlusManager(String cid) {
-            super(cid);
-        }
-        protected String getDBMSId() {
-            return POSTGREPLUS;
-        }
-        protected String getLProtectedChar() {
-            return "\\\"";
-        }
-        protected String getRProtectedChar() {
-            return "\\\"";
-        }
-        
-        public String generateSetStmt(String typeToGenerate, Column column, int index, 
-                String incomingConnName, String cid, int actionType) {
-            boolean isObject = false;
-            String prefix = null;
-            if(actionType == NORMAL_TYPE) {
-                prefix = "pstmt_";
-            } else if(actionType == INSERT_TYPE) {
-                prefix = "pstmtInsert_";
-            } else if(actionType == UPDATE_TYPE) {
-                prefix = "pstmtUpdate_";
-            }
-            StringBuilder setStmt = new StringBuilder();
-            if(typeToGenerate.equals("Character")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.CHAR);\r\n");                
-            } else if(typeToGenerate.equals("Date")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.TIMESTAMP);\r\n");                
-            } else if(typeToGenerate.equals("byte[]")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.ARRAY);\r\n");                
-            } else if(typeToGenerate.equals("Long") || typeToGenerate.equals("Byte") || typeToGenerate.equals("Integer") || typeToGenerate.equals("Short")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.INTEGER);\r\n");                
-            } else if(typeToGenerate.equals("String")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.VARCHAR);\r\n");                
-            } else if(typeToGenerate.equals("Object")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.OTHER);\r\n");                
-            } else if(typeToGenerate.equals("Boolean")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.BOOLEAN);\r\n");                
-            } else if(typeToGenerate.equals("Double")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.DOUBLE);\r\n");                
-            } else if(typeToGenerate.equals("Float")) {
-                isObject = true;
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.FLOAT);\r\n");                
-            }
-            if(isObject) {
-                setStmt.append("} else {");
-            }
-            typeToGenerate = getGenerateType(typeToGenerate);
-            if(typeToGenerate.equals("Char") || typeToGenerate.equals("Character")) {
-                if(isObject) {
-                    setStmt.append("if(" + incomingConnName + "." + column.getName() + " == null) {\r\n"); 
-                } else {
-                    setStmt.append("if(String.valueOf(" + incomingConnName + "." + column.getName() + ").toLowerCase().equals(\"null\")) {\r\n");
-                }
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.CHAR);\r\n");
-                setStmt.append("} else if(" + incomingConnName + "." + column.getName() + " == '\0'){\r\n");
-                setStmt.append(prefix + cid + ".setString(" + index + ", \"\");\r\n");
-                setStmt.append("} else {\r\n");
-                setStmt.append(prefix + cid + ".setString(" + index + ", String.valueOf(" + incomingConnName + "." + column.getName() + "));\r\n");
-                setStmt.append("}");
-            } else if(typeToGenerate.equals("Date")) {
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " != null) {\r\n");
-                setStmt.append(prefix + cid + ".setTimestamp(" + index + ", new java.sql.Timestamp(" + incomingConnName + "." + column.getName() + ".getTime()));\r\n");
-                setStmt.append("} else {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.TIMESTAMP);\r\n");
-                setStmt.append("}\r\n");
-            } else if(typeToGenerate.equals("Geometry")) {
-                setStmt.append("if(" + incomingConnName + "." + column.getName() + " != null) {\r\n");
-                // Load geometry
-                setStmt.append(
-                                prefix +
-                                cid +
-                                ".setString(" + 
-                                    index +
-                                    ", ((org.talend.sdi.geometry.Geometry)(" +
-                                    incomingConnName + "." + column.getName() + ")).toString()" +
-                                    ");\r\n");
-                // TODO : should use forceCoordinate first, then getSRID method or -1 if it's null.
-                setStmt.append(
-                                prefix +
-                                cid +
-                                ".setInt(" + 
-                                    index + 
-                                    " + 1, ((org.talend.sdi.geometry.Geometry)(" + 
-                                    incomingConnName + "." + column.getName() + ")).getSRID()" +
-                                    ");\r\n");
-                setStmt.append("} else {\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + ", java.sql.Types.VARCHAR);\r\n");
-                setStmt.append(prefix + cid + ".setNull(" + index + " + 1 , java.sql.Types.INTEGER);\r\n");
-                setStmt.append("}\r\n");    
-            } else {
-                setStmt.append(prefix + cid + ".set" + typeToGenerate + "(" + index + ", " + incomingConnName + "." + column.getName() + ");\r\n");
-            }
-            if(isObject) {
-                setStmt.append("}\r\n");
-            }
-            return setStmt.toString();
-        }
-        
-        public String getUpdateBulkSQL(List<IMetadataColumn> columnList) {
-            StringBuilder updateBulkSQL = new StringBuilder();
-            StringBuilder updateSetStmt = new StringBuilder();
-            StringBuilder updateWhereStmt = new StringBuilder();
-            updateBulkSQL.append("UPDATE " + getLProtectedChar() + "\" +  tableName_" + cid + " + \"" + getRProtectedChar());
-            boolean firstKeyColumn = true;
-            boolean firstUpdateColumn = true;
-            String keySeparator = null;
-            String updateSeparator = null;
-            for(IMetadataColumn column : columnList) {
-                if(column.isKey()) {
-                    if(firstKeyColumn) {
-                        keySeparator = "";
-                        firstKeyColumn = false;
-                        updateWhereStmt.append(" FROM " + getLProtectedChar() + "\" + tmpTableName_" + cid + " + \"" + getRProtectedChar() + " WHERE \" + \"");
-                    } else {
-                        keySeparator = " AND ";
-                    }
-                    updateWhereStmt.append(keySeparator);                    
-                    updateWhereStmt.append(getLProtectedChar() + "\" + tableName_" + cid + " + \"" + getRProtectedChar() + "." + getLProtectedChar() + "\" + \"" + column.getOriginalDbColumnName()  + "\" + \"" + getRProtectedChar() + " = " + getLProtectedChar() + "\" + tmpTableName_" + cid + " + \"" + getRProtectedChar() + "." + getLProtectedChar() + "\" + \"" + column.getOriginalDbColumnName()  + "\" + \"" + getRProtectedChar());
-                } else {
-                    if(firstUpdateColumn) {
-                        updateSeparator = "";
-                        firstUpdateColumn = false;
-                        updateSetStmt.append(" SET \" + \"");
-                    } else {
-                        updateSeparator = ", ";
-                    }
-                    updateSetStmt.append(updateSeparator);
-                    updateSetStmt.append(getLProtectedChar() + "\" + \"" + column.getOriginalDbColumnName()  + "\" + \"" + getRProtectedChar() + " = " + getLProtectedChar() + "\" + tmpTableName_" + cid + " + \"" + getRProtectedChar() + "." + getLProtectedChar() + "\" + \"" + column.getOriginalDbColumnName()  + "\" + \"" + getRProtectedChar());
-                }
-            }
-            return updateBulkSQL.toString() + updateSetStmt.toString() + updateWhereStmt.toString();            
-        }        
     }
     
     public class SQLiteManager extends Manager {
@@ -5013,22 +4859,6 @@ public class CLASS {
         }
     }
     
-    public class PostgrePlusELTManager extends PostgrePlusManager {
-        public PostgrePlusELTManager(String cid) {
-            super(cid);
-        }
-        protected String getLProtectedChar() {
-            return "";
-        }
-        protected String getRProtectedChar() {
-            return "";
-        }
-        
-        protected String getWrappedColumnName(String lProtectedChar, String columnName, String rProtectedChar) {
-            return ColumnHelper.wrapColumnNameByDoubleQuoteIfNecessary(autoWrapColumnName, lProtectedChar, columnName, rProtectedChar);
-        }
-    }
-    
     public class GreenplumELTManager extends GreenplumManager {
         public GreenplumELTManager(String cid) {
             super(cid);
@@ -5218,8 +5048,6 @@ public class CLASS {
                 manager = new NetezzaELTManager(cid);
             } else if(dbmsId.equalsIgnoreCase(ORACLE)) {
                 manager = new OracleELTManager(cid);
-            } else if(dbmsId.equalsIgnoreCase(POSTGREPLUS)) {
-                manager = new PostgrePlusELTManager(cid);
             } else if(dbmsId.equalsIgnoreCase(GREENPLUM)) {
                 manager = new GreenplumELTManager(cid);
             } else if(dbmsId.equalsIgnoreCase(POSTGRESQL)) {
@@ -5291,8 +5119,6 @@ public class CLASS {
                 manager = new NetezzaManager(cid);
             } else if(dbmsId.equalsIgnoreCase(ORACLE)) {
                 manager = new OracleManager(cid);
-            } else if(dbmsId.equalsIgnoreCase(POSTGREPLUS)) {
-                manager = new PostgrePlusManager(cid);
             } else if(dbmsId.equalsIgnoreCase(GREENPLUM)) {
                 manager = new GreenplumManager(cid);
             } else if(dbmsId.equalsIgnoreCase(POSTGRESQL)) {

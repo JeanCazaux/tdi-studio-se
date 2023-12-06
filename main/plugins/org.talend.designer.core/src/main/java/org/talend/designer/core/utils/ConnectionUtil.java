@@ -1,14 +1,20 @@
 package org.talend.designer.core.utils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.process.EConnectionType;
 import org.talend.core.model.process.IConnection;
 import org.talend.core.model.process.IConnectionCategory;
+import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.INode;
 import org.talend.core.model.process.INodeConnector;
 import org.talend.core.model.process.IProcess;
+import org.talend.core.model.utils.TalendTextUtils;
 import org.talend.core.runtime.maven.MavenArtifact;
 import org.talend.core.runtime.maven.MavenUrlHelper;
 import org.talend.core.utils.TalendQuoteUtils;
@@ -82,32 +88,13 @@ public class ConnectionUtil {
 
     }
     
-    public static void resetDriverValue(Object repValue){
-        if(repValue instanceof List){
-            List lines = (List) repValue;
-            for(Object obj: lines){
-                if(!(obj instanceof Map)){
-                    continue;
-                }
-                Map line = (Map) obj;
-                Object value = line.get("drivers");
-                if(value == null){
-                    continue;
-                }
-                if(value instanceof String){
-                    line.put("drivers", getDriverJarFromMvnUrl((String) value));
-                }
-            }
-        }
-    }
-    
     public static void getDriverJar(Object value){
         if(value instanceof List){
             List objs = (List) value;
             for(Object obj : objs){
                 if(obj instanceof Map){
                     Map map = (Map) obj;
-                    String driver = (String) map.get("drivers"); //$NON-NLS-1$
+                    String driver = ConnectionUtil.extractDriverValueFromMap(map);
                     map.put("drivers", getDriverJarFromMvnUrl(driver));//$NON-NLS-1$
                 }
             }
@@ -121,5 +108,48 @@ public class ConnectionUtil {
             return artifact.getFileName();
         }
         return driver;
+    }
+    
+    public static List<Map<String, String>> extractDriverValue(IElementParameter param, Object objectValue) {
+        List<Map<String, String>> newValue = new ArrayList<Map<String, String>>();
+        String key = "JAR_NAME"; //$NON-NLS-1$
+        if (objectValue instanceof List) {
+            String[] names = param.getListItemsDisplayCodeName();
+            if (names.length == 1) {
+                if (!Arrays.asList(names).contains(key)) {
+                    key = names[0];
+                }
+            }
+            List valueList = (List) objectValue;
+            for (Object value : valueList) {
+                if (value instanceof Map) {
+                    Map map = new HashMap();
+                    String driver = extractDriverValueFromMap(((Map) value));
+                    if (driver != null) {
+                        map.put(key, driver);
+                        newValue.add(map);
+                    }
+                }
+            }
+        } else if (objectValue instanceof String) {// Seems no need?
+            Map<String, String> map = new HashMap<String, String>();
+            map.put(key, TalendTextUtils.removeQuotes((String) objectValue));
+            newValue.add(map);
+        }
+        return newValue;
+    }
+
+    public static String extractDriverValueFromMap(Map data) {
+        Object driver = data.get("drivers");
+        if (driver == null) {
+            driver = data.get(TacokitDatabaseConnection.KEY_DRIVER_PATH);
+        }
+        if (driver == null) {
+            driver = data.get(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_PATH);
+        }
+        if (driver != null) {
+            return TalendTextUtils.removeQuotes(String.valueOf(driver));
+        }
+        return null;
     }
 }

@@ -40,8 +40,8 @@ public class PatternValidator extends PropertyValidator {
 
     @Override
     boolean validate(final Object newValue) {
-        if (newValue == null) {
-            return false;
+        if (isEmpty(newValue)) {
+            return true;
         }
         // validate the value by removing surrounding quotes if they exist
         return pattern.test(newValue.toString().replaceAll("^\"|\"$", ""));

@@ -17,8 +17,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.ui.navigator.CommonNavigator;
 import org.eclipse.ui.navigator.CommonViewer;
@@ -27,6 +29,7 @@ import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.utils.RepositoryManagerHelper;
 import org.talend.core.repository.model.ProjectRepositoryNode;
 import org.talend.core.runtime.services.IGenericDBService;
+import org.talend.repository.model.IRepositoryNode;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.IRepositoryNode.EProperties;
 import org.talend.repository.model.RepositoryNode;
@@ -34,6 +37,7 @@ import org.talend.repository.navigator.RepoViewCommonNavigator;
 import org.talend.repository.navigator.RepoViewCommonViewer;
 import org.talend.repository.tester.MetadataNodeTester;
 import org.talend.repository.viewer.content.ProjectRepoDirectChildrenNodeContentProvider;
+import org.talend.repository.viewer.content.VisitResourceHelper;
 import org.talend.repository.viewer.content.listener.ResourceCollectorVisitor;
 
 public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNodeContentProvider {
@@ -50,6 +54,41 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
             return makeUpHideNodes(getTopLevelNodes());
         }
 
+        @Override
+        protected IRepositoryNode getTopNodeFromResourceDelta(final IResourceDelta delta) {
+            if (ERepositoryObjectType.SNOWFLAKE == null) {
+                return null;
+            }
+            Set<RepositoryNode> topLevelNodes = getTopNodes();
+            IPath rootPath = new Path(ERepositoryObjectType.SNOWFLAKE.getFolder());
+            IPath fullPath = delta.getFullPath();
+            if (fullPath == null || fullPath.segmentCount() <= 1) {
+                return ProjectRepositoryNode.getInstance();
+            } else if (fullPath.removeFirstSegments(1).isPrefixOf(rootPath)) {
+                return ProjectRepositoryNode.getInstance().getRootRepositoryNode(ERepositoryObjectType.METADATA_CONNECTIONS);
+            }
+            for (final RepositoryNode repoNode : topLevelNodes) {
+                IPath topLevelNodeWorkspaceRelativePath = getTopLevelNodePath(repoNode);
+                if (topLevelNodeWorkspaceRelativePath != null && topLevelNodeWorkspaceRelativePath.isPrefixOf(fullPath)) {
+                    if (ERepositoryObjectType.SNOWFLAKE == repoNode.getContentType()) {
+                        return ProjectRepositoryNode.getInstance()
+                                .getRootRepositoryNode(ERepositoryObjectType.METADATA_CONNECTIONS);
+                    }
+                    return repoNode;
+                }
+            }
+
+            // handle recyle of folder, since recycle status is only recorded in talend.project
+            VisitResourceHelper visitHelper = new VisitResourceHelper(delta);
+            boolean merged = ProjectRepositoryNode.getInstance().getMergeRefProject();
+            IPath metadataPath = new Path(ERepositoryObjectType.METADATA.getFolder());
+            if (metadataPath != null && visitHelper.valid(metadataPath, merged)) {
+                return ProjectRepositoryNode.getInstance().getRootRepositoryNode(ERepositoryObjectType.METADATA);
+            }
+            // this visitor doesn't handle the current folder
+            return null;
+        }
+
         private Set<RepositoryNode> makeUpHideNodes(Set<RepositoryNode> topNodes){
             Set<RepositoryNode> nodes = new HashSet<RepositoryNode>(topNodes);
             List<ERepositoryObjectType> extraTypes = new ArrayList<ERepositoryObjectType>();
@@ -61,15 +100,17 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
             if(dbService != null){
                 extraTypes.addAll(dbService.getExtraTypes());
             }
-            for(ERepositoryObjectType type : extraTypes){
-                if(RepositoryManagerHelper.findRepositoryView() == null){
-                    return nodes;
+            if (RepositoryManagerHelper.findRepositoryView() != null) {
+                for (ERepositoryObjectType type : extraTypes) {
+                    RepositoryNode jdbc = new RepositoryNode(null,
+                            (RepositoryNode) RepositoryManagerHelper.findRepositoryView().getRoot(), ENodeType.SYSTEM_FOLDER);
+                    jdbc.setProperties(EProperties.CONTENT_TYPE, type);
+                    jdbc.setProperties(EProperties.LABEL, type.getType());
+                    nodes.add(jdbc);
                 }
-                RepositoryNode jdbc = new RepositoryNode(null, (RepositoryNode)RepositoryManagerHelper.findRepositoryView().getRoot(), ENodeType.SYSTEM_FOLDER);
-                jdbc.setProperties(EProperties.CONTENT_TYPE, type);
-                jdbc.setProperties(EProperties.LABEL, type.getType());
-                nodes.add(jdbc);
             }
+            nodes.add(ProjectRepositoryNode.getInstance().getGenericTopNodesMap()
+                    .get(ERepositoryObjectType.SNOWFLAKE.getType()));
             return nodes;
         }
 
@@ -93,7 +134,9 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
         ProjectRepositoryNode projectRepositoryNode = (ProjectRepositoryNode) repoNode.getRoot();
         if (metadataNodeTester.isMetadataTopNode(repoNode)) {
             getTopLevelNodes().clear();
-            getTopLevelNodes().addAll(projectRepositoryNode.getGenericTopNodesMap().values());
+            projectRepositoryNode.getGenericTopNodesMap().entrySet().stream()
+                    .filter(entry -> filterMergedNodeType(entry.getKey()))
+                    .forEach(entry -> getTopLevelNodes().add(entry.getValue()));
             getAndStoreTopLevelNode(projectRepositoryNode); // so as to inherit common settings from parent.
             return getTopLevelNodes().toArray();
         }
@@ -102,6 +145,14 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
             repoNode.setInitialized(true);
         }
         return repoNode.getChildren().toArray();
+    }
+
+    private boolean filterMergedNodeType(String type) {
+        ERepositoryObjectType snowflakeType = ERepositoryObjectType.SNOWFLAKE;
+        if (snowflakeType != null) {
+            return !snowflakeType.getType().equals(type);
+        }
+        return true;
     }
 
     @Override

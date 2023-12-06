@@ -122,6 +122,18 @@ public class TaCoKitConfigurationModel {
         getAllProperties().put(TACOKIT_PARENT_ITEM_ID, parentItemId);
     }
 
+    public boolean isCurrentModelParameter(final String key) {
+        final Map<String, PropertyDefinitionDecorator> tree = buildPropertyTree();
+        Optional<String> configPath;
+        try {
+            configPath = findConfigPath(tree, key);
+            return configPath.isPresent();
+        } catch (Exception e) {
+            ExceptionHandler.process(e);
+        }
+        return false;
+    }
+
     public ValueModel getValue(final String key) throws Exception {
         TaCoKitConfigurationModel parentModel = getParentConfigurationModel();
         if (parentModel != null) {
@@ -138,6 +150,17 @@ public class TaCoKitConfigurationModel {
                     return new ValueModel(parentModel, null, getValueType(parentModel.getConfigTypeNode(), key));
                 }
             } else {
+                String type = modelValue.getType();
+                if (StringUtils.equals(type, "ARRAY")) {
+                    EParameterFieldType eParameterFieldType = getEParameterFieldType(key);
+                    if (eParameterFieldType == EParameterFieldType.TABLE) {
+                        String value = modelValue.getValue();
+                        if (value != null && value.contains(keyStr)) {
+                            String newValue = value.replaceAll(keyStr, key);
+                            return new ValueModel(parentModel, newValue, type);
+                        }
+                    }
+                }
                 return modelValue;
             }
         }
@@ -168,6 +191,21 @@ public class TaCoKitConfigurationModel {
         }
         for (SimplePropertyDefinition property : properties) {
             if (TaCoKitUtil.equals(key, property.getPath())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean isNotENUMTypeParameter(final String key) {
+        List<SimplePropertyDefinition> properties = getConfigTypeNode().getProperties();
+        if (key == null || key.isEmpty() || properties == null || properties.isEmpty()) {
+            return false;
+        }
+        for (SimplePropertyDefinition property : properties) {
+            String type = property.getType();
+            if (TaCoKitUtil.equals(key, property.getPath()) && !StringUtils.equalsIgnoreCase("ENUM", type)
+                    && !StringUtils.equalsIgnoreCase("BOOLEAN", type)) {
                 return true;
             }
         }
@@ -444,9 +482,9 @@ public class TaCoKitConfigurationModel {
 
     public static class BuiltInKeys {
 
-        static final String TACOKIT_CONFIG_ID = "__TACOKIT_CONFIG_ID"; //$NON-NLS-1$
+        public static final String TACOKIT_CONFIG_ID = "__TACOKIT_CONFIG_ID"; //$NON-NLS-1$
 
-        static final String TACOKIT_CONFIG_PARENT_ID = "__TACOKIT_CONFIG_PARENT_ID"; //$NON-NLS-1$
+        public static final String TACOKIT_CONFIG_PARENT_ID = "__TACOKIT_CONFIG_PARENT_ID"; //$NON-NLS-1$
 
         static final String TACOKIT_PARENT_ITEM_ID = "__TACOKIT_PARENT_ITEM_ID"; //$NON-NLS-1$
 

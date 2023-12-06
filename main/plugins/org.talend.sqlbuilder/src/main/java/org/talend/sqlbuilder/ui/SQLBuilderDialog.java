@@ -112,7 +112,7 @@ public class SQLBuilderDialog extends Dialog implements ISQLBuilderDialog, IRepo
     // Added by Tang Fengneng
     private ConnectionParameters connParameters;
 
-    private RepositoryNode node;
+    private IRepositoryNode node;
 
     private RepositoryNode nodeInEditor;
 
@@ -246,7 +246,7 @@ public class SQLBuilderDialog extends Dialog implements ISQLBuilderDialog, IRepo
         SqlBuilderPlugin.getDefault().getRepositoryService().registerRepositoryChangedListener(this);
     }
 
-    public SQLBuilderDialog(Shell parentShell, RepositoryNode node, String selectedContext) {
+    public SQLBuilderDialog(Shell parentShell, IRepositoryNode node, String selectedContext) {
         super(parentShell);
         this.node = node;
         this.selectedContext = selectedContext;
@@ -444,8 +444,7 @@ public class SQLBuilderDialog extends Dialog implements ISQLBuilderDialog, IRepo
             if (this.nodeInEditor != null) {
                 RepositoryNode root = SQLBuilderRepositoryNodeManager.getRoot(this.nodeInEditor);
                 if (root != null) {
-                    DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) root.getObject().getProperty()
-                            .getItem()).getConnection();
+                    DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(root);
                     shutDownDb(connection);
                 }
             }
@@ -671,8 +670,7 @@ public class SQLBuilderDialog extends Dialog implements ISQLBuilderDialog, IRepo
     private void deleteNoUseTable() {
 
         // add for bug TDI-17097
-        connection = (DatabaseConnection) SQLBuilderRepositoryNodeManager.getItem(
-                SQLBuilderRepositoryNodeManager.getRoot(nodeInEditor)).getConnection();
+        connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection( SQLBuilderRepositoryNodeManager.getRoot(nodeInEditor));
         if (SQLBuilderRepositoryNodeManager.tList instanceof List) {
             if (SQLBuilderRepositoryNodeManager.tList.size() == 0) {
                 SQLBuilderRepositoryNodeManager.tList.addAll(ConnectionHelper.getTables(connection));

@@ -35,6 +35,10 @@ public final class JobSettingsConstants {
 
     public static final String IMPLICIT_TCONTEXTLOAD_REGEX = "REGEX"; //$NON-NLS-1$
 
+    public static final String JDBC_INPUT = "JDBCInput"; //$NON-NLS-1$
+
+    public static final String JDBC_OUTPUT = "JDBCOutput"; //$NON-NLS-1$
+
     /**
      *
      */
@@ -62,22 +66,24 @@ public final class JobSettingsConstants {
     private static final String[] PERL_DB_INPUT_COMPONENTS = new String[] {
             "tDBInput", "tMysqlInput", "tDBInput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
             ORACLE_INPUT_SID_ALIAS, ORACLE_INOUT_SN_ALIAS, ORACLE_INOUT_OCI_ALIAS,
-            "tPostgresPlusInput", "tPostgresqlInput", "tDB2Input", "tSybaseInput", "tIngresInput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$//$NON-NLS-5$
+            "tPostgresqlInput", "tDB2Input", "tSybaseInput", "tIngresInput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
+                                                                             // //$NON-NLS-5$
             "tInterbaseInput", "tSQLiteInput", "tFirebirdInput", "tInformixInput", "tAccessInput", "tTeradataInput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
 
     private static final String[] JAVA_DB_INPUT_COMPONENTS = new String[] {
-            "tJDBCInput", "tMysqlInput", "tMSSqlInput", ORACLE_INPUT_SID_ALIAS, ORACLE_INOUT_SN_ALIAS, ORACLE_INOUT_OCI_ALIAS, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            "tPostgresPlusInput", "tPostgresqlInput", "tDB2Input", "tSybaseInput", "tIngresInput", "tSQLiteInput", "tFirebirdInput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+            JDBC_INPUT, "tMysqlInput", "tMSSqlInput", ORACLE_INPUT_SID_ALIAS, ORACLE_INOUT_SN_ALIAS, ORACLE_INOUT_OCI_ALIAS, //$NON-NLS-1$ //$NON-NLS-2$
+            "tPostgresqlInput", "tDB2Input", "tSybaseInput", "tIngresInput", "tSQLiteInput", "tFirebirdInput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
             "tInformixInput", "tAccessInput", "tTeradataInput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
 
     public static final String[] JAVA_DB_OUTPUT_COMPONENTS = new String[] {
-            "tJDBCOutput", "tMysqlOutput", "tMSSqlOutput", ORACLE_OUTPUT_SID_ALIAS, ORACLE_OUTPUT_SN_ALIAS, //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
-            ORACLE_OUTPUT_OCI_ALIAS, "tPostgresPlusOutput", "tPostgresqlOutput", "tDB2Output", "tSybaseOutput", "tIngresOutput", "tSQLiteOutput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+            JDBC_OUTPUT, "tMysqlOutput", "tMSSqlOutput", ORACLE_OUTPUT_SID_ALIAS, ORACLE_OUTPUT_SN_ALIAS, //$NON-NLS-1$ //$NON-NLS-2$
+            ORACLE_OUTPUT_OCI_ALIAS, "tPostgresqlOutput", "tDB2Output", "tSybaseOutput", "tIngresOutput", "tSQLiteOutput", //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
             "tFirebirdOutput", "tInformixOutput", "tAccessOutput", "tTeradataOutput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$
 
     private static final String[] PERL_DB_OUTPUT_COMPONENTS = new String[] {
             "tMysqlOutput", ORACLE_OUTPUT_SID_ALIAS, ORACLE_OUTPUT_SN_ALIAS, ORACLE_OUTPUT_OCI_ALIAS, //$NON-NLS-1$
-            "tPostgresPlusOutput", "tPostgresqlOutput", "tDB2Output", "tSybaseOutput", "tSQLiteOutput", "tFirebirdOutput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$ //$NON-NLS-6$
+            "tPostgresqlOutput", "tDB2Output", "tSybaseOutput", "tSQLiteOutput", "tFirebirdOutput" }; //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$ //$NON-NLS-4$ //$NON-NLS-5$
+                                                                                                      // //$NON-NLS-6$
 
     public static final String[][] DB_OUTPUT_COMPONENTS = new String[][] { PERL_DB_OUTPUT_COMPONENTS, JAVA_DB_OUTPUT_COMPONENTS };
 

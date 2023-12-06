@@ -38,6 +38,8 @@ public class TaCoKitConfigurationRuntimeData {
 
     private String[] existingNames;
 
+    private String additionalJDBCType;
+
     public TaCoKitConfigurationRuntimeData() {
         problemManagers = new LinkedHashSet<>();
     }
@@ -96,6 +98,14 @@ public class TaCoKitConfigurationRuntimeData {
 
     public void setExistingNames(final String[] existingNames) {
         this.existingNames = existingNames;
+    }
+
+    public String getAdditionalJDBCType() {
+        return additionalJDBCType;
+    }
+
+    public void setAdditionalJDBCType(String additionalJDBCType) {
+        this.additionalJDBCType = additionalJDBCType;
     }
 
     public Set<WizardProblemManager> getProblemManagers() {

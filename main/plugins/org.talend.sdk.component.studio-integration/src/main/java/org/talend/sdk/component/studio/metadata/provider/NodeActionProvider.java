@@ -48,47 +48,52 @@ public class NodeActionProvider extends MetedataNodeActionProvier {
             return;
         }
         final Object selObj = sel.getFirstElement();
+        
         List<ITreeContextualAction> actions = new ArrayList<>();
         if (selObj instanceof ITaCoKitRepositoryNode) {
             ITaCoKitRepositoryNode tacokitNode = (ITaCoKitRepositoryNode) selObj;
-            ConfigTypeNode configTypeNode = tacokitNode.getConfigTypeNode();
-            if (configTypeNode != null) {
-                if (tacokitNode.isFamilyNode() || tacokitNode.isLeafNode()) {
-                    Set<String> edges = configTypeNode.getEdges();
-                    if (edges != null && !edges.isEmpty()) {
-                        TaCoKitCache cache = Lookups.taCoKitCache();
-                        Map<String, ConfigTypeNode> configTypeNodeMap = cache.getConfigTypeNodeMap();
-                        List<String> edgeArray = new LinkedList<String>(edges);
-                        Collections.sort(edgeArray);
-                        for (String edge : edgeArray) {
-                            ConfigTypeNode subTypeNode = configTypeNodeMap.get(edge);
-                            ITreeContextualAction createAction = new CreateTaCoKitConfigurationAction(subTypeNode);
-                            createAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
-                            createAction.setImageDescriptor(ImageProvider.getImageDesc(EImage.ADD_ICON));
-                            actions.add(createAction);
-                        }
-                        if (tacokitNode.isFamilyNode()) {
-                            if (TaCoKitUtil.hideConfigFolderOnSingleEdge() && edgeArray.size() == 1) {
-                                TaCoKitCreateFolderAction createFolderAction = new TaCoKitCreateFolderAction(
-                                        configTypeNodeMap.get(edges.iterator().next()));
-                                createFolderAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
-                                actions.add(createFolderAction);
+            if (!TaCoKitMetadataContentProvider.isJDBCLeafNode(tacokitNode)) {
+                ConfigTypeNode configTypeNode = tacokitNode.getConfigTypeNode();
+                if (configTypeNode != null) {
+                    if (tacokitNode.isFamilyNode() || tacokitNode.isLeafNode()) {
+                        Set<String> edges = configTypeNode.getEdges();
+                        if (edges != null && !edges.isEmpty()) {
+                            TaCoKitCache cache = Lookups.taCoKitCache();
+                            Map<String, ConfigTypeNode> configTypeNodeMap = cache.getConfigTypeNodeMap();
+                            List<String> edgeArray = new LinkedList<String>(edges);
+                            Collections.sort(edgeArray);
+                            for (String edge : edgeArray) {
+                                ConfigTypeNode subTypeNode = configTypeNodeMap.get(edge);
+                                ITreeContextualAction createAction = new CreateTaCoKitConfigurationAction(subTypeNode);
+                                createAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
+                                createAction.setImageDescriptor(ImageProvider.getImageDesc(EImage.ADD_ICON));
+                                actions.add(createAction);
+                            }
+                            if (tacokitNode.isFamilyNode()) {
+                                if (TaCoKitUtil.hideConfigFolderOnSingleEdge() && edgeArray.size() == 1) {
+                                    TaCoKitCreateFolderAction createFolderAction = new TaCoKitCreateFolderAction(
+                                            configTypeNodeMap.get(edges.iterator().next()));
+                                    createFolderAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
+                                    actions.add(createFolderAction);
+                                }
                             }
                         }
+                    } else if (tacokitNode.isConfigNode() || tacokitNode.isFolderNode()) {
+                        if (tacokitNode.isConfigNode() && ((TaCoKitConfigurationRepositoryNode) tacokitNode).isDeprecated()) {
+                            return;
+                        }
+                        ITreeContextualAction createAction = new CreateTaCoKitConfigurationAction(configTypeNode);
+                        createAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
+                        createAction.setImageDescriptor(ImageProvider.getImageDesc(EImage.ADD_ICON));
+                        actions.add(createAction);
                     }
-                } else if (tacokitNode.isConfigNode() || tacokitNode.isFolderNode()) {
-                    if (tacokitNode.isConfigNode() && ((TaCoKitConfigurationRepositoryNode) tacokitNode).isDeprecated()) {
-                        return;
-                    }
-                    ITreeContextualAction createAction = new CreateTaCoKitConfigurationAction(configTypeNode);
-                    createAction.init((TreeViewer) getActionSite().getStructuredViewer(), sel);
-                    createAction.setImageDescriptor(ImageProvider.getImageDesc(EImage.ADD_ICON));
-                    actions.add(createAction);
                 }
+                // manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
+                super.fillContextMenu(manager);
             }
-            // manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
         }
-        super.fillContextMenu(manager);
+
+
 
         if (actions.isEmpty()) {
             return;

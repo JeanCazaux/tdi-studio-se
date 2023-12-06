@@ -4,16 +4,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.talend.commons.exception.ExceptionHandler;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.Element;
 import org.talend.core.model.process.IElementParameter;
+import org.talend.core.model.properties.ConnectionItem;
 import org.talend.designer.core.model.FakeElement;
 import org.talend.designer.core.model.components.DummyComponent;
 import org.talend.designer.core.model.components.EParameterName;
 import org.talend.designer.core.model.components.ElementParameter;
 import org.talend.designer.core.model.process.DataNode;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
+import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.model.parameter.Metadatas;
 import org.talend.sdk.component.studio.model.parameter.PropertyNode;
 import org.talend.sdk.component.studio.model.parameter.PropertyTreeCreator;
@@ -36,8 +40,22 @@ public class TaCoKitPageBuildHelper {
         element.setReadOnly(runtimeData.isReadonly());
         final ElementParameter updateParameter = createUpdateComponentsParameter(element);
         this.parameters.add(updateParameter);
+        ConnectionItem connectionItem = runtimeData.getConnectionItem();
+        Connection connection = null;
+        if (connectionItem != null) {
+            connection = connectionItem.getConnection();
+            TaCoKitConfigurationModel taCoKitConfigurationModel = new TaCoKitConfigurationModel(connection);
+            try {
+                TaCoKitConfigurationModel parentConfigurationModel = taCoKitConfigurationModel.getParentConfigurationModel();
+                if (parentConfigurationModel != null) {
+                    connection = parentConfigurationModel.getConnection();
+                }
 
-        final DummyComponent component = new DummyComponent(configTypeNode.getDisplayName());
+            } catch (Exception e) {
+                ExceptionHandler.process(e);
+            }
+        }
+        final DummyComponent component = new DummyComponent(configTypeNode.getDisplayName(), connection);
         final DataNode node = new DataNode(component, component.getName());
         this.settingsCreator = new SettingVisitor(node, updateParameter, configTypeNode);
     }
@@ -56,6 +74,10 @@ public class TaCoKitPageBuildHelper {
         return parameters.stream()
                 .filter((IElementParameter p) -> this.filterForParam(p, form))
                 .collect(Collectors.toList());
+    }
+    
+    public List<IElementParameter> getParameters() {
+        return parameters;
     }
 
     private boolean filterForParam(IElementParameter param, String form) {

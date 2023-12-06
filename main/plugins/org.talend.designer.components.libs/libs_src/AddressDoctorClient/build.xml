@@ -16,8 +16,8 @@
 		<pathelement location="${component.plugin.home}/tWebServiceInput/axis.jar" />
 		<pathelement location="${component.plugin.home}/tWebServiceInput/commons-discovery-0.2.jar" />
 		<pathelement location="${component.plugin.home}/tWebServiceInput/wsdl4j-1.5.1.jar" />
-		<pathelement location="${component.plugin.home}/tWebServiceInput/saaj.jar" />
-		<pathelement location="${component.plugin.home}/tWebServiceInput/jaxrpc.jar" />
+		<pathelement location="${component.plugin.home}/tWebServiceInput/axis-saaj-1.4.jar" />
+		<pathelement location="${component.plugin.home}/tWebServiceInput/axis-jaxrpc-1.4.jar" />
 		<pathelement location="${component.plugin.home}/tXMLRPCInput/commons-logging-1.1.jar" />
 	</path>
 

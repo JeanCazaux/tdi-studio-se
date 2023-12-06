@@ -179,13 +179,17 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee.getMessage());
 
 		BigQueryUtil_<%=cid%> bigQueryUtil_<%=cid%> = new BigQueryUtil_<%=cid%>(PROJECT_ID_<%=cid%>, bigqueryclient_<%=cid%>,  <% if (authMode.equals("OAUTH")) { %> tokenFile_<%=cid%> <% } else { %> null <%}%>);
 	<%
-	} else if (authMode.equals("SERVICEACCOUNT")) {
+	} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 	%>
 		com.google.auth.oauth2.GoogleCredentials credentials_<%=cid%>;
+		<% if(authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) { %>
+            credentials_<%=cid%> = com.google.auth.oauth2.GoogleCredentials.getApplicationDefault();
+        <% } else { %>
 		java.io.File credentialsFile_<%=cid%> = new java.io.File(<%=credentialsFile%>);
 		try(java.io.FileInputStream credentialsStream_<%=cid%> = new java.io.FileInputStream(credentialsFile_<%=cid%>)) {
 		    credentials_<%=cid%> = com.google.auth.oauth2.ServiceAccountCredentials.fromStream(credentialsStream_<%=cid%>);
 		}
+		<% } %>
 
 		com.google.cloud.bigquery.BigQueryOptions.Builder bigQueryOptionsBuilder_<%=cid%> = com.google.cloud.bigquery.BigQueryOptions.newBuilder().setCredentials(credentials_<%=cid%>).setProjectId(<%=projectId%>);
 		<% if( "true".equals(ElementParameterParser.getValue(node, "__USE_REGION_ENDPOINT__")) ){ %>
@@ -195,6 +199,6 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee.getMessage());
 
 	<%
 	} else {
-		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\" or \"OAUTH\", but it is " + authMode);
+		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\" or \"OAUTH\", but it is " + authMode);
 	}
 		%>

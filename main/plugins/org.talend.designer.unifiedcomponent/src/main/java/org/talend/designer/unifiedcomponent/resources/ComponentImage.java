@@ -41,7 +41,8 @@ public enum ComponentImage implements IImage {
     tDBCDCOutput("/icons/tDBCDCOutput_icon32.png"),
     tNetSuiteConnection("/icons/tNetSuiteConnection_icon32.png"),
     tNetSuiteInput("/icons/tNetSuiteInput_icon32.png"),
-    tNetSuiteOutput("/icons/tNetSuiteOutput_icon32.png");
+    tNetSuiteOutput("/icons/tNetSuiteOutput_icon32.png"),
+    tDataprepRun("/icons/tDataprepRun_icon32.png");
 
     private String path;
 

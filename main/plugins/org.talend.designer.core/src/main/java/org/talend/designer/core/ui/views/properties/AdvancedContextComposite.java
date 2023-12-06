@@ -51,6 +51,8 @@ import org.talend.commons.ui.swt.proposal.TextCellEditorWithProposal;
 import org.talend.commons.ui.swt.tableviewer.TableViewerCreator;
 import org.talend.commons.ui.swt.tableviewer.TableViewerCreatorColumn;
 import org.talend.commons.utils.data.bean.IBeanPropertyAccessors;
+import org.talend.core.GlobalServiceRegister;
+import org.talend.core.model.components.IComponent;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.Element;
@@ -58,6 +60,8 @@ import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.IProcess2;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.utils.TalendPropertiesUtil;
+import org.talend.core.service.ITCKUIService;
+import org.talend.core.service.ITaCoKitDependencyService;
 import org.talend.core.ui.CoreUIPlugin;
 import org.talend.core.ui.process.IGEFProcess;
 import org.talend.core.ui.properties.tab.IDynamicProperty;
@@ -166,16 +170,27 @@ public class AdvancedContextComposite extends ScrolledComposite implements IDyna
     private void needContextModeParameters() {
         legalParameters.clear();
         for (IElementParameter parameter : node.getElementParameters()) {
-            if (parameter.isDynamicSettings()
-                    && parameter.isShow(node.getElementParameters())
-                    && parameter.getCategory() != EComponentCategory.TECHNICAL
-                    && (parameter.getFieldType() == EParameterFieldType.CHECK
-                            || parameter.getFieldType() == EParameterFieldType.CLOSED_LIST
-                            || parameter.getFieldType() == EParameterFieldType.MODULE_LIST
-                            || parameter.getFieldType() == EParameterFieldType.RADIO || parameter.getFieldType() == EParameterFieldType.COMPONENT_LIST)) {
-                legalParameters.add(parameter);
+            if (parameter.isDynamicSettings() && parameter.isShow(node.getElementParameters())
+                    && parameter.getCategory() != EComponentCategory.TECHNICAL) {
+                if (parameter.getFieldType() == EParameterFieldType.CHECK
+                        || parameter.getFieldType() == EParameterFieldType.CLOSED_LIST
+                        || parameter.getFieldType() == EParameterFieldType.MODULE_LIST
+                        || parameter.getFieldType() == EParameterFieldType.RADIO) {
+                    legalParameters.add(parameter);
+                } else if (parameter.getFieldType() == EParameterFieldType.COMPONENT_LIST
+                        && !isTacokitJDBCComponent(node.getComponent())) { // Hide component list for Tacokit JDBC
+                                                                           // component
+                    legalParameters.add(parameter);
+                }
             }
         }
+    }
+
+    private boolean isTacokitJDBCComponent(IComponent component) {
+        if ("JDBC".equals(ITCKUIService.get().getComponentFamilyName(component))) {
+            return true;
+        }
+        return false;
     }
 
     /**

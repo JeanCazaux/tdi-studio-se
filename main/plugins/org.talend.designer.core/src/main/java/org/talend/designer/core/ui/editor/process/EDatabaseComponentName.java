@@ -35,6 +35,7 @@ import org.talend.core.model.properties.RegExFileConnectionItem;
 import org.talend.core.model.properties.RulesItem;
 import org.talend.core.model.properties.SAPConnectionItem;
 import org.talend.core.model.properties.SalesforceSchemaConnectionItem;
+import org.talend.core.model.properties.TacokitDatabaseConnectionItem;
 import org.talend.core.model.properties.WSDLSchemaConnectionItem;
 import org.talend.core.model.properties.XmlFileConnectionItem;
 import org.talend.core.model.properties.impl.ConnectionItemImpl;
@@ -44,7 +45,7 @@ import org.talend.core.model.utils.IComponentName;
 /**
  * DOC bqian TalendEditor class global comment. Detailled comment <br/>
  *
- * $Id: talend.epf 1 2006-09-29 17:06:40 +0000 (Ã¦Â˜ÂŸÃ¦ÂœÂŸÃ¤ÂºÂ”, 29 Ã¤Â¹Â�Ã¦ÂœÂˆ 2006) nrousseau $
+ * $Id: talend.epf 1 2006-09-29 17:06:40 +0000 (脙娄脗藴脗鸥脙娄脗艙脗鸥脙陇脗潞脗鈥�, 29 脙陇脗鹿脗锟矫兟γ偱撁偹� 2006) nrousseau $
  *
  * @deprecated use extension point in class RepositoryComponentManager
  */
@@ -72,7 +73,6 @@ public enum EDatabaseComponentName implements IComponentName {
     REDSHIFT_SSO(DatabaseConnectionItem.class, EDatabaseTypeName.REDSHIFT_SSO, "tRedshiftInput", "tRedshiftOutput", true),
     NETEZZA(DatabaseConnectionItem.class, EDatabaseTypeName.NETEZZA, "tNetezzaInput", "tNetezzaOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
 
-    DBPLUSPSQL(DatabaseConnectionItem.class, EDatabaseTypeName.PLUSPSQL, "tPostgresPlusInput", "tPostgresPlusOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
     DBORACLEFORSID(DatabaseConnectionItem.class, EDatabaseTypeName.ORACLEFORSID, "tOracleInput", "tOracleOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
 
     DBORACLESN(DatabaseConnectionItem.class, EDatabaseTypeName.ORACLESN, "tOracleInput", "tOracleOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
@@ -86,7 +86,8 @@ public enum EDatabaseComponentName implements IComponentName {
     AS400(DatabaseConnectionItem.class, EDatabaseTypeName.AS400, "tAS400Input", "tAS400Output", true), //$NON-NLS-1$ //$NON-NLS-2$
 
     // General JDBC
-    GENERAL_JDBC(DatabaseConnectionItem.class, EDatabaseTypeName.GENERAL_JDBC, "tJDBCInput", "tJDBCOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
+    GENERAL_JDBC(TacokitDatabaseConnectionItem.class, EDatabaseTypeName.GENERAL_JDBC, "JDBCInput", "JDBCOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
+    
     // this Sybase IQ not used.
     // SYBASEIQ(DatabaseConnectionItem.class,"SYBASE", "Sybase IQ", new Boolean(false), "SYBASE"),
     MSSQLODBC(DatabaseConnectionItem.class, EDatabaseTypeName.MSSQL, "tMSSqlInput", "tMSSqlOutput", true), //$NON-NLS-1$ //$NON-NLS-2$
@@ -314,7 +315,6 @@ public enum EDatabaseComponentName implements IComponentName {
     }
 
     private static EDatabaseComponentName getCorrespondingComponentName(Item item, boolean flag) {
-
         for (EDatabaseComponentName typeName : EDatabaseComponentName.values()) {
             if (typeName.getMappingKey().isAssignableFrom(item.getClass())) {
 

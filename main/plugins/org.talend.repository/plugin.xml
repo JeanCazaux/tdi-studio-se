@@ -3570,6 +3570,31 @@
              version="7.4.1">
        </projecttask>
        <projecttask
+             breaks="8.0.0"
+             class="org.talend.repository.model.migration.ReplacePostgresPlusConnectionByPostgresConnectionMigrationTask"
+             description="replace PostgresPlusConnection By PostgresConnection"
+             id="org.talend.repository.model.migration.ReplacePostgresPlusConnectionByPostgresConnectionMigrationTask"
+             name="ReplacePostgresPlusConnectionByPostgresConnectionMigrationTask"
+             version="8.0.1">
+       </projecttask>
+        <projecttask
+             breaks="8.0.0"
+             class="org.talend.repository.model.migration.ChangeToPostgresInJobSettingsMigrationTask"
+             description="change to Postgres in JobSettings"
+             id="org.talend.repository.model.migration.ChangeToPostgresInJobSettingsMigrationTask"
+             name="ChangeToPostgresInJobSettingsMigrationTask"
+             version="8.0.1">
+       </projecttask>
+       <projecttask
+       		 beforeLogon="true"
+             breaks="8.0.0"
+             class="org.talend.repository.model.migration.ChangePostgresPlusDBType4ProjectSettingsMigrationTask"
+             description="change to Postgres in ProjectSettings"
+             id="org.talend.repository.model.migration.ChangePostgresPlusDBType4ProjectSettingsMigrationTask"
+             name="ChangePostgresPlusDBType4ProjectSettingsMigrationTask"
+             version="8.0.1">
+       </projecttask>
+       <projecttask
               beforeLogon="false"
               breaks="7.3.0"
               class="org.talend.repository.model.migration.FixUpgradePasswordEncryptionAlg4ItemMigrationTask"
@@ -3864,15 +3889,6 @@
               version="8.0.1">
         </projecttask>
         <projecttask
-              beforeLogon="true"
-              breaks="8.0.0"
-              class="org.talend.repository.model.migration.RemoveUnwantedUsageDataMigrationTask"
-              description="Remove unwanted old entried from prefrence store for Usage Data Collection"
-              id="org.talend.repository.model.migration.RemoveUnwantedUsageDataMigrationTask"
-              name="RemoveUnwantedUsageDataMigrationTask"
-              version="8.0.1">
-        </projecttask>
-        <projecttask
               beforeLogon="false"
               breaks="8.0.1"
               class="org.talend.repository.model.migration.ReplaceSQSCheckBoxWithDropDownListMigrationTask"
@@ -3900,6 +3916,24 @@
                name="ChangeDefaultValueLocalFileCopyInPostgresql"
                version="8.0.1">
        </projecttask>
+       <projecttask
+               beforeLogon="true"
+               breaks="8.0.1"
+               class="org.talend.repository.model.migration.RenameDBTypeInProjectSettingsMigrationTask"
+               description="Rename db type of project settings implicit context load and stats logs"
+               id="org.talend.repository.model.migration.RenameDBTypeInProjectSettingsMigrationTask"
+               name="RenameDBTypeInProjectSettingsMigrationTask"
+               version="8.0.1">
+       </projecttask>
+       <projecttask
+               beforeLogon="false"
+               breaks="8.0.1"
+               class="org.talend.repository.model.migration.RenameDBTypeInJobSettingsMigrationTask"
+               description="Rename db type of job settings implicit context load and stats logs"
+               id="org.talend.repository.model.migration.RenameDBTypeInJobSettingsMigrationTask"
+               name="RenameDBTypeInJobSettingsMigrationTask"
+               version="8.0.1">
+       </projecttask>
         <projecttask
                beforeLogon="false"
                breaks="8.0.0"
@@ -3909,8 +3943,16 @@
                name="ReplaceBackSlashWithSlashInGSPut"
                version="8.0.1">
         </projecttask>
+       <projecttask
+               beforeLogon="false"
+               breaks="8.0.1"
+               class="org.talend.repository.model.migration.UnifyPostgresPlusComponentsToReusePostgres"
+               description="Unify tPostgresPlus component to reuse tPostgres"
+               id="org.talend.repository.model.migration.UnifyPostgresPlusComponentsToReusePostgres"
+               name="UnifyPostgresPlusComponentsToReusePostgres"
+               version="8.0.1">
+       </projecttask>
    </extension>
-
    <extension
          point="org.talend.core.runtime.librariesNeeded">
       <libraryNeeded

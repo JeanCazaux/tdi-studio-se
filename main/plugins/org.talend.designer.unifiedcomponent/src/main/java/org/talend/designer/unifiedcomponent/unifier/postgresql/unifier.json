@@ -65,6 +65,14 @@
         "exclude":"PORT,DB_VERSION"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tPostgresqlCDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT,DB_VERSION"}
+},
+{
     "component_delegate":"tDBInvalidRows",
     "component":"tPostgresqlInvalidRows",
     "category":"DI",

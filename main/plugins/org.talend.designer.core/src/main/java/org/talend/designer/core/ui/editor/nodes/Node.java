@@ -1292,8 +1292,9 @@ public class Node extends Element implements IGraphicalNode {
      */
     @Override
     public String getLabel() {
-		if (label == null)
-			label = this.getUniqueName();
+		if (label == null) {
+            label = this.getUniqueName();
+        }
 		return label;
     }
 
@@ -4375,12 +4376,15 @@ public class Node extends Element implements IGraphicalNode {
         boolean eltComponent = isELTComponent();
         IComponent _component = node.getComponent();
         boolean isEBCDIC = _component.getName().contains("EBCDIC");
+        boolean isGeneric = component.getComponentType() == EComponentType.GENERIC;
         if (_component != null && _component.isSupportDbType() || _component.getOriginalFamilyName().startsWith(DATABASE_LABEL)
                 || eltComponent || isEBCDIC) {
-            for (IElementParameter currentParam : getElementParameters()) {
-                if (EParameterFieldType.MAPPING_TYPE.equals(currentParam.getFieldType())) {
-                    hasMappingType = true;
-                    break;
+            if (!isGeneric) {
+                for (IElementParameter currentParam : getElementParameters()) {
+                    if (EParameterFieldType.MAPPING_TYPE.equals(currentParam.getFieldType())) {
+                        hasMappingType = true;
+                        break;
+                    }
                 }
             }
         }
@@ -4665,7 +4669,9 @@ public class Node extends Element implements IGraphicalNode {
         if (getComponent() != null && "tRunJob".equals(getComponent().getName()) 
                 && EParameterName.PROCESS_TYPE_VERSION.getName().equals(param.getName())) {
             String version = (String) param.getValue();
-            if (StringUtils.isBlank(version) || version.equals(ItemCacheManager.LATEST_VERSION)) return;
+            if (StringUtils.isBlank(version) || version.equals(ItemCacheManager.LATEST_VERSION)) {
+                return;
+            }
             boolean found = false;
             if (param.getListItemsValue().length > 1) {
                 //if the items value has been set besides 'Latest'
@@ -4683,7 +4689,9 @@ public class Node extends Element implements IGraphicalNode {
                 
                 Map<String, IElementParameter> childParameters = thisElement.getChildParameters();
                 IElementParameter jobNameParam = childParameters.get(EParameterName.PROCESS_TYPE_PROCESS.getName());
-                if (jobNameParam == null) return;
+                if (jobNameParam == null) {
+                    return;
+                }
                 
                 final String strJobId = (String) jobNameParam.getValue();
                 String[] strJobIds = strJobId.split(";");

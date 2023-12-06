@@ -19,7 +19,6 @@
    <requires>
       <import feature="org.talend.studio.components.tck.jira.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tck.splunk.feature" version="0.0.0" match="greaterOrEqual"/>
-      <import feature="org.talend.studio.components.tcompv0.jdbc.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.netsuite.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.googledrive.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.marketo.feature" version="0.0.0" match="greaterOrEqual"/>
@@ -158,7 +157,7 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-         
+
    <plugin
          id="org.talend.designer.filemultischemas"
          download-size="0"
@@ -242,12 +241,18 @@
          install-size="0"
          version="0.0.0"
          unpack="false"/>
-		 
-	<plugin
+
+   <plugin
          id="org.talend.designer.esb.components.rs.consumer"
          download-size="0"
          install-size="0"
          version="0.0.0"
          unpack="false"/>
+
+   <plugin
+         id="org.talend.studio.components.tck.jdbc"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
 
 </feature>

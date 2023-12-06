@@ -78,7 +78,7 @@
                 insert_jobs_<%=cid%> = java.util.Collections.singletonList(insert_<%=cid%>);
             }
 	<%
-	} else if (authMode.equals("SERVICEACCOUNT")) {
+	} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 	%>
 		com.google.cloud.bigquery.QueryJobConfiguration queryConfiguration_<%=cid%> = com.google.cloud.bigquery.QueryJobConfiguration.newBuilder(<%=query%>).setUseLegacySql(<%=useLegacySql%>).build();
 		com.google.cloud.bigquery.JobId jobId_<%=cid%> = com.google.cloud.bigquery.JobId.of(java.util.UUID.randomUUID().toString());
@@ -143,7 +143,7 @@
 		%>
 	<%
 	} else {
-		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 	}
 
 		List< ? extends IConnection> conns = node.getOutgoingSortedConnections();
@@ -184,7 +184,7 @@
 								Object value_<%=cid%> = null;
 								nb_line_<%=cid%> ++;
 						<%
-					} else if (authMode.equals("SERVICEACCOUNT")) {
+					} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 						%>
                         long nb_line_<%=cid%> = 0;
                         for (com.google.cloud.bigquery.Job job_iterable_<%=cid%> : childJobs_<%=cid%>) {
@@ -202,7 +202,7 @@
                                 nb_line_<%=cid%> ++;
 					<%
 					} else {
-						throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+						throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 					}
 
 					List<IMetadataTable> metadatas = node.getMetadataList();
@@ -228,12 +228,12 @@
 								%>
 								value_<%=cid%> = field_<%=cid %>.get(<%=i%>).getV();
 								<%
-								} else if (authMode.equals("SERVICEACCOUNT")) {
+								} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 								%>
 								value_<%=cid%> = field_<%=cid %>.get(<%=i%>).getValue();
 								<%
 								} else {
-									throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+									throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 								}
 								%>
 								if(com.google.api.client.util.Data.isNull(value_<%=cid%>)) value_<%=cid%> = null;

@@ -167,8 +167,7 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
         if (isRefresh) {
             refreshRootNode(rootNode);
             rootNode.getChildren().clear();
-            DatabaseConnection metadataConnection = (DatabaseConnection) ((ConnectionItem) rootNode.getObject().getProperty()
-                    .getItem()).getConnection();
+            DatabaseConnection metadataConnection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(rootNode);
             createTables(rootNode, rootNode.getObject(), metadataConnection, isBuildIn);
             createQueries(rootNode, rootNode.getObject(), metadataConnection, isBuildIn);
             isRefresh = false;
@@ -182,8 +181,7 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
                 if (type == RepositoryNodeType.TABLE) {
                     try {
                         MetadataTable table = ((MetadataTableRepositoryObject) repositoryNode.getObject()).getTable();
-                        DatabaseConnectionItem connItem = repositoryNodeManager.getItem(repositoryNode);
-                        DatabaseConnection dbConn = (DatabaseConnection) connItem.getConnection();
+                        DatabaseConnection dbConn = SQLBuilderRepositoryNodeManager.getDatabaseConnection(repositoryNode);
                         IMetadataConnection iMetadataConnection = ConvertionHelper.convert(dbConn);
                         repositoryNode.getChildren().clear();
                         repositoryNodeManager.modifyOldRepositoryNode(dbConn, iMetadataConnection, repositoryNode);
@@ -239,8 +237,13 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
         }
         RepositoryNode treeRoot = (RepositoryNode) inputElement;
         if (!isInitialized) {
-            initialize(treeRoot);
-            isInitialized = true;
+            try {
+                initialize(treeRoot);
+                isInitialized = true;
+            }catch (Exception ex) {
+                ExceptionHandler.process(ex);
+            }
+
         }
         return treeRoot.getChildren().toArray();
     }
@@ -256,7 +259,7 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
         this.isInitialized = isInitialized;
     }
 
-    private void initialize(RepositoryNode treeRoot) {
+    private void initialize(RepositoryNode treeRoot) throws Exception {
         if (!connectionParameters.isRepository()) {
             addNode(treeRoot, repositoryNodeManager.getRepositoryNodeByBuildIn(treeRoot, connectionParameters).getObject(), true,
                     null);
@@ -275,21 +278,37 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
         ProjectManager pManager = ProjectManager.getInstance();
         Container container = null;
         try {
-            container = factory.getMetadata(pManager.getCurrentProject(), ERepositoryObjectType.METADATA_CONNECTIONS);
-            pManager.retrieveReferencedProjects();
-            for (Project p : pManager.getAllReferencedProjects()) {
-                RootContainer rContainer = factory.getMetadata(p, ERepositoryObjectType.METADATA_CONNECTIONS);
-                if (container == null) {
-                    container = rContainer;
-                } else if (rContainer != null) {
-                    Iterator iterator = rContainer.absoluteKeySet().iterator();
-                    while (iterator.hasNext()) {
-                        Object id = iterator.next();
-                        container.addMember(id, rContainer.getAbsoluteMember(id));
+            if (connectionParameters.isTacokitJDBC()) {
+                container = ProxyRepositoryFactory.getInstance()
+                        .getMetadata(pManager.getCurrentProject(), ERepositoryObjectType.METADATA_TACOKIT_JDBC);
+                for (Project p : pManager.getAllReferencedProjects()) {
+                    RootContainer rContainer = factory.getMetadata(p, ERepositoryObjectType.METADATA_TACOKIT_JDBC);
+                    if (container == null) {
+                        container = rContainer;
+                    } else if (rContainer != null) {
+                        Iterator iterator = rContainer.absoluteKeySet().iterator();
+                        while (iterator.hasNext()) {
+                            Object id = iterator.next();
+                            container.addMember((String)id, (IRepositoryViewObject)rContainer.getAbsoluteMember(id));
+                        }
+                    }
+                }
+            } else {
+                container = factory.getMetadata(pManager.getCurrentProject(), ERepositoryObjectType.METADATA_CONNECTIONS);
+                pManager.retrieveReferencedProjects();
+                for (Project p : pManager.getAllReferencedProjects()) {
+                    RootContainer rContainer = factory.getMetadata(p, ERepositoryObjectType.METADATA_CONNECTIONS);
+                    if (container == null) {
+                        container = rContainer;
+                    } else if (rContainer != null) {
+                        Iterator iterator = rContainer.absoluteKeySet().iterator();
+                        while (iterator.hasNext()) {
+                            Object id = iterator.next();
+                            container.addMember(id, rContainer.getAbsoluteMember(id));
+                        }
                     }
                 }
             }
-
         } catch (PersistenceException e) {
             SqlBuilderPlugin.log(Messages.getString("DBTreeProvider.logMessage"), e); //$NON-NLS-1$
         } catch (BusinessException e) {
@@ -300,7 +319,7 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
 
     private boolean isCleared = false;
 
-    private void convert(Container fromModel, RepositoryNode parent, ERepositoryObjectType type) {
+    private void convert(Container fromModel, RepositoryNode parent, ERepositoryObjectType type) throws Exception {
         if (fromModel.isEmpty()) {
             return;
         }
@@ -336,10 +355,16 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
 
     private static Map<String, IRepositoryViewObject> maps = new HashMap<String, IRepositoryViewObject>();
 
-    private void addNode(RepositoryNode parent, IRepositoryViewObject repositoryObject, boolean isBuildIn, Integer index) {
+    private void addNode(RepositoryNode parent, IRepositoryViewObject repositoryObject, boolean isBuildIn, Integer index) throws Exception {
         ProxyRepositoryFactory factory = ProxyRepositoryFactory.getInstance();
-        DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) repositoryObject.getProperty().getItem())
-                .getConnection();
+        DatabaseConnection connection = null;
+        if (ERepositoryObjectType.METADATA_TACOKIT_JDBC.equals(repositoryObject.getRepositoryObjectType())) {
+            connection = ConvertionHelper.fillJDBCParams4TacokitDatabaseConnection(((ConnectionItem) repositoryObject.getProperty().getItem()).getConnection());
+        } else {
+            connection = (DatabaseConnection) ((ConnectionItem) repositoryObject.getProperty().getItem())
+                    .getConnection();
+        }
+        
         String sid = connection.getSID();
         MetadataConnectionRepositoryObject connectionRepositoryObject = new MetadataConnectionRepositoryObject(repositoryObject);
         if (isBuildIn) {
@@ -378,8 +403,7 @@ public class DBTreeProvider extends LabelProvider implements ITableLabelProvider
                 parent.getChildren().add(index.intValue(), node);
             }
             repositoryNodeManager.addRepositoryNode(node);
-            DatabaseConnection metadataConnection = (DatabaseConnection) ((ConnectionItem) repositoryObject.getProperty()
-                    .getItem()).getConnection();
+            DatabaseConnection metadataConnection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(node);
             createTables(node, repositoryObject, metadataConnection, isBuildIn);
             createQueries(node, repositoryObject, metadataConnection, isBuildIn);
         }

@@ -251,6 +251,11 @@ public class TextController extends AbstractElementPropertySectionController {
             labelText.setText(""); //$NON-NLS-1$
         } else {
             if (!value.equals(labelText.getText())) {
+                if (isPasswordParam(param)) {
+                    labelText.setEchoChar('*');
+                } else {
+                    labelText.setEchoChar('\0');
+                }
                 // see feature 0025
                 if (!isInWizard() && isPasswordParam(param)) {
                     labelText.setText(TalendTextUtils.hidePassword(value.toString()));
@@ -267,7 +272,12 @@ public class TextController extends AbstractElementPropertySectionController {
             checkErrorsForPropertiesOnly(labelText);
         }
         fixedCursorPosition(param, labelText, value, valueChanged);
-
+        if (!isReadOnly()) {
+            boolean editable = !param.isReadOnly() && (elem instanceof FakeElement || !param.isRepositoryValueUsed());
+            labelText.setEditable(editable);
+        } else {
+            labelText.setEditable(false);
+        }
     }
 
     boolean a = false;
@@ -327,12 +337,14 @@ public class TextController extends AbstractElementPropertySectionController {
      * @return
      */
     protected boolean isPasswordParam(final IElementParameter parameter) {
-        if (ContextParameterUtils.containContextVariables(parameter.getValue().toString())) {
+        if (parameter.getValue() == null || ContextParameterUtils.containContextVariables(parameter.getValue().toString())) {
             return false;
         }
 
+        String repositoryValue = null;
         return parameter.isRepositoryValueUsed()
                 && (parameter.getName().equals(EParameterName.PASS.getName()) || parameter.getName().contains("PASSWORD") || //$NON-NLS-1$
-                parameter.getRepositoryValue() != null && parameter.getRepositoryValue().contains("PASSWORD")); //$NON-NLS-1$
+                        (repositoryValue = parameter.calcRepositoryValue()) != null
+                                && repositoryValue.contains("PASSWORD")); //$NON-NLS-1$
     }
 }

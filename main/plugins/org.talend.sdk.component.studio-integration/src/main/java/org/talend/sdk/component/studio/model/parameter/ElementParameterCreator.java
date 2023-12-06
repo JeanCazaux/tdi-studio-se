@@ -40,6 +40,7 @@ import org.talend.designer.core.DesignerPlugin;
 import org.talend.designer.core.model.components.AbstractBasicComponent;
 import org.talend.designer.core.model.components.EParameterName;
 import org.talend.designer.core.model.components.ElementParameter;
+import org.talend.designer.core.model.components.EmfComponent;
 import org.talend.designer.core.ui.preferences.TalendDesignerPrefConstants;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
@@ -164,7 +165,7 @@ public class ElementParameterCreator {
     private void addLayoutParameter(final PropertyNode root, final String form) {
         final Layout layout = root.getLayout(form);
         if (TaCoKitUtil.isSupportUseExistConnection(component) && Metadatas.MAIN_FORM.equals(form)) {
-            if (isShowPropertyParameter()) {
+            if (isShowPropertyParameter() && isShowUseExistingConnectionParameter()) {
                 updateParameterForComponentList();
             } else {
                 addParameterForClose();
@@ -262,6 +263,7 @@ public class ElementParameterCreator {
         if (isShowPropertyParameter()) {
             addPropertyParameter();
         }
+        addQuerystoreParameter();
         addStatCatcherParameter();
         // following parameters are added only in TIS
         addParallelizeParameter();
@@ -276,6 +278,10 @@ public class ElementParameterCreator {
         if (this.component instanceof VirtualComponentModel) {
             return ((VirtualComponentModel) component).isShowPropertyParameter();
         }
+        return true;
+    }
+
+    private boolean isShowUseExistingConnectionParameter() {
         String name = detail.getId().getName();
         return TaCoKitSpeicalManager.supportUseExistingConnection(name);
     }
@@ -407,7 +413,7 @@ public class ElementParameterCreator {
         connectionParameter.setFieldType(EParameterFieldType.COMPONENT_LIST);
         connectionParameter.setCategory(EComponentCategory.BASIC);
         connectionParameter.setNumRow(1);
-        connectionParameter.setFilter(VirtualComponentModel.getDefaultConnectionName(component.getIndex()));
+        connectionParameter.setFilter(VirtualComponentModel.getDefaultConnectionName(component));
         connectionParameter.setReadOnly(false);
         connectionParameter.setRequired(false);
         connectionParameter.setShow(true);
@@ -438,7 +444,7 @@ public class ElementParameterCreator {
         connectionParameter.setDisplayName(Messages.getString("ElementParameterCreator.connectionLabel"));
         connectionParameter.setFieldType(EParameterFieldType.COMPONENT_LIST);
         connectionParameter.setCategory(EComponentCategory.BASIC);
-        connectionParameter.setFilter(VirtualComponentModel.getDefaultConnectionName(component.getIndex()));
+        connectionParameter.setFilter(VirtualComponentModel.getDefaultConnectionName(component));
         connectionParameter.setReadOnly(false);
         connectionParameter.setRequired(true);
         connectionParameter.setNumRow(1);
@@ -605,6 +611,43 @@ public class ElementParameterCreator {
     private List<PropertyDefinitionDecorator> findConfigurationTypes() {
         return properties.stream().filter(PropertyDefinitionDecorator::hasConfigurationType).collect(
                 Collectors.toList());
+    }
+
+    private void addQuerystoreParameter() {
+        final ElementParameter parameter = new ElementParameter(node);
+        parameter.setName("QUERYSTORE");
+        parameter.setCategory(EComponentCategory.BASIC);
+        parameter.setDisplayName(EParameterName.QUERYSTORE_TYPE.getDisplayName());
+        parameter.setFieldType(EParameterFieldType.QUERYSTORE_TYPE);
+        parameter.setNumRow(0);
+        parameter.setShow(false);
+        parameter.setValue("");
+
+        final ElementParameter querystoreType = new ElementParameter(node);
+        querystoreType.setCategory(EComponentCategory.BASIC);
+        querystoreType.setName(EParameterName.QUERYSTORE_TYPE.getName());
+        querystoreType.setDisplayName(EParameterName.QUERYSTORE_TYPE.getDisplayName());
+        querystoreType.setListItemsDisplayName(new String[] { EmfComponent.TEXT_BUILTIN, EmfComponent.TEXT_REPOSITORY });
+        querystoreType.setListItemsDisplayCodeName(new String[] { EmfComponent.BUILTIN, EmfComponent.REPOSITORY });
+        querystoreType.setListItemsValue(new String[] { EmfComponent.BUILTIN, EmfComponent.REPOSITORY });
+        querystoreType.setValue(EmfComponent.BUILTIN);
+        querystoreType.setNumRow(0);
+        querystoreType.setFieldType(EParameterFieldType.TECHNICAL);
+        querystoreType.setParentParameter(parameter);
+
+        final ElementParameter repQuerystoreType = new ElementParameter(node);
+        repQuerystoreType.setCategory(EComponentCategory.BASIC);
+        repQuerystoreType.setName(EParameterName.REPOSITORY_QUERYSTORE_TYPE.getName());
+        repQuerystoreType.setDisplayName(EParameterName.REPOSITORY_QUERYSTORE_TYPE.getDisplayName());
+        repQuerystoreType.setListItemsDisplayName(new String[] {});
+        repQuerystoreType.setListItemsValue(new String[] {});
+        repQuerystoreType.setNumRow(0);
+        repQuerystoreType.setFieldType(EParameterFieldType.TECHNICAL);
+        repQuerystoreType.setValue("");
+        repQuerystoreType.setRequired(true);
+        repQuerystoreType.setParentParameter(parameter);
+        repQuerystoreType.setShow(false);
+        parameters.add(parameter);
     }
 
     /**

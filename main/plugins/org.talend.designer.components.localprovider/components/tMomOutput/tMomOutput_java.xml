@@ -433,20 +433,19 @@
   <CODEGENERATION>
     <IMPORTS>
       <!-- ActiveMQ -->
-      <IMPORT NAME="activemq-client-5.16.3.jar" MODULE="activemq-client-5.16.3.jar" MVN="mvn:org.apache.activemq/activemq-client/5.16.3" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" BundleID="" />
-      <IMPORT NAME="geronimo-jms_1.1_spec-1.1.1.jar" MODULE="geronimo-jms_1.1_spec-1.1.1.jar" MVN="mvn:org.talend.libraries/geronimo-jms_1.1_spec-1.1.1/6.3.0" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
-      <IMPORT NAME="geronimo-j2ee-management_1.1_spec-1.0.1.jar" MODULE="geronimo-j2ee-management_1.1_spec-1.0.1.jar" MVN="mvn:org.talend.libraries/geronimo-j2ee-management_1.1_spec-1.0.1/6.3.0" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
-      <IMPORT NAME="hawtbuf-1.11.jar" MODULE="hawtbuf-1.11.jar" MVN="mvn:org.talend.libraries/hawtbuf-1.11/6.3.0" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
+      <IMPORT NAME="activemq-client-5.18.3.jar" MODULE="activemq-client-5.18.3.jar" MVN="mvn:org.apache.activemq/activemq-client/5.18.3" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')"/>
+      <IMPORT NAME="jakarta.jms-api-2.0.3.jar" MODULE="jakarta.jms-api-2.0.3.jar" MVN="mvn:jakarta.jms/jakarta.jms-api/2.0.3" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
+      <IMPORT NAME="hawtbuf-1.11.jar" MODULE="hawtbuf-1.11.jar" MVN="mvn:org.fusesource.hawtbuf/hawtbuf/1.11" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
       <IMPORT NAME="slf4j-api-1.7.34.jar" MODULE="slf4j-api-1.7.34.jar" MVN="mvn:org.slf4j/slf4j-api/1.7.34" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
       <IMPORT NAME="slf4j-reload4j-1.7.34.jar" MODULE="slf4j-reload4j-1.7.34.jar" MVN="mvn:org.slf4j/slf4j-reload4j/1.7.34" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'ACTIVEMQ')" />
       
       <!-- JBOSS -->
-      <IMPORT NAME="JAVA_SSIST" MODULE="javassist.jar" MVN="mvn:org.talend.libraries/javassist/6.0.0"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JAVA_SSIST" MODULE="javassist-3.10.0.GA.jar" MVN="mvn:javassist/javassist/3.10.0.GA"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="TROVE" MODULE="trove-1.0.2.jar" MVN="mvn:trove/trove/1.0.2"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
-      <IMPORT NAME="JBOSS MDR" MODULE="jboss-mdr.jar" MVN="mvn:org.talend.libraries/jboss-mdr/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-mdr.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS MDR" MODULE="jboss-mdr-2.0.1.GA.jar" MVN="mvn:org.jboss/jboss-mdr/2.0.1.GA"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-mdr.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="JNP-CLIENT" MODULE="jnp-client.jar" MVN="mvn:org.talend.libraries/jnp-client/6.0.0"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
-      <IMPORT NAME="JBOSS COMMON" MODULE="jboss-common-core.jar" MVN="mvn:org.talend.libraries/jboss-common-core/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-common-core.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
-      <IMPORT NAME="JBOSS AOP" MODULE="jboss-aop.jar" MVN="mvn:org.talend.libraries/jboss-aop/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-aop.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS COMMON" MODULE="jboss-common-core-2.2.11.GA.jar" MVN="mvn:org.jboss/jboss-common-core/2.2.11.GA"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-common-core.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
+      <IMPORT NAME="JBOSS AOP" MODULE="jboss-aop-2.1.3.GA.jar" MVN="mvn:org.jboss.aop/jboss-aop/2.1.3.GA"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-aop.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="JBOSS REMOTING" MODULE="jboss-remoting.jar" MVN="mvn:org.talend.libraries/jboss-remoting/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-remoting.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="JBOSS MESSAGING CLIENT" MODULE="jboss-messaging-client.jar" MVN="mvn:org.talend.libraries/jboss-messaging-client/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jboss-messaging-client.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
       <IMPORT NAME="JBOSS MQ LIB" MODULE="jbossall-client.jar" MVN="mvn:org.talend.libraries/jbossall-client/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jboss/lib/jbossall-client.jar" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'JBOSS')" />
@@ -454,7 +453,7 @@
 
 	  <!-- Websphere MQ -->
       <IMPORT NAME="WEBSPHERE MQ LIB" MODULE="com.ibm.mq.allclient-9.2.5.0.jar" MVN="mvn:com.ibm.mq/com.ibm.mq.allclient/9.2.5.0"  REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
-      <IMPORT NAME="JSON In Java " MODULE="json-20230227.jar" MVN="mvn:org.json/json/20230227" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
+      <IMPORT NAME="JSON In Java " MODULE="json-20231013.jar" MVN="mvn:org.json/json/20231013" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="bcprov-jdk15on-1.70" MODULE="bcprov-jdk15on-1.70.jar" MVN="mvn:org.bouncycastle/bcprov-jdk15on/1.70" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="bcpkix-jdk15on-1.70" MODULE="bcpkix-jdk15on-1.70.jar" MVN="mvn:org.bouncycastle/bcpkix-jdk15on/1.70" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />
       <IMPORT NAME="bcutil-jdk15on-1.70" MODULE="bcutil-jdk15on-1.70.jar" MVN="mvn:org.bouncycastle/bcutil-jdk15on/1.70" REQUIRED_IF="(USE_CONNECTION=='false' AND SERVER == 'WEBSPHERE')" />

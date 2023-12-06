@@ -21,6 +21,7 @@ import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRunnable;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
+import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -252,6 +253,12 @@ public class GenericConnWizard extends CheckLastVersionRepositoryWizard {
         }
     }
 
+    public void setPathToSave(IPath pathToSave) {
+        if (pathToSave != null) {
+            this.pathToSave = pathToSave;
+        }
+    }
+
     @Override
     public boolean performFinish() {
         if (wizPage.isPageComplete()) {
@@ -276,15 +283,7 @@ public class GenericConnWizard extends CheckLastVersionRepositoryWizard {
         if (pages.length > 0 && pages[0] instanceof GenericWizardPage) {
             GenericWizardPage namePage = (GenericWizardPage) pages[0];
             boolean nameModifiedByUser = namePage.nameModifiedByUser();
-            if (nameModifiedByUser) {
-                if (GlobalServiceRegister.getDefault().isServiceRegistered(IDesignerCoreService.class)) {
-                    IDesignerCoreService service = (IDesignerCoreService) GlobalServiceRegister.getDefault()
-                            .getService(IDesignerCoreService.class);
-                    if (service != null) {
-                        service.refreshComponentView(connectionItem);
-                    }
-                }
-            }
+            refreshInFinish(nameModifiedByUser);
         }
 
         closeLockStrategy();

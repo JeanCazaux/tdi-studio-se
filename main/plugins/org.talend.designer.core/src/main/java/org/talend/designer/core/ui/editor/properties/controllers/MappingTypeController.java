@@ -34,7 +34,6 @@ import org.eclipse.swt.layout.FormAttachment;
 import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.talend.core.model.metadata.Dbms;
 import org.talend.core.model.metadata.MetadataTalendType;
@@ -48,7 +47,7 @@ import org.talend.designer.core.ui.editor.nodes.Node;
 /**
  * DOC yzhang class global comment. Detailled comment <br/>
  *
- * $Id: ComboController.java 1 2006-12-12 涓嬪崍01:58:48 +0000 (涓嬪崍01:58:48) yzhang $
+ * $Id: ComboController.java 1 2006-12-12 娑撳宕�01:58:48 +0000 (娑撳宕�01:58:48) yzhang $
  *
  */
 public class MappingTypeController extends AbstractElementPropertySectionController {
@@ -289,11 +288,10 @@ public class MappingTypeController extends AbstractElementPropertySectionControl
                 combo.setItems(paramItems);
             }
             combo.setText("".equals(strValue) ? (String) value : strValue);
-            if (param.isContextMode()) {
-                combo.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_YELLOW));
-                combo.setEnabled(false);
+            if (isTacokit(param) || param.isContextMode()) {
+                combo.setEnabled(isWidgetEnabled(param));
             }
-        }
+        }       
     }
 
     private void updateMappingList(IElementParameter param) {

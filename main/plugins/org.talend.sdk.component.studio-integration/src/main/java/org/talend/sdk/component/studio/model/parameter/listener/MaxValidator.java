@@ -32,8 +32,8 @@ public class MaxValidator extends PropertyValidator {
 
     @Override
     boolean validate(final Object newValue) {
-        if (newValue == null) {
-            return false;
+        if (isEmpty(newValue)) {
+            return true;
         }
         try {
             Integer value = Integer.valueOf((String) newValue);

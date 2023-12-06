@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -48,6 +47,7 @@ import org.eclipse.jface.viewers.ViewerSorter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.BusyIndicator;
+import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.PaintEvent;
@@ -55,6 +55,7 @@ import org.eclipse.swt.events.PaintListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -65,12 +66,15 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -123,6 +127,7 @@ import org.talend.repository.ui.actions.importproject.ImportProjectAsAction;
 import org.talend.repository.ui.login.connections.ConnectionUserPerReader;
 import org.talend.repository.ui.login.connections.ConnectionsDialog;
 import org.talend.repository.ui.login.sandboxProject.CreateSandboxProjectDialog;
+import org.talend.signon.util.TMCRepositoryUtil;
 import org.talend.utils.json.JSONException;
 import org.talend.utils.json.JSONObject;
 
@@ -246,6 +251,8 @@ public class LoginProjectPage extends AbstractLoginActionPage {
     private String lastSelectedBranch;
     
     private boolean isSSOMode = false;
+
+    public static final String CLM_LINK = "https://document-link.us.cloud.talend.com/ts_ug_launch-studio?version=80&lang=en&env=prd";
 
     public LoginProjectPage(Composite parent, LoginDialogV2 dialog, int style) {
         super(parent, dialog, style);
@@ -2725,6 +2732,22 @@ public class LoginProjectPage extends AbstractLoginActionPage {
                 checkErrors();
                 return;
             }
+            // validate PAT
+            if (!this.isSSOMode && connection.isToken() && !connection.isLoginViaCloud() && !LoginHelper.validatePAT(connection)) {
+                cancelAllBackgroundJobs(null);
+                resetProjectOperationSelection(false);
+                try {
+                    gotoNextPage();
+                    if (!containsLinkListener(loginDialog.errorTextLabel.getListeners(SWT.MouseDown))) {
+                        loginDialog.errorTextLabel.addListener(SWT.MouseDown, new MorelinkListener());
+                    }
+                    showInvalidPATMessage(errorManager);
+                    return;
+                } catch (Throwable e1) {
+                    MessageDialog.openError(Display.getDefault().getActiveShell(), getShell().getText(), e1.getMessage());
+                }
+            }
+            
             if (!forceRefresh && connection.equals(LoginHelper.getInstance().getCurrentSelectedConnBean())) {
                 // in case they are equal but different object id
                 LoginHelper.getInstance().setCurrentSelectedConnBean(connection);
@@ -2760,6 +2783,54 @@ public class LoginProjectPage extends AbstractLoginActionPage {
 
     private void onRefresh() {
         scheduleRefreshJob();
+    }
+    
+    protected class MorelinkListener implements Listener{
+
+        @Override
+        public void handleEvent(Event event) {
+            int offset = loginDialog.errorTextLabel.getOffsetAtPoint(new Point(event.x, event.y));
+            if (offset != -1) {
+                StyleRange style1 = null;
+                try {
+                    style1 = loginDialog.errorTextLabel.getStyleRangeAtOffset(offset);
+                } catch (IllegalArgumentException e) {
+                }
+                if (style1 != null && style1.data != null) {
+                    Program.launch(String.valueOf(style1.data));
+                }
+            }
+        }
+        
+    }
+    
+    private static boolean containsLinkListener(Listener[] listeners) {
+        for (int i = 0; i < listeners.length; i++) {
+            if (listeners[i] instanceof MorelinkListener) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    public static void showInvalidPATMessage(ErrorManager errorManager) {
+        Display.getDefault().asyncExec(() -> {
+            List<StyleRange> styleRangeList = new ArrayList<StyleRange>();
+            String msg = Messages.getString("LoginProjectPage.invalidPAT.message", TMCRepositoryUtil.ALLOWED_PAT_MAX_DAYS) + "\n";
+            StyleRange styleRange = new StyleRange();
+            styleRangeList.add(styleRange);
+            styleRange.start = msg.length();
+            Color moreColor = new Color(Display.getCurrent(), 3, 94, 155);
+            styleRange.foreground = moreColor;
+            String more = Messages.getString("LoginProjectPage.invalidPAT.more");
+            styleRange.length = more.length();
+            styleRange.underline = false;
+            styleRange.data = CLM_LINK;
+
+            msg = msg + more;
+
+            errorManager.setWarnMessage(msg, styleRangeList);
+        });
     }
 
     protected class ConnectionLabelProvider extends LabelProvider {
@@ -2947,4 +3018,13 @@ public class LoginProjectPage extends AbstractLoginActionPage {
         }.schedule();
     }  
     
+    public AbstractActionPage getNextPage() {
+        ConnectionBean connection = this.getConnection();
+        if (!this.isSSOMode && connection.isToken() && !connection.isLoginViaCloud()) {
+            AbstractActionPage iNextPage = new LoginWithCloudPage(getParent(), loginDialog, SWT.NONE, false);
+            setNextPage(iNextPage);
+            return iNextPage;
+        }
+        return null;
+    }
 }

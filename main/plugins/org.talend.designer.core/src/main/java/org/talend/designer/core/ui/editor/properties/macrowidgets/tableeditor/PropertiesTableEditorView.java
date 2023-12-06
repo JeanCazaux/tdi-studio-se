@@ -567,11 +567,12 @@ public class PropertiesTableEditorView<B> extends AbstractPropertiesTableEditorV
                             tcEditor = textCellEditor;
                         }
                     }
-                    if (tcEditor != null) {
-                        column.setCellEditor(tcEditor);
-                        column.setModifiable((!param.isRepositoryValueUsed()) && (!param.isReadOnly())
-                                && (!currentParam.isReadOnly()));
+                    if (tcEditor == null) {
+                        tcEditor = new TextCellEditor(table);
                     }
+                    column.setCellEditor(tcEditor);
+                    column.setModifiable((!param.isRepositoryValueUsed()) && (!param.isReadOnly())
+                            && (!currentParam.isReadOnly()));
                 }
                 // for all kinds of column, check if read only or not when edit the field.
                 column.setColumnCellModifier(new ColumnCellModifier(column) {

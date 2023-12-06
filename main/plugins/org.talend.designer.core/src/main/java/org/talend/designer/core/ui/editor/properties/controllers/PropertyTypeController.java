@@ -127,7 +127,7 @@ public class PropertyTypeController extends AbstractRepositoryController {
     @Override
     public void refresh(IElementParameter param, boolean check) {
         // judge only pattern mode
-        if ("TDQ:PATTERN".equals(param.getRepositoryValue())) {
+        if ("TDQ:PATTERN".equals(param.calcRepositoryValue())) {
             IElementParameter patternPropertyTypeElementParameter = param.getChildParameters()
                         .get("REPOSITORY_PROPERTY_TYPE");//$NON-NLS-1$
                 if (patternPropertyTypeElementParameter.getListItemsDisplayName().length == 0
@@ -160,7 +160,7 @@ public class PropertyTypeController extends AbstractRepositoryController {
         INode node = (INode) param.getElement();
         //
         String componentName = node.getComponent().getName();
-        String repositoryValue = param.getRepositoryValue();
+        String repositoryValue = param.calcRepositoryValue();
         boolean isHDFSRepVal = repositoryValue != null && repositoryValue.contains("HDFS"); //$NON-NLS-1$
         String compDefName = getDefinitionNameIfAdditionalJDBC(node);
         if (StringUtils.isNotBlank(compDefName)) {
@@ -336,7 +336,7 @@ public class PropertyTypeController extends AbstractRepositoryController {
         IElementParameter param = elem.getElementParameter(paramName);
         IElementParameter elementParameter = elem.getElementParameter("DBTYPE");//$NON-NLS-1$
         if (param != null && elementParameter != null) {
-            String repositoryValue = param.getRepositoryValue();
+            String repositoryValue = param.calcRepositoryValue();
             String dbTypeValue = (String) elementParameter.getValue();
             if (repositoryValue != null && !StringUtils.equals(repositoryValue, "DATABASE:" + dbTypeValue)) {//$NON-NLS-1$
                 param.setRepositoryValue("DATABASE:" + dbTypeValue);//$NON-NLS-1$
@@ -365,7 +365,7 @@ public class PropertyTypeController extends AbstractRepositoryController {
                 if (dbTypeParam != null) {
                     String[] listRepositoryItems = dbTypeParam.getListRepositoryItems();
                     dialog = new RepositoryReviewDialog(Display.getCurrent().getActiveShell(), ERepositoryObjectType.METADATA,
-                            param.getRepositoryValue(), listRepositoryItems);
+                            param.calcRepositoryValue(), listRepositoryItems);
                 } else {
                     // Added TDQ-11688
                     ITDQPatternService service = null;
@@ -506,7 +506,7 @@ public class PropertyTypeController extends AbstractRepositoryController {
                 final IRepositoryService repositoryService = CorePlugin.getDefault().getRepositoryService();
                 if (param != null) {
                     RepositoryNode realNode = null;
-                    String repositoryValue = param.getRepositoryValue();
+                    String repositoryValue = param.calcRepositoryValue();
                     if (repositoryValue != null && repositoryValue.startsWith(ERepositoryCategoryType.DATABASE.getName())) {
                         realNode = (RepositoryNode) repositoryService
                                 .getRootRepositoryNode(ERepositoryObjectType.METADATA_CONNECTIONS);
@@ -605,6 +605,13 @@ public class PropertyTypeController extends AbstractRepositoryController {
                         realNode = (RepositoryNode) repositoryService
                                 .getRootRepositoryNode(ERepositoryObjectType.METADATA_FILE_HL7);
                     }
+
+                    if (repositoryValue.contains("|") && ERepositoryObjectType.METADATA_TACOKIT_JDBC.getKey()
+                            .equals(repositoryValue.split("\\|")[1])) {
+                        realNode = (RepositoryNode) repositoryService
+                                .getRootRepositoryNode(ERepositoryObjectType.METADATA_TACOKIT_JDBC);
+                    }
+
                     // last resort we assume that the repository value was named after the root component type key
                     if (realNode == null) {
                         realNode = (RepositoryNode) repositoryService.getRootRepositoryNode(ERepositoryObjectType

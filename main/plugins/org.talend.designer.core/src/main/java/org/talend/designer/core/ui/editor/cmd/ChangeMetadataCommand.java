@@ -31,6 +31,7 @@ import org.talend.core.model.metadata.IMetadataColumn;
 import org.talend.core.model.metadata.IMetadataTable;
 import org.talend.core.model.metadata.MetadataTalendType;
 import org.talend.core.model.metadata.MetadataToolHelper;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.metadata.designerproperties.RepositoryToComponentProperty;
 import org.talend.core.model.param.EConnectionParameterName;
 import org.talend.core.model.process.EConnectionType;
@@ -797,7 +798,8 @@ public class ChangeMetadataCommand extends Command {
             String componentName = node.getComponent().getName();
             for (IElementParameter parameter : node.getElementParameters()) {
                 if (parameter.getFieldType() == EParameterFieldType.TABLE) {
-                    if (parameter.getRepositoryValue() != null && parameter.getRepositoryValue().equals("XML_MAPPING")) { //$NON-NLS-1$
+                    String repositoryValue = parameter.calcRepositoryValue();
+                    if (repositoryValue != null && repositoryValue.equals("XML_MAPPING")) { //$NON-NLS-1$
                         List<Map<String, Object>> value2 = (List<Map<String, Object>>) parameter.getValue();
                         RepositoryToComponentProperty.getTableXMLMappingValue(getConnection(), value2, newOutputMetadata,
                                 getColumnRenameMap());
@@ -902,7 +904,11 @@ public class ChangeMetadataCommand extends Command {
             }
             if(((Node) curNode).getComponent().getComponentType() == EComponentType.GENERIC){
                 dbTableElementField = curNode.getElementParameter(EConnectionParameterName.GENERIC_TABLENAME.getDisplayName());
+                if (dbTableElementField == null) {
+                    dbTableElementField = curNode.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_TABLE_NAME);
+                }
             }
+            
             changeTableNameParameter(newdbTableName, olddbTableName, uniqueName, dbTableElementField);
             if (((Node) curNode).getComponent().getName().startsWith("tSAPADSO")) { //$NON-NLS-1$
                 IElementParameter serviceNameElementField = curNode.getElementParameter("SERVICE_NAME"); //$NON-NLS-1$
@@ -992,5 +998,4 @@ public class ChangeMetadataCommand extends Command {
     public void setCurrentConnector(String currentConnector) {
         this.currentConnector = currentConnector;
     }
-
 }

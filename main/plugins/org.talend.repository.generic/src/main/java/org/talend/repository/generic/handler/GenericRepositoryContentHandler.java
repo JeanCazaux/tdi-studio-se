@@ -26,10 +26,10 @@ import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.repository.i18n.Messages;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
-import org.talend.core.repository.model.repositoryObject.MetadataTableRepositoryObject;
 import org.talend.core.repository.utils.RepositoryNodeManager;
 import org.talend.core.repository.utils.XmiResourceManager;
 import org.talend.core.runtime.services.IGenericDBService;
+import org.talend.core.runtime.services.IGenericWizardService;
 import org.talend.cwm.helper.ConnectionHelper;
 import org.talend.cwm.helper.PackageHelper;
 import org.talend.cwm.helper.SubItemHelper;
@@ -39,7 +39,6 @@ import org.talend.repository.generic.model.genericMetadata.GenericMetadataFactor
 import org.talend.repository.generic.model.genericMetadata.GenericMetadataPackage;
 import org.talend.repository.generic.model.genericMetadata.SubContainer;
 import org.talend.repository.generic.ui.GenericConnWizard;
-import org.talend.repository.generic.ui.GenericSchemaWizard;
 import org.talend.repository.generic.ui.common.GenericWizardDialog;
 import org.talend.repository.generic.util.GenericConnectionUtil;
 import org.talend.repository.generic.util.GenericWizardServiceFactory;
@@ -51,7 +50,7 @@ import orgomg.cwm.objectmodel.core.Package;
 
 /**
  * 
- * created by ycbai on 2015年10月15日 Detailled comment
+ * created by ycbai on 2015骞�10鏈�15鏃� Detailled comment
  *
  */
 public class GenericRepositoryContentHandler extends AbstractRepositoryContentHandler {
@@ -78,7 +77,7 @@ public class GenericRepositoryContentHandler extends AbstractRepositoryContentHa
     @Override
     public Resource create(IProject project, Item item, int classifierID, IPath path) throws PersistenceException {
         Resource itemResource = null;
-        if (isProcess(item)) {
+        if (item != null && isProcess(item)) {
             itemResource = create(project, (GenericConnectionItem) item, path);
         }
 
@@ -265,26 +264,14 @@ public class GenericRepositoryContentHandler extends AbstractRepositoryContentHa
     @Override
     public IWizard newSchemaWizard(IWorkbench workbench, boolean creation, IRepositoryViewObject object,
             MetadataTable metadataTable, String[] existingNames, boolean forceReadOnly) {
-        if (object == null) {
-            return null;
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IGenericWizardService.class)) {
+            IGenericWizardService wizardService = (IGenericWizardService) GlobalServiceRegister.getDefault()
+                    .getService(IGenericWizardService.class);
+            return wizardService.newSchemaWizard(workbench, creation, object, metadataTable, existingNames, forceReadOnly);
         }
-        IWorkbench wb = workbench;
-        if (wb == null) {
-            wb = PlatformUI.getWorkbench();
-        }
-        MetadataTable table = metadataTable;
-        if (table == null && object instanceof MetadataTableRepositoryObject) {
-            MetadataTableRepositoryObject metaTableRepObj = (MetadataTableRepositoryObject) object;
-            table = metaTableRepObj.getTable();
-        }
-        if (table == null) {
-            return null;
-        }table.eContainer();
-        ConnectionItem connectionItem = (ConnectionItem) object.getProperty().getItem();
-        table = SchemaUtils.getMetadataTable(connectionItem.getConnection(), table, object);
-        return new GenericSchemaWizard(wb, creation, object, connectionItem, table, forceReadOnly);
+        return null;
     }
-
+    
     @Override
     public int openWizardDialog(IRepositoryNode repoNode, IWizard wizard) {
         WizardDialog wizardDialog = new GenericWizardDialog(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),

@@ -107,8 +107,7 @@ public final class EMFRepositoryNodeManager {
         if (root == null) {
             return null;
         }
-        DatabaseConnectionItem item = SQLBuilderRepositoryNodeManager.getItem(root);
-        DatabaseConnection connection = (DatabaseConnection) item.getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(root);
         QueriesConnection queriesConnection = connection.getQueries();
         if (queriesConnection != null) {
             List<Query> queries = queriesConnection.getQuery();
@@ -130,8 +129,7 @@ public final class EMFRepositoryNodeManager {
             RepositoryNodeType type = SQLBuilderRepositoryNodeManager.getRepositoryType((RepositoryNode) node);
             if (type == RepositoryNodeType.DATABASE) {
                 root = (RepositoryNode) node;
-                DatabaseConnection connection = (DatabaseConnection) SQLBuilderRepositoryNodeManager
-                        .getItem((RepositoryNode) node).getConnection();
+                DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(node);
                 for (MetadataTable table : ConnectionHelper.getTables(connection)) {
                     if (!tables.contains(table)) {
                         tables.add(table);
@@ -183,8 +181,7 @@ public final class EMFRepositoryNodeManager {
         IMetadataConnection iMetadataConnection = null;
         if (root != null) {
             try {
-                DatabaseConnection databaseConnection = (DatabaseConnection) SQLBuilderRepositoryNodeManager.getItem(root)
-                        .getConnection();
+                DatabaseConnection databaseConnection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(root);
                 DatabaseConnection copyConnection = getCopyConnection();
                 if (copyConnection == null) {
                     copyConnection = databaseConnection;

@@ -260,5 +260,9 @@ public class UnifiedComponentServiceTest {
                 .getDelegateComponent("tDBOutput", ComponentCategory.CATEGORY_4_DI.getName());
         IComponent emfComponent = unifiedCompservice.getUnifiedComponentByFilter(tDBConnection, "mysql");
         Assert.assertEquals("tMysqlOutput", emfComponent.getName());
+
+        IComponent tDBCDC = unifiedCompservice.getDelegateComponent("tDBCDC", ComponentCategory.CATEGORY_4_DI.getName());
+        emfComponent = unifiedCompservice.getUnifiedComponentByFilter(tDBCDC, "Oracle");
+        Assert.assertEquals("tOracleCDC", emfComponent.getName());
     }
 }

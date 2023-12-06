@@ -55,6 +55,7 @@ public class TableElementParameter extends TaCoKitElementParameter {
         final List<String> columnNames = new ArrayList<>(columns.size());
         final List<String> displayNames = new ArrayList<>(columns.size());
         List<String> changable = new ArrayList<>();
+        boolean basedonschema = false;
         for (final IElementParameter param : columns) {
             columnNames.add(param.getName());
             displayNames.add(param.getDisplayName());
@@ -66,6 +67,9 @@ public class TableElementParameter extends TaCoKitElementParameter {
                     changable.add(param.getName());
                 }
             }
+            if (param.isBasedOnSchema()) {
+                basedonschema = true;
+            }
         }
         
         if(changable != null && !changable.isEmpty()) {
@@ -76,7 +80,7 @@ public class TableElementParameter extends TaCoKitElementParameter {
         setListItemsDisplayCodeName(columnNames.toArray(new String[0]));
         setListItemsValue(columns.toArray(new ElementParameter[0]));
         updateValueOnly(new ArrayList<Map<String, Object>>());
-        setBasedOnSchema(false);
+        setBasedOnSchema(basedonschema);
     }
 
     /**
@@ -106,7 +110,26 @@ public class TableElementParameter extends TaCoKitElementParameter {
      */
     @Override
     public void setValue(final Object newValue) {
-        if (newValue == null || newValue instanceof String) {
+        IElement elem = getElement();
+        boolean contextMode = isContextMode();
+        if (contextMode && elem != null && newValue instanceof String && newValue != "[]") {
+            List<Map<String, Object>> table = ValueConverter.toTable((String) newValue);
+            if (table == null || table.size() == 0 || table.get(0).isEmpty()) {
+                List<Map<String, Object>> tableValue1 = new ArrayList<Map<String, Object>>();
+                HashMap<String, Object> hashMap = new LinkedHashMap<String, Object>();
+                String[] listItemsDisplayCodeName = getListItemsDisplayCodeName();
+                if (listItemsDisplayCodeName != null && listItemsDisplayCodeName.length > 0) {
+                    for (String s : listItemsDisplayCodeName) {
+                        hashMap.put(s, (String) newValue);
+                    }
+                    tableValue1.add(hashMap);
+                }
+                super.setValue(fromRepository(tableValue1));
+            } else {
+                final List<Map<String, Object>> tableValue = table;
+                super.setValue(fromRepository(tableValue));
+            }
+        } else if (newValue == null || newValue instanceof String) {
             final List<Map<String, Object>> tableValue = ValueConverter.toTable((String) newValue);
             super.setValue(fromRepository(tableValue));
         } else if (newValue instanceof List) {
@@ -204,7 +227,7 @@ public class TableElementParameter extends TaCoKitElementParameter {
         }
         final List<Map<String, Object>> converted = new ArrayList<>(table.size());
         for (final Map<String, Object> row : table) {
-            final Map<String, Object> convertedRow = new HashMap<>();
+            final Map<String, Object> convertedRow = new LinkedHashMap<>();
             for (final Map.Entry<String, Object> cell : row.entrySet()) {
                 final String newKey = cell.getKey().replace(repositoryKey.get(), getName());
                 convertedRow.put(newKey, cell.getValue());
@@ -225,7 +248,8 @@ public class TableElementParameter extends TaCoKitElementParameter {
             return Optional.empty();
         }
         final Map<String, Object> row = tableValue.get(0);
-        for (final String repositoryKey : getRepositoryValue().split("\\|")) {
+        String repositoryValue = calcRepositoryValue();
+        for (final String repositoryKey : repositoryValue.split("\\|")) {
             for (final String cellKey : row.keySet()) {
                 if (cellKey.startsWith(repositoryKey)) {
                     return Optional.of(repositoryKey);

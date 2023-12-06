@@ -33,6 +33,9 @@
 <%
 final java.util.Map<String, String> configurationToChange = new java.util.HashMap<String, String>();
 final List<ElementParameter> params = List.class.cast(node.getElementParametersWithChildrens());
+
+final boolean isJDBC = node.getComponent().getName().contains("JDBC");
+
 if (params != null && !params.isEmpty()) {
     for (final ElementParameter p : params) {
         Object pluginValue = p.getTaggedValue("org.talend.sdk.component.source");
@@ -48,6 +51,10 @@ if (params != null && !params.isEmpty()) {
         }
         
         if (p.getFieldType() == EParameterFieldType.TABLE || p.getFieldType() == EParameterFieldType.TACOKIT_SUGGESTABLE_TABLE) {
+            if (!p.isShow(params)) {
+                continue;
+            }
+            
             java.util.List<java.util.Map<String, String>> tableValues = ElementParameterParser.createTableValues((java.util.List<java.util.Map<String, Object>>) p.getValue(), p);
             String[] items = p.getListItemsDisplayCodeName();
             String tableName = p.getName().replace('$', '.');
@@ -76,6 +83,33 @@ if (params != null && !params.isEmpty()) {
                         configurationToChange.put(key, value);
                     }
                 }
+            }
+        } else if(isJDBC && p.getFieldType() == EParameterFieldType.MEMO_SQL) {
+            if (!p.isShow(params)) {
+                continue;
+            }
+            
+            final String key = p.getName();
+            
+            String value = ElementParameterParser.getStringElementParameterValue(p);
+            
+            if (value.contains("+") || org.talend.core.model.utils.TalendTextUtils.isEnclosed(value)) {
+                value = org.talend.core.model.utils.NodeUtil.replaceCRLFInMEMO_SQL(value).trim();
+                value = value.endsWith(";") ? value.substring(0, value.length() -1) : value;
+            } else {
+                value = value.replace("\n", " ").replace("\r", " ");
+                if (org.talend.core.model.utils.ContextParameterUtils.isDynamic(value)) {
+                    value = "String.valueOf(" + value + ")";
+                } else {
+                    if (org.talend.core.model.utils.TalendTextUtils.isEnclosed(value)) {
+                        value = org.talend.core.model.utils.TalendTextUtils.removeQuotes(value);
+                    }
+                    value = org.talend.core.model.utils.TalendTextUtils.addQuotes(value);
+                }
+            }
+            
+            if(value != null) {
+                configurationToChange.put(key, value);
             }
         }
     }

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.PolylineConnection;
@@ -101,6 +102,7 @@ import org.talend.core.model.metadata.builder.connection.Query;
 import org.talend.core.model.metadata.builder.connection.SAPFunctionUnit;
 import org.talend.core.model.metadata.builder.connection.SAPTable;
 import org.talend.core.model.metadata.builder.connection.SalesforceModuleUnit;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.metadata.builder.connection.XMLFileNode;
 import org.talend.core.model.metadata.builder.connection.impl.BRMSConnectionImpl;
 import org.talend.core.model.metadata.builder.connection.impl.HL7ConnectionImpl;
@@ -157,6 +159,7 @@ import org.talend.core.repository.model.repositoryObject.SAPFunctionRepositoryOb
 import org.talend.core.repository.model.repositoryObject.SAPIDocRepositoryObject;
 import org.talend.core.repository.model.repositoryObject.SalesforceModuleRepositoryObject;
 import org.talend.core.service.ISAPProviderService;
+import org.talend.core.service.ITCKUIService;
 import org.talend.core.ui.ICDCProviderService;
 import org.talend.core.ui.IJobletProviderService;
 import org.talend.core.ui.ITestContainerProviderService;
@@ -684,7 +687,7 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
         if (propertyParam == null) {
             return;
         }
-        String repositoryValue = propertyParam.getRepositoryValue();
+        String repositoryValue = propertyParam.calcRepositoryValue();
         if (repositoryValue == null) {
             return;
         }
@@ -1159,6 +1162,9 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
                     repositoryNode = (RepositoryNode) getSelection().getFirstElement();
                     // dnd a table
                     IElementParameter dbTableParam = node.getElementParameterFromField(EParameterFieldType.DBTABLE);
+                    if (dbTableParam == null) {
+                        dbTableParam = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_TABLE_NAME);
+                    }
                     boolean hasDbTableField = dbTableParam != null;
 
                     if (repositoryNode.getObjectType() == ERepositoryObjectType.METADATA_CON_TABLE
@@ -1531,6 +1537,9 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
             // command used to set query
             if (selectedNode.getProperties(EProperties.CONTENT_TYPE) == ERepositoryObjectType.METADATA_CON_QUERY) {
                 IElementParameter queryParam = node.getElementParameterFromField(EParameterFieldType.QUERYSTORE_TYPE);
+                if (queryParam == null) {
+                    queryParam = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_SQL_QUERY);
+                }
 
                 QueryRepositoryObject object = (QueryRepositoryObject) selectedNode.getObject();
                 Query query = object.getQuery();
@@ -1648,6 +1657,9 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
 
     public boolean hasQuery(Node node) {
         IElementParameter elementParameter = node.getElementParameterFromField(EParameterFieldType.MEMO_SQL);
+        if (elementParameter == null) {
+            elementParameter = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_SQL_QUERY);
+        }
         if (elementParameter == null) {
             return false;
         }
@@ -2037,36 +2049,25 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
             }
         }
         
-        if (item != null && item instanceof DatabaseConnectionItem) {
-            DatabaseConnectionItem databaseConnectionItem = (DatabaseConnectionItem) item;
-            String typeName = databaseConnectionItem.getTypeName();
-            EmfComponent createTableComponent = (EmfComponent) ComponentsFactoryProvider.getInstance().get("tCreateTable", //$NON-NLS-1$
-                    ComponentCategory.CATEGORY_4_DI.getName());
-            Node node = new Node(createTableComponent);
-            IElementParameter elementParameter = node.getElementParameter("DBTYPE");
-            String[] listItemsDisplayName = elementParameter.getListItemsDisplayName();
-            String[] listItemsValue = elementParameter.getListItemsDisplayCodeName();
-            EDatabaseTypeName dbTypeName = EDatabaseTypeName.getTypeFromDbType(typeName);
-            if (ArrayUtils.contains(listItemsDisplayName, typeName)||ArrayUtils.contains(listItemsValue, dbTypeName.getXMLType())) {
-                neededComponents.add(createTableComponent);
-            }
-        }
-
-        neededComponents = (List<IComponent>) ComponentUtilities.filterVisibleComponents(neededComponents);
-
-
         RepositoryComponentSetting compsetting = new RepositoryComponentSetting();
         compsetting.setInputComponent(rcSetting.getInputComponentName());
         compsetting.setOutputComponent(rcSetting.getOutPutComponentName());
         compsetting.setDefaultComponent(rcSetting.getDefaultComponentName());
         String typeName = null;
+        boolean isAdditionalJDBC = false;
         if (item instanceof ConnectionItem) {
             ConnectionItem connectionItem = (ConnectionItem) item;
             typeName = connectionItem.getTypeName();
             Connection connection = connectionItem.getConnection();
             if (connection instanceof DatabaseConnection) {
                 DatabaseConnection dbconn = (DatabaseConnection) connection;
+                String dbType = dbconn.getDatabaseType();
+                if (EDatabaseTypeName.GENERAL_JDBC.getDisplayName().equalsIgnoreCase(dbType)
+                        || ITCKUIService.get().getTCKJDBCType().getLabel().equalsIgnoreCase(dbType)) {
+                    typeName = ITCKUIService.get().getTCKJDBCType().getLabel();
+                }
                 if (UnifiedComponentUtil.isAdditionalJDBC(dbconn.getProductId())) {
+                    isAdditionalJDBC = true;
                     typeName = dbconn.getProductId();
                     String componentKey = UnifiedComponentUtil.getAdditionalJDBC().get(typeName).getComponentKey();
                     compsetting = new RepositoryComponentSetting();
@@ -2089,6 +2090,22 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
             }
         }
 
+        if (item instanceof DatabaseConnectionItem && !isAdditionalJDBC) {
+            EmfComponent createTableComponent = (EmfComponent) ComponentsFactoryProvider.getInstance().get("tCreateTable", //$NON-NLS-1$
+                    ComponentCategory.CATEGORY_4_DI.getName());
+            Node node = new Node(createTableComponent);
+            IElementParameter elementParameter = node.getElementParameter("DBTYPE");
+            String[] listItemsDisplayName = elementParameter.getListItemsDisplayName();
+            String[] listItemsValue = elementParameter.getListItemsDisplayCodeName();
+            EDatabaseTypeName dbTypeName = EDatabaseTypeName.getTypeFromDbType(typeName);
+            if (ArrayUtils.contains(listItemsDisplayName, typeName)
+                    || ArrayUtils.contains(listItemsValue, dbTypeName.getXMLType())) {
+                neededComponents.add(createTableComponent);
+            }
+        }
+
+        neededComponents = (List<IComponent>) ComponentUtilities.filterVisibleComponents(neededComponents);
+
         RepositoryComponentSetting settingCopy = new RepositoryComponentSetting();
         settingCopy.setInputComponent(compsetting.getInputComponentName());
         settingCopy.setOutputComponent(compsetting.getOutPutComponentName());
@@ -2098,7 +2115,17 @@ public class TalendEditorDropTargetListener extends TemplateTransferDropTargetLi
         // Check if the components in the list neededComponents have the same category that is required by Process.
         IComponent component = chooseOneComponent(extractComponents(neededComponents), settingCopy, quickCreateInput,
                 quickCreateOutput, typeName);
-        store.component = UnifiedComponentUtil.getEmfComponent(compsetting, component);
+
+        if (ITCKUIService.get().getTCKJDBCType().getLabel().equals(typeName)
+                || UnifiedComponentUtil.isAdditionalJDBC(typeName)) {
+            settingCopy = new RepositoryComponentSetting();
+            settingCopy.setInputComponent(StringUtils.prependIfMissing(compsetting.getInputComponentName(), "t"));
+            settingCopy.setOutputComponent(StringUtils.prependIfMissing(compsetting.getOutPutComponentName(), "t"));
+            settingCopy.setDefaultComponent(StringUtils.prependIfMissing(compsetting.getDefaultComponentName(), "t"));
+            store.component = UnifiedComponentUtil.getEmfComponent(settingCopy, component);
+        } else {
+            store.component = UnifiedComponentUtil.getEmfComponent(compsetting, component);
+        }
         store.componentName = rcSetting;
     }
 

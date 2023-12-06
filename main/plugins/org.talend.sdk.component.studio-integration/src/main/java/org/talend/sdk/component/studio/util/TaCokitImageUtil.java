@@ -95,6 +95,10 @@ public class TaCokitImageUtil {
     public static byte[] requestFamilyIcon(String id) throws Exception {
         return Lookups.client().v1().component().familyIcon(id);
     }
+    
+    public static byte[] searchIcon(String familyId, String iconKey) throws Exception {
+        return Lookups.client().v1().component().searchIcon(familyId, iconKey);
+    }
 
     public static byte[] requestIcon(String id) throws Exception {
         return Lookups.client().v1().component().icon(id);
@@ -118,21 +122,39 @@ public class TaCokitImageUtil {
         }
         return null;
     }
+    
+    public static ImageDescriptor getImage(String familyId, String iconKey) throws Exception {
+        if (CommonsPlugin.isHeadless()) {
+            return ComponentService.DEFAULT_IMAGE;
+        }
+        final String mapKey = familyId + "/" + iconKey;
+        if (CONNECTION_IMAGE_MAP.containsKey(mapKey)) {
+            return CONNECTION_IMAGE_MAP.get(mapKey);
+        }
+        byte[] data = searchIcon(familyId, iconKey);
+        Image image = buildTaCoKitImage(data);
+        if (image != null) {        
+            CONNECTION_IMAGE_MAP.put(mapKey, ImageDescriptor.createFromImage(image));
+        } else {
+            ExceptionHandler.log("Build TCK connection image failed:" + mapKey);
+        }
+        return CONNECTION_IMAGE_MAP.get(mapKey);
+    }
    
-   public static ImageDescriptor getConnectionImage(String id) throws Exception {
-       if (CommonsPlugin.isHeadless()) {
-           return ComponentService.DEFAULT_IMAGE;
-       }
-       if (CONNECTION_IMAGE_MAP.containsKey(id)) {
-           return CONNECTION_IMAGE_MAP.get(id);
-       }
-       byte[] data = requestFamilyIcon(id);
-       Image image = buildTaCoKitImage(data);
-       if (image != null) {        
-           CONNECTION_IMAGE_MAP.put(id, ImageDescriptor.createFromImage(image));
-       } else {
-           ExceptionHandler.log("Build TCK connection image failed:" + id);
-       }
-       return CONNECTION_IMAGE_MAP.get(id);
-   }
+    public static ImageDescriptor getConnectionImage(String id) throws Exception {
+        if (CommonsPlugin.isHeadless()) {
+            return ComponentService.DEFAULT_IMAGE;
+        }
+        if (CONNECTION_IMAGE_MAP.containsKey(id)) {
+            return CONNECTION_IMAGE_MAP.get(id);
+        }
+        byte[] data = requestFamilyIcon(id);
+        Image image = buildTaCoKitImage(data);
+        if (image != null) {        
+            CONNECTION_IMAGE_MAP.put(id, ImageDescriptor.createFromImage(image));
+        } else {
+            ExceptionHandler.log("Build TCK connection image failed:" + id);
+        }
+        return CONNECTION_IMAGE_MAP.get(id);
+    }
 }

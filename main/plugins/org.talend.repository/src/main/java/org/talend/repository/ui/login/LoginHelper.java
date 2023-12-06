@@ -67,6 +67,7 @@ import org.talend.core.repository.model.IRepositoryFactory;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.repository.model.RepositoryFactoryProvider;
 import org.talend.core.runtime.CoreRuntimePlugin;
+import org.talend.core.service.ICloudSignOnService;
 import org.talend.core.service.IStudioLiteP2Service;
 import org.talend.core.services.ICoreTisService;
 import org.talend.core.services.IGITProviderService;
@@ -134,7 +135,7 @@ public class LoginHelper {
     private Map<String, String> licenseMap;
 
     private List<ConnectionBean> currentConnections = null;
-
+    
     public static LoginHelper getInstance() {
         if (instance == null) {
             instance = new LoginHelper();
@@ -1121,4 +1122,19 @@ public class LoginHelper {
     public IGITProviderService getGitProviderService() {
         return this.gitProviderService;
     }
+    
+    public static boolean validatePAT(ConnectionBean selectedConnBean) {
+        if (selectedConnBean.isToken() && !selectedConnBean.isLoginViaCloud()) {
+            String tmcUrl = selectedConnBean.getDynamicFields().get(RepositoryConstants.REPOSITORY_URL);
+            String pat = selectedConnBean.getPassword();
+            return ICloudSignOnService.get().validatePAT(pat, tmcUrl);
+        }
+        // not pat
+        return true;
+    }
+    
+    public List<ConnectionBean> loadSavedConnections() {
+        return perReader.readConnections();
+    }
+    
 }

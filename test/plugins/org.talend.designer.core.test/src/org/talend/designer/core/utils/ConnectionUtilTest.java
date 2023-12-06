@@ -75,10 +75,10 @@ public class ConnectionUtilTest {
         List list = new ArrayList<Map<String, Object>>();
         Map<String, Object> map = new HashMap<String, Object>();
         list.add(map);
-        map.put("drivers", "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0");//$NON-NLS-1$//$NON-NLS-2$
+        map.put("drivers", "mvn:mysql/mysql-connector-java/5.1.30");//$NON-NLS-1$//$NON-NLS-2$
         ConnectionUtil.getDriverJar(list);
         Assert.assertEquals(1, map.size());
-        Assert.assertEquals("mysql-connector-java-5.1.30-bin.jar", map.get("drivers")); //$NON-NLS-1$//$NON-NLS-2$
+        Assert.assertEquals("mysql-connector-java-5.1.30.jar", map.get("drivers")); //$NON-NLS-1$//$NON-NLS-2$
     }
 
     @Test
@@ -140,10 +140,10 @@ public class ConnectionUtilTest {
         List list = new ArrayList<Map<String, Object>>();
         Map<String, Object> map = new HashMap<String, Object>();
         list.add(map);
-        map.put("drivers", "mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0");//$NON-NLS-1$//$NON-NLS-2$
+        map.put("drivers", "mvn:mysql/mysql-connector-java/5.1.30");//$NON-NLS-1$//$NON-NLS-2$
         ConnectionUtil.getDriverJar(list);
         Assert.assertEquals(1, map.size());
-        Assert.assertEquals("mysql-connector-java-5.1.30-bin.jar", map.get("drivers")); //$NON-NLS-1$//$NON-NLS-2$
+        Assert.assertEquals("mysql-connector-java-5.1.30.jar", map.get("drivers")); //$NON-NLS-1$//$NON-NLS-2$
     }
 
     @Test
@@ -180,8 +180,8 @@ public class ConnectionUtilTest {
 
     @Test
     public void testGetDriverJarFromMvnUrlMysql5() {
-        Assert.assertEquals("mysql-connector-java-5.1.30-bin.jar", //$NON-NLS-1$
-                ConnectionUtil.getDriverJarFromMvnUrl("mvn:org.talend.libraries/mysql-connector-java-5.1.30-bin/6.0.0")); //$NON-NLS-1$
+        Assert.assertEquals("mysql-connector-java-5.1.30.jar", //$NON-NLS-1$
+                ConnectionUtil.getDriverJarFromMvnUrl("mvn:mysql/mysql-connector-java/5.1.30")); //$NON-NLS-1$
     }
 
     @Test

@@ -15,11 +15,13 @@
  */
 package org.talend.sdk.component.studio.model.action;
 
-import org.talend.sdk.component.studio.model.parameter.SuggestionValues;
-import org.talend.sdk.component.studio.ui.composite.controller.TaCoKitValueSelectionController;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.talend.core.model.metadata.builder.connection.Connection;
+import org.talend.core.service.ITCKUIService;
+import org.talend.sdk.component.studio.model.parameter.SuggestionValues;
+import org.talend.sdk.component.studio.ui.composite.controller.TaCoKitValueSelectionController;
 
 /**
  * It should be Thread-safe as it is used in a Job launched by {@link TaCoKitValueSelectionController}
@@ -34,10 +36,17 @@ public class SuggestionsAction extends Action<String> {
     public SuggestionsAction(String actionName, String family) {
         super(actionName, family, Action.Type.SUGGESTIONS);
     }
+    
+    public SuggestionsAction(String actionName, String family, Connection connection) {
+        super(actionName, family, Action.Type.SUGGESTIONS, connection);
+    }
 
     private synchronized SuggestionValues callSuggestions() {
         final Map<String, String> newPayload = payload();
         if (responseNotCached() || payloadChanged(newPayload)) {
+            if (ITCKUIService.get().getTCKJDBCType().getLabel().equals(getFamily())) {
+                retrieveDrivers(newPayload);
+            }
             return doCallback(newPayload);
         } else {
             return cached.response();

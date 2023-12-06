@@ -227,7 +227,7 @@ public class TaCoKitUtil {
         if (repObjType == null) {
             return false;
         }
-        if (TaCoKitConst.METADATA_TACOKIT.equals(repObjType)) {
+        if (TaCoKitConst.METADATA_TACOKIT.equals(repObjType) || ERepositoryObjectType.METADATA_TACOKIT_JDBC.equals(repObjType)) {
             return true;
         }
         ERepositoryObjectType[] parentTypesArray = repObjType.getParentTypesArray();
@@ -240,6 +240,18 @@ public class TaCoKitUtil {
             }
         }
         return false;
+    }
+
+    // TODO remove
+    public static ConfigTypeNode getTopLevelNode(ConfigTypeNode node, Map<String, ConfigTypeNode> nodes) {
+        if (node != null && StringUtils.isBlank(node.getParentId())) {
+            return node;
+        }
+        ConfigTypeNode parentNode = nodes.get(node.getParentId());
+        if (parentNode == null) {
+            return node;
+        }
+        return getTopLevelNode(parentNode, nodes);
     }
 
     public static boolean equals(final String str1, final String str2) {
@@ -266,13 +278,21 @@ public class TaCoKitUtil {
         return familyName + TaCoKitConst.COMPONENT_NAME_SEPARATOR + componentName;
     }
 
+    public static boolean isJDBCFamily (final String familyName) {
+        if ("JDBC".equals(familyName)) {
+            return true;
+        }
+        return false;
+    }
+    
     public static Collection<ConfigTypeNode> filterTopLevelNodes(Collection<ConfigTypeNode> nodes) {
         Collection<ConfigTypeNode> filteredNodes = new ArrayList<>();
         if (nodes != null && !nodes.isEmpty()) {
             for (ConfigTypeNode node : nodes) {
                 String parentId = node.getParentId();
                 String configType = node.getConfigurationType();
-                if (StringUtils.isNotBlank(parentId) || StringUtils.isNotBlank(configType)) {
+                if (StringUtils.isNotBlank(parentId)
+                        || StringUtils.isNotBlank(configType) || TaCoKitSpeicalManager.JDBC.equals(node.getName())) {
                     continue;
                 }
                 filteredNodes.add(node);

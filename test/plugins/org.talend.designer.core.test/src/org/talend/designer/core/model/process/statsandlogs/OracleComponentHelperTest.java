@@ -41,8 +41,8 @@ public class OracleComponentHelperTest {
         assertEquals(StatsAndLogsConstants.ORACLE_WITH_SERVICE_CONN_TYPE,
                 OracleComponentHelper.filterOracleConnectionType(JobSettingsConstants.ORACLE_INOUT_SN_ALIAS));
 
-        assertEquals(StatsAndLogsConstants.JDBC_OUTPUT,
-                OracleComponentHelper.filterOracleConnectionType(StatsAndLogsConstants.JDBC_OUTPUT));
+        assertEquals(JobSettingsConstants.JDBC_OUTPUT,
+                OracleComponentHelper.filterOracleConnectionType(JobSettingsConstants.JDBC_OUTPUT));
     }
 
     /**

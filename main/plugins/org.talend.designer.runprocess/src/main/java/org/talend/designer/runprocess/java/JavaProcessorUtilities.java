@@ -138,6 +138,23 @@ public class JavaProcessorUtilities {
         return libNames;
     }
 
+    public static Set<ModuleNeeded> extractModuleNeededListOnlyForMapperAndReducerWithoutRoutines(IProcess2 process) {
+        Set<ModuleNeeded> libs = extractLibsOnlyForMapperAndReducer(process);
+        if (libs != null) {
+            Iterator<ModuleNeeded> itLibs = libs.iterator();
+            while (itLibs.hasNext()) {
+                ModuleNeeded currentModule = itLibs.next();
+                if (ProcessorUtilities.hadoopConfJarCanBeLoadedDynamically(process.getProperty())) {
+                    Object obj = currentModule.getExtraAttributes().get(HadoopConstants.IS_DYNAMIC_JAR);
+                    if (Boolean.valueOf(String.valueOf(obj))) {
+                        itLibs.remove();
+                    }
+                }
+            }
+        }
+        return libs;
+    }
+
     /**
      * Extracts the name of libs only for mapper and reducer methods dependency.
      *
@@ -154,6 +171,12 @@ public class JavaProcessorUtilities {
     public static Set<String> extractLibNamesOnlyForMapperAndReducer(IProcessor processor) {
         Set<String> libNames = extractLibNamesOnlyForMapperAndReducerWithoutRoutines((IProcess2) processor.getProcess());
         libNames.addAll(JavaProcessUtil.getCodesExportJars(processor));
+        return libNames;
+    }
+
+    public static Set<ModuleNeeded> extractNeededModulesOnlyForMapperAndReducerWithoutRoutines(IProcessor processor) {
+        Set<ModuleNeeded> libNames =
+                extractModuleNeededListOnlyForMapperAndReducerWithoutRoutines((IProcess2) processor.getProcess());
         return libNames;
     }
 

@@ -12,6 +12,7 @@
  */
 package org.talend.sdk.component.studio.metadata.action;
 
+import org.apache.log4j.Logger;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.jface.wizard.WizardDialog;
@@ -25,15 +26,19 @@ import org.talend.commons.utils.VersionUtils;
 import org.talend.core.CorePlugin;
 import org.talend.core.context.Context;
 import org.talend.core.context.RepositoryContext;
+import org.talend.core.database.EDatabaseTypeName;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.metadata.builder.connection.ConnectionFactory;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.PropertiesFactory;
 import org.talend.core.model.properties.Property;
+import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.repository.model.RepositoryNode;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.node.ITaCoKitRepositoryNode;
+import org.talend.sdk.component.studio.metadata.provider.TaCoKitMetadataContentProvider;
 import org.talend.sdk.component.studio.ui.wizard.TaCoKitConfigurationRuntimeData;
 import org.talend.sdk.component.studio.ui.wizard.TaCoKitCreateWizard;
 
@@ -45,6 +50,9 @@ import org.talend.sdk.component.studio.ui.wizard.TaCoKitCreateWizard;
  * for each registered extension class
  */
 public class CreateTaCoKitConfigurationAction extends TaCoKitMetadataContextualAction {
+    private static Logger LOGGER = Logger.getLogger(CreateTaCoKitConfigurationAction.class);
+    
+    private String additionalJDBCType;
 
     public CreateTaCoKitConfigurationAction(final ConfigTypeNode configTypeNode) {
         super();
@@ -66,7 +74,7 @@ public class CreateTaCoKitConfigurationAction extends TaCoKitMetadataContextualA
         case SIMPLE_FOLDER:
         case SYSTEM_FOLDER:
         case REPOSITORY_ELEMENT:
-            if (isUserReadOnly() || !belongsToCurrentProject(node) || isDeleted(node)) {
+            if (isUserReadOnly() || !belongsToCurrentProject(node) || isDeleted(node) || TaCoKitMetadataContentProvider.isJDBCLeafNode((ITaCoKitRepositoryNode) node)) {
                 setEnabled(false);
                 return;
             } else {
@@ -101,19 +109,40 @@ public class CreateTaCoKitConfigurationAction extends TaCoKitMetadataContextualA
         runtimeData.setCreation(true);
         runtimeData.setReadonly(false);
         runtimeData.setConnectionItem(createConnectionItem());
+        runtimeData.setAdditionalJDBCType(additionalJDBCType);
         return runtimeData;
     }
 
     private ConnectionItem createConnectionItem() throws Exception {
-        Connection connection = ConnectionFactory.eINSTANCE.createConnection();
-
+        Connection connection = null;
+        ConnectionItem connectionItem = null;
+        if(TacokitDatabaseConnection.KEY_JDBC_DATASTORE_NAME.equals(configTypeNode.getName())) {
+            TacokitDatabaseConnection databaseConnection = ConnectionFactory.eINSTANCE.createTacokitDatabaseConnection();
+            databaseConnection.setDatabaseType(EDatabaseTypeName.GENERAL_JDBC.getXMLType());
+            databaseConnection.setProductId(EDatabaseTypeName.GENERAL_JDBC.getProduct());
+            if (additionalJDBCType != null) {
+                databaseConnection.setProductId(additionalJDBCType);
+            }
+            connection = databaseConnection;
+            connectionItem = PropertiesFactory.eINSTANCE.createTacokitDatabaseConnectionItem();
+        } else if ("dataset".equalsIgnoreCase(configTypeNode.getConfigurationType())) {
+            connection = ConnectionFactory.eINSTANCE.createConnection();
+            connectionItem = PropertiesFactory.eINSTANCE.createConnectionItem();
+            IRepositoryViewObject parentObject = repositoryNode.getObject();
+            ConnectionItem parentItem = ((ConnectionItem) parentObject.getProperty().getItem());
+            connection.setContextMode(parentItem.getConnection().isContextMode());
+            connection.setContextName(parentItem.getConnection().getContextName());
+            connection.setContextId(parentItem.getConnection().getContextId());
+        } else {
+            connection = ConnectionFactory.eINSTANCE.createConnection();
+            connectionItem = PropertiesFactory.eINSTANCE.createConnectionItem();
+        }
         Property property = PropertiesFactory.eINSTANCE.createProperty();
         property.setAuthor(
                 ((RepositoryContext) CorePlugin.getContext().getProperty(Context.REPOSITORY_CONTEXT_KEY)).getUser());
         property.setVersion(VersionUtils.DEFAULT_VERSION);
         property.setStatusCode(""); //$NON-NLS-1$
 
-        ConnectionItem connectionItem = PropertiesFactory.eINSTANCE.createConnectionItem();
         connectionItem.setConnection(connection);
         connectionItem.setProperty(property);
         connectionItem.setTypeName(configTypeNode.getId());
@@ -135,6 +164,10 @@ public class CreateTaCoKitConfigurationAction extends TaCoKitMetadataContextualA
             configurationModel.setParentItemId(id);
         }
         return connectionItem;
+    }
+
+    public void setAdditionalJDBCType(String additionalJDBCType) {
+        this.additionalJDBCType = additionalJDBCType;
     }
 
 }

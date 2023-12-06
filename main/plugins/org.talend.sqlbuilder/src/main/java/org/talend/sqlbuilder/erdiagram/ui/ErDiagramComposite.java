@@ -238,8 +238,7 @@ public class ErDiagramComposite extends SashForm {
     }
 
     private String getCurrentDbType() {
-        DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) rootNode.getObject().getProperty().getItem())
-                .getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(rootNode);
         String driverClass = connection.getDriverClass();
         if (connection.isContextMode()) {
             driverClass = DatabaseConnectionParameterUtil.getContextTrueValue(connection, driverClass);
@@ -252,8 +251,7 @@ public class ErDiagramComposite extends SashForm {
     }
 
     private String getSchema() {
-        DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) rootNode.getObject().getProperty().getItem())
-                .getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(rootNode);
         String schema = "";
         boolean isCalculationView = false;
         if (ConnectionUtils.isTeradata(connection.getURL())) {

@@ -111,7 +111,7 @@
            level="1"
            name="Edit TaCoKit">
      </Action>
-  </extension>
+  </extension> 
   <extension
         point="org.talend.core.runtime.service">
      <Service
@@ -121,6 +121,10 @@
     <Service
       class="org.talend.sdk.component.studio.service.TaCoKitDependencyService"
       serviceId="ITaCoKitDependencyService">
+    </Service>
+    <Service
+          class="org.talend.sdk.component.studio.service.TCKUIService"
+          serviceId="ITCKUIService">
     </Service>
   </extension>
   <extension
@@ -347,4 +351,18 @@
   <extension point="org.talend.core.runtime.buildExport_provider">
     <dependenciesProvider class="org.talend.sdk.component.studio.provider.TacokitExportDependenciesProvider"></dependenciesProvider>
   </extension>
+  <extension
+          point="org.talend.core.repository.repository_context">
+       <RepositoryContext
+             class="org.talend.sdk.component.studio.ui.wizard.page.TaCoKitContextHandler">
+       </RepositoryContext>
+    </extension>
+    <extension
+          point="org.talend.core.runtime.service">
+       <Service
+             class="org.talend.sdk.component.studio.service.TaCoKitContextUpdateService"
+             serviceId="IRepositoryContextUpdateService">
+       </Service>
+    </extension>
+
 </plugin>

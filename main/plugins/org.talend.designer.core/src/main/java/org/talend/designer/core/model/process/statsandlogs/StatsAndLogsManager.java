@@ -19,11 +19,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.avro.Schema;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.talend.components.api.properties.ComponentProperties;
-import org.talend.components.api.properties.ComponentReferenceProperties;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.database.EDatabaseTypeName;
 import org.talend.core.database.conn.DatabaseConnStrUtil;
@@ -34,8 +32,6 @@ import org.talend.core.model.components.EComponentType;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.general.ModuleNeeded;
 import org.talend.core.model.metadata.IMetadataTable;
-import org.talend.core.model.metadata.MetadataToolAvroHelper;
-import org.talend.core.model.metadata.builder.ConvertionHelper;
 import org.talend.core.model.param.EConnectionParameterName;
 import org.talend.core.model.param.ERepositoryCategoryType;
 import org.talend.core.model.process.EComponentCategory;
@@ -48,7 +44,6 @@ import org.talend.core.model.utils.ContextParameterUtils;
 import org.talend.core.model.utils.TalendTextUtils;
 import org.talend.core.runtime.services.IGenericDBService;
 import org.talend.core.ui.component.ComponentsFactoryProvider;
-import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.presentation.Form;
 import org.talend.designer.core.DesignerPlugin;
 import org.talend.designer.core.model.components.EParameterName;
@@ -56,7 +51,9 @@ import org.talend.designer.core.model.components.ElementParameter;
 import org.talend.designer.core.model.components.EmfComponent;
 import org.talend.designer.core.model.process.DataConnection;
 import org.talend.designer.core.model.process.DataNode;
+import org.talend.designer.core.model.process.jobsettings.JobSettingsConstants;
 import org.talend.designer.core.ui.preferences.StatsAndLogsConstants;
+import org.talend.designer.core.utils.ConnectionUtil;
 import org.talend.librariesmanager.model.ModulesNeededProvider;
 
 /**
@@ -193,15 +190,12 @@ public class StatsAndLogsManager {
                         commitNode.setActivate(true);
                         boolean isGeneric = commitNode.getComponent().getComponentType() == EComponentType.GENERIC;
                         IElementParameter param = commitNode.getElementParameter(EParameterName.CONNECTION.getName());
-                        if (param == null && isGeneric) {
-                            param = commitNode.getElementParameter("referencedComponent"); //$NON-NLS-1$
-                        }
                         if (param != null) {
                             param.setValue(CONNECTION_UID);
                         }
                         IElementParameter elementParameter = commitNode.getElementParameter("CLOSE");//$NON-NLS-1$
                         if (elementParameter == null && isGeneric) {
-                            elementParameter = commitNode.getElementParameter("closeConnection");//$NON-NLS-1$
+                            elementParameter = commitNode.getElementParameter("configuration.close");//$NON-NLS-1$
                         }
                         if (elementParameter != null) {
                             elementParameter.setValue(Boolean.FALSE);
@@ -468,16 +462,9 @@ public class StatsAndLogsManager {
         dbOutputNode.setProcess(process);
         nodeList.add(dbOutputNode);
 
-        ComponentProperties tcomp_properties = dbOutputNode.getComponentProperties();
-        dbOutputNode.getElementParameter("tableSelection.tablename")
-                .setValue(process.getElementParameter(dbTableParameterName).getValue());
-
-        NamedThing referencedComponent = tcomp_properties.getProperty("referencedComponent");
-        if (referencedComponent instanceof ComponentReferenceProperties) {
-            ComponentReferenceProperties refProps = (ComponentReferenceProperties) referencedComponent;
-            refProps.referenceType.setValue(ComponentReferenceProperties.ReferenceType.COMPONENT_INSTANCE);
-            refProps.componentInstanceId.setStoredValue(CONNECTION_UID);
-            refProps.componentInstanceId.setTaggedValue("ADD_QUOTES", true);
+        IElementParameter tableName = dbOutputNode.getElementParameter("configuration.dataSet.tableName"); //$NON-NLS-1$
+        if (tableName != null) {
+            tableName.setValue(process.getElementParameter(dbTableParameterName).getValue());
         }
         sourceMetadataTable = sourceMetadataTable.clone();
         sourceMetadataTable.setTableName(dbOutputNode.getUniqueName());
@@ -485,10 +472,6 @@ public class StatsAndLogsManager {
         List<IMetadataTable> tables = new ArrayList<>();
         tables.add(sourceMetadataTable);
         dbOutputNode.setMetadataList(tables);
-
-        Schema schema = MetadataToolAvroHelper.convertToAvro(ConvertionHelper.convert(sourceMetadataTable));
-        tcomp_properties.setValue("main.schema", schema);
-        tcomp_properties.setValue("schemaFlow.schema", schema);
 
         dataConnec.setActivate(true);
         dataConnec.setLineStyle(EConnectionType.FLOW_MAIN);
@@ -498,7 +481,6 @@ public class StatsAndLogsManager {
         dataConnec.setTarget(dbOutputNode);
         ((List<IConnection>) inputNode.getOutgoingConnections()).add(dataConnec);
         ((List<IConnection>) dbOutputNode.getIncomingConnections()).add(dataConnec);
-        inputNode = dbOutputNode;
 
         resetShowIf(dbOutputNode);
 
@@ -514,6 +496,15 @@ public class StatsAndLogsManager {
                 dbService.initReferencedComponent(refPara, connectionNode.getUniqueName());
             }
         }
+        IElementParameter param = dbOutputNode.getElementParameter(EParameterName.USE_EXISTING_CONNECTION.getName());
+        if (param != null) {
+            param.setValue(Boolean.TRUE);
+        }
+        param = dbOutputNode.getElementParameter(EParameterName.CONNECTION.getName());
+        if (param != null) {
+            param.setValue(CONNECTION_UID);
+        }
+        inputNode = dbOutputNode;
 
         if (console) {
             DataNode consoleNode = createGenericConsoleNode(inputNode, sourceMetadataTable, prefixName, process);
@@ -711,7 +702,7 @@ public class StatsAndLogsManager {
                         IElementParameter elementParameter = connectionNode
                                 .getElementParameter(EParameterName.USE_SHARED_CONNECTION.getName());
                         if (elementParameter == null && isGeneric) {
-                            elementParameter = connectionNode.getElementParameter("shareConnection"); //$NON-NLS-1$
+                            elementParameter = connectionNode.getElementParameter("configuration.useSharedDBConnection"); //$NON-NLS-1$
                         }
                         if (elementParameter != null && elementParameter.getName() != null) {
                             elementParameter.setValue(Boolean.TRUE);
@@ -719,7 +710,8 @@ public class StatsAndLogsManager {
                             IElementParameter sharedElementParameter = connectionNode
                                     .getElementParameter(EParameterName.SHARED_CONNECTION_NAME.getName());
                             if (sharedElementParameter == null && isGeneric) {
-                                sharedElementParameter = connectionNode.getElementParameter("sharedConnectionName"); //$NON-NLS-1$
+                                sharedElementParameter = connectionNode
+                                        .getElementParameter("configuration.sharedDBConnectionName"); //$NON-NLS-1$
                             }
                             if ((Boolean) process.getElementParameter(EParameterName.STATANDLOG_USE_PROJECT_SETTINGS.getName())
                                     .getValue()) {
@@ -738,7 +730,8 @@ public class StatsAndLogsManager {
                         if (isGeneric) {// reset the show if
                             resetShowIf(connectionNode);
                             if (checkUrlContainsAutoCommit(connectionNode)) {
-                                IElementParameter autoCommitParam = connectionNode.getElementParameter("autocommit");//$NON-NLS-1$
+                                IElementParameter autoCommitParam = connectionNode
+                                        .getElementParameter("configuration.autoCommit");//$NON-NLS-1$
                                 if (autoCommitParam != null) {
                                     autoCommitParam.setValue(Boolean.TRUE);
                                 }
@@ -772,7 +765,7 @@ public class StatsAndLogsManager {
         }
         boolean noCommitNode = false;
         if (checkUrlContainsAutoCommit(connectionNode)) {
-            IElementParameter autoCommitParam = connectionNode.getElementParameter("autocommit");//$NON-NLS-1$
+            IElementParameter autoCommitParam = connectionNode.getElementParameter("configuration.autoCommit");//$NON-NLS-1$
             if (autoCommitParam != null && autoCommitParam.getValue() != null) {
                 noCommitNode = Boolean.parseBoolean(autoCommitParam.getValue().toString());
                 if (noCommitNode && nodeList.contains(commitNode)) {
@@ -830,7 +823,7 @@ public class StatsAndLogsManager {
     private static String getUrl(IProcess process) {
         String processDBType = (String) process.getElementParameter(EParameterName.DB_TYPE.getName()).getValue();
 
-        if (StatsAndLogsConstants.JDBC_OUTPUT.equals(processDBType)) {
+        if (JobSettingsConstants.JDBC_OUTPUT.equals(processDBType)) {
             IElementParameter urlParam = process.getElementParameter(EParameterName.URL.getName());
             if (urlParam != null && urlParam.getValue() != null) {
                 return urlParam.getValue().toString();
@@ -1014,7 +1007,7 @@ public class StatsAndLogsManager {
         // 7253
         IElementParameter elementParameter = connectionNode.getElementParameter("PROPERTY");
         if (elementParameter != null) {
-            String repositoryValue = elementParameter.getRepositoryValue();
+            String repositoryValue = elementParameter.calcRepositoryValue();
             if ("DATABASE:SQLITE".equals(repositoryValue)) {
                 if (connectionNode.getElementParameter(EParameterName.DBNAME.getName()) != null) {
                     connectionNode.getElementParameter(EParameterName.DBNAME.getName())
@@ -1059,7 +1052,7 @@ public class StatsAndLogsManager {
 
     }
 
-    private static void getMVNDriverJar(IElementParameter elePara, Object value) {
+    public static void getMVNDriverJar(IElementParameter elePara, Object value) {
         IGenericDBService dbService = null;
         if (GlobalServiceRegister.getDefault().isServiceRegistered(IGenericDBService.class)) {
             dbService = GlobalServiceRegister.getDefault().getService(IGenericDBService.class);
@@ -1073,11 +1066,13 @@ public class StatsAndLogsManager {
             for (Object obj : objs) {
                 if (obj instanceof Map) {
                     Map map = (Map) obj;
-                    String driver = (String) map.get("drivers");
-                    if (elePara.getName().equals(EConnectionParameterName.GENERIC_DRIVER_JAR.getDisplayName())) {
+                    String driver = ConnectionUtil.extractDriverValueFromMap(map);
+                    String name = elePara.getName();
+                    if (name.equals(EConnectionParameterName.GENERIC_DRIVER_JAR.getDisplayName())) {
                         driver = dbService.getMVNPath(driver);
                     }
-                    map.put("drivers", driver);
+                    map.clear();
+                    map.put(name + "[].path", driver);
                 }
             }
         }
@@ -1183,7 +1178,7 @@ public class StatsAndLogsManager {
         paramList.addAll(statsAndLogsParametersFinalPart(process));
 
         for (IElementParameter param : paramList) {
-            if (param.getRepositoryValue() != null) {
+            if (param.calcRepositoryValue() != null) {
                 // if any of the parameter of stat&logs is using repository, then force to link it to the name of the
                 // property for stat&logs
                 param.setRepositoryProperty(EParameterName.PROPERTY_TYPE.getName());

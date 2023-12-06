@@ -38,7 +38,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.commons.ui.gmf.util.DisplayUtils;
@@ -70,7 +69,6 @@ import org.talend.designer.core.ui.editor.cmd.PropertyChangeCommand;
 import org.talend.designer.core.ui.editor.cmd.QueryGuessCommand;
 import org.talend.designer.core.ui.editor.nodes.Node;
 import org.talend.repository.model.IProxyRepositoryFactory;
-import org.talend.hadoop.distribution.constants.SparkBatchConstant;
 
 /**
  * DOC yzhang class global comment. Detailled comment <br/>
@@ -182,7 +180,7 @@ public class ComboController extends AbstractElementPropertySectionController {
         combo.setItems(getListToDisplay(param));
         combo.setEditable(false);
         cLayout.setBackground(subComposite.getBackground());
-        combo.setEnabled(!param.isReadOnly());
+        combo.setEnabled(isWidgetEnabled(param));
         combo.addSelectionListener(listenerSelection);
         combo.setData(PARAMETER_NAME, param.getName());
         int nbLines = param.getNbLines();
@@ -575,7 +573,7 @@ public class ComboController extends AbstractElementPropertySectionController {
                     comboValue = (String) value;
                 }
                 boolean isRepositoryValueUsed = param.isRepositoryValueUsed();
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (!isRepositoryValueUsed && StringUtils.isBlank(repositoryValue) && paramItems != null
                         && paramItems.length > 0) {
 
@@ -596,12 +594,9 @@ public class ComboController extends AbstractElementPropertySectionController {
 
             combo.setVisible(true);
         }
-
-        if (param.isContextMode()) {
-            combo.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_YELLOW));
-            combo.setEnabled(false);
+        if (isTacokit(param) || param.isContextMode()) {
+            combo.setEnabled(isWidgetEnabled(param));
         }
-
     }
 
     private String[] getListToDisplay(IElementParameter param) {

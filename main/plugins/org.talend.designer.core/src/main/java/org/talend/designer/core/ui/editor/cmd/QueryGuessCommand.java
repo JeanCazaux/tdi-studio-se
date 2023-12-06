@@ -20,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Priority;
 import org.eclipse.gef.commands.Command;
 import org.talend.commons.exception.PersistenceException;
+import org.talend.commons.runtime.service.ITaCoKitService;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.ITDQRuleService;
@@ -30,6 +31,7 @@ import org.talend.core.model.metadata.IMetadataTable;
 import org.talend.core.model.metadata.QueryUtil;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.metadata.builder.connection.DatabaseConnection;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataUtils;
 import org.talend.core.model.metadata.designerproperties.RepositoryToComponentProperty;
 import org.talend.core.model.param.EConnectionParameterName;
@@ -43,6 +45,7 @@ import org.talend.core.model.process.IProcess2;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.DatabaseConnectionItem;
 import org.talend.core.model.properties.Item;
+import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.model.utils.ContextParameterUtils;
 import org.talend.core.model.utils.TalendTextUtils;
@@ -145,27 +148,26 @@ public class QueryGuessCommand extends Command {
             newQuery = generateNewQueryFromDQRuler(dqRuler);
         }
 
-        for (IElementParameter param : (List<IElementParameter>) node.getElementParameters()) {
-            if (param.getFieldType() == EParameterFieldType.MEMO_SQL) {
-                oldValue = node.getPropertyValue(param.getName());
-                this.propName = param.getName();
-                String sql = null;
-                try {
-                    // sql = new SQLFormatUtil().formatSQL(newQuery);
-                    if (QueryUtil.needFormatSQL(dbType)) {
-                        sql = fomatQuery(newQuery);
-                    } else {
-                        sql = newQuery;
-                    }
-                    node.setPropertyValue(param.getName(), sql);
-                } catch (Exception e) {
-                    ExceptionHandler.process(e, Priority.WARN);
-                    node.setPropertyValue(param.getName(), newQuery);
-                }
-
-                param.setRepositoryValueUsed(false);
-            }
+        IElementParameter param = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_SQL_QUERY);
+        if (param == null) {
+            param = node.getElementParameterFromField(EParameterFieldType.MEMO_SQL);
         }
+        oldValue = node.getPropertyValue(param.getName());
+        this.propName = param.getName();
+        String sql = null;
+        try {
+            // sql = new SQLFormatUtil().formatSQL(newQuery);
+            if (QueryUtil.needFormatSQL(dbType)) {
+                sql = fomatQuery(newQuery);
+            } else {
+                sql = newQuery;
+            }
+            node.setPropertyValue(param.getName(), sql);
+        } catch (Exception e) {
+            ExceptionHandler.process(e, Priority.WARN);
+            node.setPropertyValue(param.getName(), newQuery);
+        }
+        param.setRepositoryValueUsed(false);
 
         node.setPropertyValue(EParameterName.UPDATE_COMPONENTS.getName(), Boolean.TRUE);
 
@@ -216,6 +218,9 @@ public class QueryGuessCommand extends Command {
                     schemaParam == null ? org.apache.commons.lang.StringUtils.EMPTY : schemaParam.getValue().toString(),
                     lastRunContext);
             IElementParameter tableParam = node.getElementParameterFromField(EParameterFieldType.DBTABLE);
+            if (tableParam == null) {
+                tableParam = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_TABLE_NAME);
+            }
             String tableName = JavaProcessUtil.getRealParamValue(process, tableParam.getValue().toString(), lastRunContext);
             IElementParameter whereClause = node.getElementParameter("WHERE_CLAUSE"); //$NON-NLS-1$
             String whereStr = org.apache.commons.lang.StringUtils.EMPTY;
@@ -265,8 +270,10 @@ public class QueryGuessCommand extends Command {
         }
         if (dbType == null || dbType.equals("")) { //$NON-NLS-1$
             IElementParameter ptParam = node.getElementParameterFromField(EParameterFieldType.PROPERTY_TYPE);
-            if (ptParam != null && ptParam.getRepositoryValue() != null) {
-                if (ptParam.getRepositoryValue().endsWith(EDatabaseTypeName.GENERAL_JDBC.getProduct())) {
+            String repositoryValue = null;
+            if (ptParam != null && (repositoryValue = ptParam.calcRepositoryValue()) != null) {
+                if (repositoryValue.endsWith(EDatabaseTypeName.GENERAL_JDBC.getProduct())
+                        || repositoryValue.indexOf(ERepositoryObjectType.METADATA_TACOKIT_JDBC.getKey()) >= 0) {
                     dbType = EDatabaseTypeName.GENERAL_JDBC.getDisplayName();
                 }
             }
@@ -316,16 +323,18 @@ public class QueryGuessCommand extends Command {
         // hywang add for bug 7575
         String jdbcDriverClassName = null;
         String jdbcDriverJarName = null;
-        if (dbType != null && dbType.equals(EDatabaseTypeName.GENERAL_JDBC.getProduct())) {
+        if (dbType != null && (dbType.equals(EDatabaseTypeName.GENERAL_JDBC.getProduct())
+                || dbType.equals(EDatabaseTypeName.GENERAL_JDBC.getDisplayName()))) {
             isJdbc = true;
-            boolean isGeneralJDBC = dbType.equals(EDatabaseTypeName.GENERAL_JDBC.getDisplayName());
-
-            String driverClassName = null;
-            if (isGeneralJDBC) {
-                driverClassName = node.getElementParameter("DRIVER_CLASS").getValue().toString();
-                if (connectionNode != null) {
-                    driverClassName = connectionNode.getElementParameter("DRIVER_CLASS").getValue().toString();
+            String driverClassName = null;           
+            if (connectionNode != null) {
+                IElementParameter elementParameter = connectionNode.getElementParameter(EConnectionParameterName.GENERIC_DRIVER_CLASS.getDisplayName());
+                if (elementParameter == null) {
+                    elementParameter = connectionNode.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_CLASS);
                 }
+                if (elementParameter != null) {
+                    driverClassName = elementParameter.getValue().toString();
+                }                    
             } else {
                 IElementParameter elementParameter = node.getElementParameter(EConnectionParameterName.GENERIC_DRIVER_CLASS
                         .getDisplayName());
@@ -333,12 +342,13 @@ public class QueryGuessCommand extends Command {
                     // for mr process , it still use old JDBC component but can use new connection from repository
                     elementParameter = node.getElementParameter("DRIVER_CLASS");
                 }
-                driverClassName = elementParameter.getValue().toString();
-                if (connectionNode != null) {
-                    driverClassName = connectionNode
-                            .getElementParameter(EConnectionParameterName.GENERIC_DRIVER_CLASS.getDisplayName()).getValue()
-                            .toString();
+                if (elementParameter == null) {
+                    elementParameter = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_CLASS);
                 }
+                
+                if (elementParameter != null) {
+                    driverClassName = elementParameter.getValue().toString();
+                }  
             }
 
             driverClassName = TalendTextUtils.removeQuotes(driverClassName);
@@ -357,12 +367,15 @@ public class QueryGuessCommand extends Command {
             }
 
             // DRIVER_JAR:
-            String driverJarName = null;
-            if (isGeneralJDBC) {
-                driverJarName = node.getElementParameter("DRIVER_JAR").getValue().toString();
-                if (connectionNode != null) {
-                    driverJarName = connectionNode.getElementParameter("DRIVER_JAR").getValue().toString();
+            String driverJarName = null;                      
+            if (connectionNode != null) {
+                IElementParameter elementParameter = connectionNode.getElementParameter(EConnectionParameterName.GENERIC_DRIVER_JAR.getDisplayName());
+                if (elementParameter == null) {
+                    elementParameter = connectionNode.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER);
                 }
+                if (elementParameter != null) {
+                    driverJarName = elementParameter.getValue().toString();
+                }                    
             } else {
                 IElementParameter elementParameter = node.getElementParameter(EConnectionParameterName.GENERIC_DRIVER_JAR
                         .getDisplayName());
@@ -370,14 +383,15 @@ public class QueryGuessCommand extends Command {
                     // for mr process , it still use old JDBC component but can use new connection from repository
                     elementParameter = node.getElementParameter("DRIVER_JAR");
                 }
-                driverJarName = elementParameter.getValue().toString();
-
-                if (connectionNode != null) {
-                    driverJarName = connectionNode
-                            .getElementParameter(EConnectionParameterName.GENERIC_DRIVER_JAR.getDisplayName()).getValue()
-                            .toString();
+                if (elementParameter == null) {
+                    elementParameter = node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER);
                 }
+                
+                if (elementParameter != null) {
+                    driverJarName = elementParameter.getValue().toString();
+                }  
             }
+            
             if (driverJarName != null && driverJarName.startsWith("[") && driverJarName.endsWith("]")) {
                 driverJarName = driverJarName.substring(1, driverJarName.length() - 1);
                 if (driverJarName != null && driverJarName.startsWith("{") && driverJarName.endsWith("}")) {
@@ -439,9 +453,10 @@ public class QueryGuessCommand extends Command {
                 elementParameters = connectionNode.getElementParameters();
             }
             for (IElementParameter param : elementParameters) {
-                if (param.getRepositoryValue() != null) {
-                    if ((!isTeradata && param.getRepositoryValue().equals("SCHEMA")) //$NON-NLS-1$
-                            || (isTeradata && param.getRepositoryValue().equals("SID"))) {// check if dbtype is //$NON-NLS-1$
+                String repositoryValue = param.calcRepositoryValue();
+                if (repositoryValue != null) {
+                    if ((!isTeradata && repositoryValue.equals("SCHEMA")) //$NON-NLS-1$
+                            || (isTeradata && repositoryValue.equals("SID"))) {// check if dbtype is //$NON-NLS-1$
                         // Teradata, always keep the
                         // query style like
                         // "dbname.tablename.columnname" on build-in mode
@@ -661,5 +676,18 @@ public class QueryGuessCommand extends Command {
             }
         }
         return schema;
+    }
+    
+    private String getTacokitDriversFromParameter(IElementParameter parameter) {
+        List<String> values = ITaCoKitService.getInstance().getValuesFromTableParameter(parameter,
+                TacokitDatabaseConnection.KEY_DRIVER_PATH, TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_PATH);
+        StringBuffer sb = new StringBuffer();
+        for (String v : values) {
+            if (sb.length() > 0) {
+                sb.append(";");
+            }
+            sb.append(v);
+        }
+        return sb.toString();
     }
 }

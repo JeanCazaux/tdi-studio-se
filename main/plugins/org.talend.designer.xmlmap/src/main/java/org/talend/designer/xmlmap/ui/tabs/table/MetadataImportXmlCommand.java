@@ -17,6 +17,7 @@ import java.util.ArrayList;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
+import org.talend.commons.ui.runtime.swt.tableviewer.TableViewerCreatorNotModifiable;
 import org.talend.commons.ui.swt.dialogs.ErrorDialogWidthDetailArea;
 import org.talend.commons.ui.swt.extended.table.ExtendedTableModel;
 import org.talend.commons.utils.data.list.ListenableList;
@@ -55,6 +56,11 @@ public class MetadataImportXmlCommand extends org.talend.core.ui.metadata.extend
             if (extendedTableModel.getBeansList() instanceof ListenableList) {
                 ListenableList beanList = (ListenableList) extendedTableModel.getBeansList();
                 beanList.fireReplacedEvent(0, removed, added, false);
+            }
+            // when not lazy load need to do refresh to refresh the row number
+            if (!TableViewerCreatorNotModifiable.getRecommandLazyLoad()
+                    && !TableViewerCreatorNotModifiable.isLazyLoadingEnabled()) {
+                extendedTableModel.getTableViewer().refresh();
             }
 
         } catch (Exception e) {

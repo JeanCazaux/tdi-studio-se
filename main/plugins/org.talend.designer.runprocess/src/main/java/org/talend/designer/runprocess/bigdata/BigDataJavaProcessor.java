@@ -23,6 +23,7 @@ import java.util.Set;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
@@ -30,8 +31,6 @@ import org.talend.commons.exception.CommonExceptionHandler;
 import org.talend.commons.utils.generation.JavaUtils;
 import org.talend.commons.utils.resource.FileExtensions;
 import org.talend.core.model.general.ModuleNeeded;
-import org.talend.core.model.process.Element;
-import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.IProcess;
 import org.talend.core.model.process.IProcess2;
 import org.talend.core.model.process.JobInfo;
@@ -47,7 +46,6 @@ import org.talend.core.runtime.process.LastGenerationInfo;
 import org.talend.core.runtime.process.TalendProcessOptionConstants;
 import org.talend.core.runtime.repository.build.IMavenPomCreator;
 import org.talend.core.runtime.util.ModuleAccessHelper;
-import org.talend.designer.core.model.components.EParameterName;
 import org.talend.designer.core.utils.BigDataJobUtil;
 import org.talend.designer.core.utils.JavaProcessUtil;
 import org.talend.designer.maven.model.TalendMavenConstants;
@@ -66,6 +64,10 @@ import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManag
 import org.talend.repository.ui.wizards.exportjob.scriptsmanager.JobScriptsManager.ExportChoice;
 
 public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements IBigDataProcessor {
+
+    private static final String DISABLE_ALIGN_LIBJARS = "disable.align.libjars";
+
+    private static Logger log = Logger.getLogger(BigDataJavaProcessor.class);
 
     protected String windowsAddition, unixAddition;
 
@@ -151,10 +153,13 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
         return super.makeUpCommandSegments();
     }
     
+    List<ModuleNeeded> cpNeededModules = null;
+
     private List<String> makeUpCommandSegments(boolean ignoreCustomJVMSetting) {
     	List<String> commands = new ArrayList<String>();
         commands.addAll(extractAheadCommandSegments());
         commands.addAll(extractJavaCommandSegments(ignoreCustomJVMSetting));
+        cpNeededModules = getCPNeededModules();
         commands.addAll(extractCPCommandSegments());
         commands.add(extractMainClassSegments() == null ? "" : extractMainClassSegments()); //$NON-NLS-1$
         commands.addAll(extractArgumentSegments());
@@ -222,10 +227,14 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
 
     @Override
     public List<String> extractArgumentSegments() {
+        // add a system property to disable align libjars . align libjars by default
+        boolean disableAlignLibjars =
+                Boolean.valueOf(System.getProperty(DISABLE_ALIGN_LIBJARS, Boolean.FALSE.toString()));
         List<String> list = new ArrayList<>();
         list.add(ProcessorConstants.CMD_KEY_WORD_LIBJAR);
         StringBuffer libJars = new StringBuffer();
         Set<String> libNamesUnsorted = new HashSet<>();
+        Set<ModuleNeeded> moduleNeededUnsorted = new HashSet<>();
         boolean isExport = isExportConfig() || isRunAsExport();
         if (process instanceof IProcess2) {
             if (isExport) {
@@ -238,6 +247,11 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
                 // handle them separetely.
                 libNamesUnsorted = JavaProcessorUtilities
                         .extractLibNamesOnlyForMapperAndReducerWithoutRoutines((IProcess2) process);
+            }
+            // prepare a -libjars moduleNeeded list to check
+            if (!disableAlignLibjars) {
+                moduleNeededUnsorted =
+                        JavaProcessorUtilities.extractNeededModulesOnlyForMapperAndReducerWithoutRoutines(this);
             }
         }
         Set<ModuleNeeded> modulesNeeded = LastGenerationInfo.getInstance().getModulesNeededWithSubjobPerJob(process.getId(),
@@ -253,7 +267,6 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
 
         List<String> libNames = new ArrayList<>();
         libNames.addAll(libNamesUnsorted);
-        UpdateLog4jJarUtils.sortClassPath4log4j(highPriorityModuleNeeded, libNames);
         Iterator<String> it = libNames.iterator();
         while (it.hasNext()) {
             String jarName = it.next();
@@ -262,6 +275,19 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
                 it.remove();
             }
         }
+        if (!disableAlignLibjars) {
+            Iterator<ModuleNeeded> iterator = moduleNeededUnsorted.iterator();
+            while (iterator.hasNext()) {
+                ModuleNeeded mn = iterator.next();
+                String jarName = MavenUrlHelper.generateModuleNameByMavenURI(mn.getMavenUri());
+                if (!allNeededLibsAfterAdjuster.contains(jarName) && !JavaUtils.ROUTINES_JAR.equals(jarName)
+                        && !JavaUtils.BEANS_JAR.equals(jarName) && !JavaUtils.PIGUDFS_JAR.equals(jarName)) {
+                    iterator.remove();
+                }
+            }
+            alignLibJarWithClasspath(cpNeededModules, moduleNeededUnsorted, libNames, highPriorityModuleNeeded);
+        }
+        UpdateLog4jJarUtils.sortClassPath4log4j(highPriorityModuleNeeded, libNames);
 
         File libDir = JavaProcessorUtilities.getJavaProjectLibFolder();
 
@@ -269,7 +295,6 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
         if (libDir != null) {
             libFolder = new Path(libDir.getAbsolutePath()).toPortableString();
         }
-
         // We iterate over the depencendies, and for each of them, we get its path and append it to the libjars
         // StringBuffer.
         boolean needAllLibJars = true;
@@ -316,6 +341,60 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
         }
         list.add(libJars.toString());
         return list;
+    }
+
+    public void alignLibJarWithClasspath(List<ModuleNeeded> classPathNeededModules,
+            Set<ModuleNeeded> libJarModuleNeeded, List<String> libNames, Set<ModuleNeeded> highPriorityModuleNeeded) {
+        // align classpath version to libjar for same artifact
+        Set<String> toBeRemoveSet = new HashSet<String>();
+        Set<String> toBeAddSet = new HashSet<String>();
+        Iterator<ModuleNeeded> libJarIter = libJarModuleNeeded.iterator();
+        while (libJarIter.hasNext()) {
+            ModuleNeeded module = libJarIter.next();
+            if (highPriorityModuleNeeded.contains(module)) {
+                continue;
+            }
+            MavenArtifact artifact = MavenUrlHelper.parseMvnUrl(module.getMavenUri(), true);
+            String key = getModuleKey(artifact);
+            if (key != null) {
+                Iterator<ModuleNeeded> cpIter = classPathNeededModules.iterator();
+                while (cpIter.hasNext()) {
+                    ModuleNeeded cp = cpIter.next();
+                    if (highPriorityModuleNeeded.contains(cp)) {
+                        continue;
+                    }
+                    MavenArtifact cpArtifact = MavenUrlHelper.parseMvnUrl(cp.getMavenUri(), true);
+                    String cpKey = getModuleKey(cpArtifact);
+                    if (key.equals(cpKey)) {
+                        // same group/artifact id but different version
+                        if (MavenArtifact.compareVersion(artifact.getVersion(), cpArtifact.getVersion()) != 0) {
+                            String removeName = MavenUrlHelper.generateModuleNameByMavenURI(module.getMavenUri());
+                            String addName = MavenUrlHelper.generateModuleNameByMavenURI(cp.getMavenUri());
+                            toBeRemoveSet.add(removeName);
+                            toBeAddSet.add(addName);
+                            log.info("replace -jarlibs [ " + removeName + " ] with [ " + addName + " ]");
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+        libNames.removeAll(toBeRemoveSet);
+        libNames.addAll(toBeAddSet);
+    }
+
+    private String getModuleKey(MavenArtifact artifact) {
+        if (artifact == null) {
+            return null;
+        }
+        String key = artifact.getGroupId() + ":" + artifact.getArtifactId();
+        if (artifact.getType() != null) {
+            key = key + ":" + artifact.getType();
+        }
+        if (artifact.getClassifier() != null) {
+            key = key + ":" + artifact.getClassifier();
+        }
+        return key;
     }
 
     private String getCodesClassPath(ERepositoryObjectType type) {
@@ -397,7 +476,7 @@ public abstract class BigDataJavaProcessor extends MavenJavaProcessor implements
 	protected String makeUpClassPathString() {
         StringBuffer sb = new StringBuffer();
         try {
-            sb.append(getLibsClasspath());
+            sb.append(getLibsClasspath(cpNeededModules));
         } catch (ProcessorException e) {
             e.printStackTrace();
         }

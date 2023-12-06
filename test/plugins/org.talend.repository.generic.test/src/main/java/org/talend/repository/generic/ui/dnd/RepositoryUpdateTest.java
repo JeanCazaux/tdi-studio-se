@@ -129,7 +129,7 @@ public class RepositoryUpdateTest {
 
             IElementParameter param = node.getElementParameter("connection.userPassword.userId");
             assertTrue(param.isRepositoryValueUsed());
-            assertNotNull(param.getRepositoryValue());
+            assertNotNull(param.calcRepositoryValue());
             Form form = node.getComponentProperties().getForm(Form.MAIN);
 
             List<ElementParameter> parameters = new ArrayList<>();
@@ -139,7 +139,7 @@ public class RepositoryUpdateTest {
             node.setElementParameters(parameters);
             param = node.getElementParameter("connection.userPassword.userId");
             assertTrue(param.isRepositoryValueUsed());
-            assertNotNull(param.getRepositoryValue());
+            assertNotNull(param.calcRepositoryValue());
 
         } finally {
             IRepositoryViewObject object = ProxyRepositoryFactory.getInstance().getLastVersion(id);

@@ -17,19 +17,15 @@ package org.talend.sdk.component.studio.model.parameter.listener;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-import java.util.Collections;
-import java.util.regex.Pattern;
 
-import org.talend.sdk.component.studio.model.parameter.TaCoKitElementParameter;
 import org.talend.sdk.component.studio.model.parameter.ValidationLabel;
+import org.talend.sdk.component.studio.util.TacokitContextUtil;
 
 /**
  * Base class for Property Validators. It validates new value. If validation is not passed, then
  * it activates {@code label} ElementParameter and sets its validation message
  */
 public abstract class PropertyValidator implements PropertyChangeListener {
-
-    private final static Pattern CONTEXT_PATTERN = Pattern.compile("^(context\\.).*");
 
     private final ValidationLabel label;
 
@@ -50,8 +46,7 @@ public abstract class PropertyValidator implements PropertyChangeListener {
         if(!"value".equals(event.getPropertyName())){
             return;
         }
-
-        if (isContextualValue(event.getNewValue()) || hideValidation(event.getSource())) {
+        if (TacokitContextUtil.isContextualValue(event.getNewValue()) || ValidationHelper.hideValidation(event.getSource())) {
             label.hideConstraint(validationMessage);
         } else if (!validate(event.getNewValue())) {
             label.showConstraint(validationMessage);
@@ -59,51 +54,18 @@ public abstract class PropertyValidator implements PropertyChangeListener {
             label.hideConstraint(validationMessage);
         }
     }
-    
-    /**
-     * Check if the source parameter is hidden. 
-     * If it is hidden we need to disable validation for it.
-     * @param source element parameter to check
-     * @return
-     */
-    private boolean hideValidation(Object source) {
-		if(source instanceof TaCoKitElementParameter) {
-			TaCoKitElementParameter parameter = (TaCoKitElementParameter)source;
-			return !parameter.isShow(Collections.emptyList());
-		}
-		return false;
-	}
 
-    /**
-     * Checks whether {@code value} is raw data or contains {@code context} variable.
-     * It is assumed that any not String value is raw data.
-     * The {@code value} contains {@code context} if some of words in it starts with "context."
-     *
-     * @param value value to check
-     * @return true, if value contains {@code context} variables
-     */
-    protected boolean isContextualValue(final Object value) {
-        if (!String.class.isInstance(value)) {
-            return false;
-        }
-        String strValue = (String) value;
-        String[] tokens = strValue.split(" ");
-        for (String token : tokens) {
-            if (isContextVariable(token)) {
-                return true;
-            }
-        }
-        return false;
+    protected void hideConstraint() {
+        label.hideConstraint(validationMessage);
+        label.clearConstraint();
     }
 
-    /**
-     * Checks whether incoming token is context variable.
-     *
-     * @param token token to check
-     * @return true, it the token is context variable
-     */
-    private boolean isContextVariable(final String token) {
-        return CONTEXT_PATTERN.matcher(token).matches();
+    boolean isEmpty(final Object newValue) {
+        if (newValue == null) {
+            return true;
+        }
+        String value = (String) newValue;
+        return value.isEmpty();
     }
 
     abstract boolean validate(final Object newValue);

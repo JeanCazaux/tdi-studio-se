@@ -54,7 +54,7 @@
     <PARAMETER
       NAME="CONNECTION"
       FIELD="COMPONENT_LIST"
-      REQUIRED="true" FILTER="tJDBCConnection"
+      REQUIRED="true" FILTER="REGEXP:^JDBCConnection$"
       NUM_ROW="10"
       SHOW_IF="USE_EXISTING_CONNECTION == 'true'"
       DYNAMIC_SETTINGS="true"
@@ -416,7 +416,7 @@
       FIELD="LABEL"
 	  NUM_ROW="16"
 	 >
-	   <DEFAULT>"Source fields value include Null" doesn't work for Postgres and PostgresPlus</DEFAULT>
+	   <DEFAULT>"Source fields value include Null" doesn't work for Postgres</DEFAULT>
 	</PARAMETER>
 
     <PARAMETER

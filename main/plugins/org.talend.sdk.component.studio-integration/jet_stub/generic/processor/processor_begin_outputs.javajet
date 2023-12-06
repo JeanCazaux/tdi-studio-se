@@ -47,11 +47,11 @@
     final org.talend.sdk.component.runtime.di.OutputsHandler outputHandler_<%=cid%> = new org.talend.sdk.component.runtime.di.OutputsHandler(jsonb_<%=cid%>, servicesMapper_<%=cid%>);
 <%
     for (final IConnection connection : node.getOutgoingSortedConnections()) {
-        if (connection.getLineStyle() != EConnectionType.FLOW_MAIN) {
+        if ((connection.getLineStyle() != EConnectionType.FLOW_MAIN) && (connection.getLineStyle() != EConnectionType.FLOW_MERGE)) {
             continue;
         }
 %>
-        outputHandler_<%=cid%>.addConnection("<%= connection.getConnectorName() %>", <%= connection.getName() %>.getClass());
+        outputHandler_<%=cid%>.addConnection("<%=connection.getConnectorName() %>", <%=connection.getName() %>!=null ? <%=connection.getName() %>.getClass() : <%=connection.getName() %>Struct.class);
 <%
     }
 %>

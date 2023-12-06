@@ -625,8 +625,8 @@ public class GenericElementParameter extends ElementParameter implements IGeneri
      * @see org.talend.designer.core.model.components.ElementParameter#getRepositoryValue()
      */
     @Override
-    public String getRepositoryValue() {
-        if (isRepositoryValueUsed() && super.getRepositoryValue() == null) {
+    public String calcRepositoryValue() {
+        if (isRepositoryValueUsed() && super.calcRepositoryValue() == null) {
             super.setRepositoryValue(this.getName());
 //            Property property = getProperty();
 //            if (property != null) {
@@ -637,7 +637,7 @@ public class GenericElementParameter extends ElementParameter implements IGeneri
 //                super.setRepositoryValue(properties.getName());
 //            }
         }
-        return super.getRepositoryValue();
+        return super.calcRepositoryValue();
     }
 
     @Override

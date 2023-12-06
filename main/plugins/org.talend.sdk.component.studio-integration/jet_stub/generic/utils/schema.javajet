@@ -106,7 +106,7 @@ for (IMetadataColumn col: input_columnList){
 <%
 if (rawname != null){
 %>
-.withRawName("<%=rawname%>")
+.withRawName("<%=org.talend.core.model.utils.TalendTextUtils.escapeJavaText(rawname)%>")
 <%
 }
 if (comment != null && !comment.isEmpty()){

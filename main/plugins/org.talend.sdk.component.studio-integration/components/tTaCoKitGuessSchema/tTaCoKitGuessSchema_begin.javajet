@@ -73,7 +73,13 @@ System.setOut(new java.io.PrintStream(new java.io.OutputStream() {
     final String family = (String)node.getElementParameter(EParameterName.FAMILY.getName()).getValue();
     final String version = (String)node.getElementParameter(EParameterName.VERSION.getName()).getValue();
 %>
+
     <%@include file="../../jet_stub/generic/configuration.javajet"%>
+    
+    if(mappings_url_<%=cid %> != null) {
+        System.setProperty("MAPPING_LOCATION", mappings_url_<%=cid %>.toString());
+    }
+    
     <%@include file="../../jet_stub/generic/utils/schema.javajet"%>
 
     org.talend.sdk.component.runtime.di.schema.TaCoKitGuessSchema tacokitGuessSchema =

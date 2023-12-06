@@ -259,7 +259,7 @@
      <IMPORTS>
        <IMPORT NAME="ORACLE_18" MODULE="ojdbc8-19.19.0.0.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc8/19.19.0.0" REQUIRED_IF="(DB_VERSION == 'ORACLE_18') AND (USE_EXISTING_CONNECTION == 'false')" />
        <IMPORT NAME="ORACLE_12" MODULE="ojdbc7.jar" MVN="mvn:org.talend.libraries/ojdbc7/6.0.0"  REQUIRED_IF="(DB_VERSION == 'ORACLE_12') AND (USE_EXISTING_CONNECTION == 'false')" />
-       <IMPORT NAME="ORACLE_11" MODULE="ojdbc6.jar" MVN="mvn:org.talend.libraries/ojdbc6/6.0.0"  REQUIRED_IF="(DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
+       <IMPORT NAME="ORACLE_11" MODULE="ojdbc6-11.2.0.4.jar" MVN="mvn:com.oracle.database.jdbc/ojdbc6/11.2.0.4"  REQUIRED_IF="(DB_VERSION == 'ORACLE_11') AND (USE_EXISTING_CONNECTION == 'false')" />
      </IMPORTS>
    </CODEGENERATION>
 

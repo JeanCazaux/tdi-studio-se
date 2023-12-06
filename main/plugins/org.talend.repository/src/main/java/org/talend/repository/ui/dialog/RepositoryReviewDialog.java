@@ -214,7 +214,7 @@ public class RepositoryReviewDialog extends Dialog {
          *
          * borrow the repositoryType to set the current process id here.
          */
-        this.repositoryType = elemParameter.getRepositoryValue();
+        this.repositoryType = elemParameter.calcRepositoryValue();
         this.elem = compElement;
         this.elementParameter = elemParameter;
         typeProcessor = createTypeProcessor();

@@ -8,7 +8,8 @@ Bundle-SymbolicName: org.talend.sdk.component.studio-integration;singleton=true
 Bundle-Description: Studio integration of the Talend Component Kit framework.
 Bundle-ActivationPolicy: lazy
 Bundle-Activator: org.talend.sdk.component.studio.SdkComponentPlugin
-Export-Package: org.talend.sdk.component.studio.metadata.provider,
+Export-Package: org.talend.sdk.component.server.front.model,
+  org.talend.sdk.component.studio.metadata.provider,
   org.talend.sdk.component.studio.metadata.tester,
   org.talend.sdk.component.studio.metadata.sorter,
   org.talend.sdk.component.studio.metadata.action;uses:="org.talend.sdk.component.studio.metadata.node,org.talend.sdk.component.studio.ui.wizard",
@@ -95,6 +96,7 @@ Require-Bundle: org.eclipse.core.runtime,
  org.eclipse.emf.common,
  org.eclipse.gef,
  org.eclipse.help,
+ org.eclipse.jdt.core,
  org.eclipse.ui,
  org.eclipse.ui.views.properties.tabbed;visibility:=reexport,
  org.eclipse.m2e.core,
@@ -121,7 +123,10 @@ Require-Bundle: org.eclipse.core.runtime,
  org.talend.utils,
  org.apache.log4j,
  org.talend.updates.runtime,
- org.eclipse.equinox.p2.metadata
+ org.eclipse.equinox.p2.metadata,
+ org.talend.components.api,
+ org.talend.sqlbuilder,
+ org.talend.metadata.managment
 Import-Package: org.slf4j,
  org.slf4j.spi,
  org.talend.designer.core.ui.event

@@ -36,7 +36,7 @@ Require-Bundle: org.eclipse.ui,
  org.apache.commons.lang3,
  org.talend.themes.core,
  org.eclipse.ui.views.properties.tabbed,
- avro;bundle-version="1.11.2"
+ avro
 Eclipse-LazyStart: true
 Export-Package: org.talend.repository.generic.model.genericMetadata,
  org.talend.repository.generic.model.genericMetadata.impl,

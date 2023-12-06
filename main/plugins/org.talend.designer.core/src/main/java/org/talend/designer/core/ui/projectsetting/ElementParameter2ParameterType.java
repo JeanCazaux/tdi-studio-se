@@ -293,9 +293,11 @@ public class ElementParameter2ParameterType {
                         } else if (param.getFieldType().equals(EParameterFieldType.ENCODING_TYPE)) {
                             // fix for bug 2193
                             boolean setToCustom = false;
+                            String repositoryValue = null;
                             if (EmfComponent.REPOSITORY
                                     .equals(elemParam.getPropertyValue(EParameterName.PROPERTY_TYPE.getName()))
-                                    && param.getRepositoryValue() != null && param.getRepositoryValue().equals("ENCODING")) { //$NON-NLS-1$
+                                    && (repositoryValue = param.calcRepositoryValue()) != null
+                                    && repositoryValue.equals("ENCODING")) { //$NON-NLS-1$
                                 setToCustom = true;
                             }
                             String tempValue = null;
@@ -322,7 +324,7 @@ public class ElementParameter2ParameterType {
                             elemParam.setPropertyValue(pTypeName, value);
                             // end of fix for bug 2193
                         } else if (!param.getFieldType().equals(EParameterFieldType.SCHEMA_TYPE)) {
-                            if (param.getRepositoryValue() != null
+                            if (param.calcRepositoryValue() != null
                                     && !param.getFieldType().equals(EParameterFieldType.PROPERTY_TYPE)) {
                                 if (repositoryParam != null && EmfComponent.REPOSITORY.equals(repositoryParam.getValue())) {
                                     param.setRepositoryValueUsed(true);

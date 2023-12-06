@@ -341,7 +341,7 @@ public class JobletUtil {
         }
 
         for (IElementParameter param : cloneNode.getElementParameters()) {
-            String repositoryValue = param.getRepositoryValue();
+            String repositoryValue = param.calcRepositoryValue();
             if (param.isShow(cloneNode.getElementParameters()) && (repositoryValue != null)
                     && (!param.getName().equals(EParameterName.PROPERTY_TYPE.getName()))
                     && param.getFieldType() != EParameterFieldType.MEMO_SQL) {

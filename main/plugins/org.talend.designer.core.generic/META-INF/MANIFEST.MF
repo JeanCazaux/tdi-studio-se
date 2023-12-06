@@ -36,7 +36,7 @@ Require-Bundle: org.eclipse.ui,
  org.talend.cwm.mip,
  org.apache.commons.codec,
  org.talend.studio.studio-utils,
- avro;bundle-version="1.11.2"
+ avro
 Bundle-ActivationPolicy: lazy
 Bundle-Vendor: .Talend SA.
 Export-Package: org.talend.designer.core.generic.constants,

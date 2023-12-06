@@ -221,7 +221,7 @@
         	} else if("MYSQL".equals(dbType)){
         		return "`";
         	}
-        	String[] array_types = new String[]{"DB2","GREENPLUM","POSTGRE","POSTGREPLUS","PARACCEL","INGRES","SQLITE","TERADATA","INTERBASE"};
+        	String[] array_types = new String[]{"DB2","GREENPLUM","POSTGRE","PARACCEL","INGRES","SQLITE","TERADATA","INTERBASE"};
         	for(String db :array_types){
         		if(db.equals(dbType)){
         			return "\\\"";

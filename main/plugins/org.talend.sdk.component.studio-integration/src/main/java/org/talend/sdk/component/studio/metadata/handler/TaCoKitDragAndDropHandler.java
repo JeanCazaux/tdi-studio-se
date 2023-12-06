@@ -28,14 +28,17 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.talend.commons.exception.ExceptionHandler;
-import org.talend.core.GlobalServiceRegister;
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.components.IComponentsService;
 import org.talend.core.model.metadata.IMetadataTable;
 import org.talend.core.model.metadata.builder.connection.Connection;
+import org.talend.core.model.metadata.builder.connection.DatabaseConnection;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.IElement;
 import org.talend.core.model.process.IElementParameter;
@@ -46,6 +49,8 @@ import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.utils.AbstractDragAndDropServiceHandler;
 import org.talend.core.model.utils.IComponentName;
 import org.talend.core.repository.RepositoryComponentSetting;
+import org.talend.core.utils.TalendQuoteUtils;
+import org.talend.designer.core.utils.UnifiedComponentUtil;
 import org.talend.repository.model.RepositoryNode;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
 import org.talend.sdk.component.server.front.model.ComponentDetailList;
@@ -55,6 +60,7 @@ import org.talend.sdk.component.server.front.model.ComponentIndices;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.server.front.model.SimplePropertyDefinition;
 import org.talend.sdk.component.studio.ComponentModel;
+import org.talend.sdk.component.studio.IAdditionalJDBCComponent;
 import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.ValueModel;
@@ -284,26 +290,51 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
             final ERepositoryObjectType type) {
 
         List<IComponent> neededComponents = new ArrayList<IComponent>();
+        
+        ITaCoKitRepositoryNode taCoKitRepositoryNode = null;
         if (selectedNode instanceof ITaCoKitRepositoryNode) {
+            taCoKitRepositoryNode = (ITaCoKitRepositoryNode)selectedNode;
             if (!((ITaCoKitRepositoryNode) selectedNode).isLeafNode()) {
                 return neededComponents;
             }
-        } else {
+        } else if ((taCoKitRepositoryNode = getParentTaCoKitRepositoryNode(selectedNode)) == null){
             return neededComponents;
         }
-        ITaCoKitRepositoryNode tacokitNode = (ITaCoKitRepositoryNode) selectedNode;
+        ITaCoKitRepositoryNode tacokitNode = taCoKitRepositoryNode;
         ConfigTypeNode configTypeNode = tacokitNode.getConfigTypeNode();
         ConfigTypeNode familyTypeNode = Lookups.taCoKitCache().getFamilyNode(configTypeNode);
         String familyName = familyTypeNode.getName();
         String configType = configTypeNode.getConfigurationType();
         String configName = configTypeNode.getName();
 
-        IComponentsService service =
-                GlobalServiceRegister.getDefault().getService(IComponentsService.class);
-        Collection<IComponent> components = service.getComponentsFactory().readComponents();
-        for (IComponent component : components) {
-            if (component instanceof ComponentModel) {
-                if (((ComponentModel) component).supports(familyName, configType, configName)) {
+        boolean isAdditionalJDBC = false;
+        String productId = null;
+        if (ConnectionItem.class.isInstance(item)) {
+            Connection connection = ConnectionItem.class.cast(item).getConnection();
+            if (DatabaseConnection.class.isInstance(connection)) {
+                DatabaseConnection dbconn = DatabaseConnection.class.cast(connection);
+                productId = dbconn.getProductId();
+                if (UnifiedComponentUtil.isAdditionalJDBC(dbconn.getProductId())) {
+                    isAdditionalJDBC = true;
+                }
+            }
+        }
+        for (IComponent component : IComponentsService.get().getComponentsFactory().readComponents()) {
+            if (ComponentModel.class.isInstance(component)) {
+                if (isAdditionalJDBC && (!IAdditionalJDBCComponent.class.isInstance(component) || !IAdditionalJDBCComponent.class
+                        .cast(component).getDatabaseType().equals(StringUtils.deleteWhitespace(productId)))) {
+                    continue;
+                }
+                if (!isAdditionalJDBC && IAdditionalJDBCComponent.class.isInstance(component)) {
+                    continue;
+                }
+                if (!isAdditionalJDBC) {
+                    String componentName = component.getName().toLowerCase();
+                    if (componentName.contains("jdbcoutputbulk") || componentName.contains("jdbcbulk")) {
+                        continue;
+                    }
+                }
+                if (ComponentModel.class.cast(component).supports(familyName, configType, configName)) {
                     neededComponents.add(component);
                 }
             }
@@ -311,6 +342,17 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
 
         return neededComponents;
 
+    }
+    
+    private ITaCoKitRepositoryNode getParentTaCoKitRepositoryNode(RepositoryNode selectedNode) {
+        while (selectedNode.getParent() != null) {
+            if (selectedNode.getParent() instanceof ITaCoKitRepositoryNode) {
+                return (ITaCoKitRepositoryNode)selectedNode.getParent();
+            }
+            selectedNode = selectedNode.getParent();
+        }
+        
+        return null;
     }
 
     @Override
@@ -350,9 +392,83 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
         return setting;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void setComponentValue(final Connection connection, final INode node, final IElementParameter param) {
-        // System.out.println("setComponentValue: " + param);
+        if (!TacokitDatabaseConnection.class.isInstance(connection)) {
+            return;
+        }
+        TacokitDatabaseConnection tckConnection = TacokitDatabaseConnection.class.cast(connection);
+        String paramName = param.getName();
+        if (param.getValue() == null) {
+            return;
+        }
+        String paramValue = TalendQuoteUtils.removeQuotesIfExist(param.getValue().toString());
+        if (TacokitDatabaseConnection.KEY_DATASTORE_URL.equals(paramName) || TacokitDatabaseConnection.KEY_URL.equals(paramName)
+                || "URL".equals(paramName)) {
+            tckConnection.setURL(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_HOST.equals(paramName)
+                || TacokitDatabaseConnection.KEY_HOST.equals(paramName)) {
+            tckConnection.setServerName(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_PORT.equals(paramName)
+                || TacokitDatabaseConnection.KEY_PORT.equals(paramName)) {
+            tckConnection.setPort(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DRIVER.equals(paramName)) {
+            // ignore
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_DRIVER.equals(paramName) || "DRIVER_JAR".equals(paramName)) {
+            List<Map<String, String>> list = (List<Map<String, String>>) param.getValue();
+            Set<String> existingDrivers = Stream.of(tckConnection.getDriverJarPath().split(";")).collect(Collectors.toSet());
+            list.stream().flatMap(m -> m.values().stream()).filter(path -> !existingDrivers.contains(path))
+                    .forEach(path -> tckConnection.setDriverJarPath(path));
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_CLASS.equals(paramName)
+                || TacokitDatabaseConnection.KEY_DRIVER_CLASS.equals(paramName) || "DRIVER_CLASS".equals(paramName)) {
+            tckConnection.setDriverClass(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_USER_ID.equals(paramName)
+                || TacokitDatabaseConnection.KEY_USER_ID.equals(paramName) || "USERNAME".equals(paramName)) {
+            tckConnection.setUsername(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_PASSWORD.equals(paramName)
+                || TacokitDatabaseConnection.KEY_PASSWORD.equals(paramName) || "PASSWORD".equals(paramName)) {
+            tckConnection.setRawPassword(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_DATABASE_MAPPING.equals(paramName)
+                || TacokitDatabaseConnection.KEY_DATABASE_MAPPING.equals(paramName)) {
+            // already set
+            // tckConnection.setDbmsId(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_DATASOURCE_ALIAS.equals(paramName)
+                || TacokitDatabaseConnection.KEY_DATASOURCE_ALIAS.equals(paramName)) {
+            // ignore
+            // tckConnection.getDatasourceAlias();
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_USE_SHARED_DB_CONNECTION.equals(paramName)
+                || TacokitDatabaseConnection.KEY_USE_SHARED_DB_CONNECTION.equals(paramName)) {
+            // ignore
+            // tckConnection.useSharedDBConnection();
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_SHARED_DB_CONNECTION.equals(paramName)
+                || TacokitDatabaseConnection.KEY_SHARED_DB_CONNECTION.equals(paramName)) {
+            // ignore
+            // tckConnection.getSharedDBConnectionName();
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_USE_DATASOURCE.equals(paramName)
+                || TacokitDatabaseConnection.KEY_USE_DATASOURCE.equals(paramName)) {
+            // ignore
+            // tckConnection.useDatasourceAlias();;
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_AUTHENTICATION_TYPE.equals(paramName)
+                || TacokitDatabaseConnection.KEY_AUTHENTICATION_TYPE.equals(paramName)) {
+            tckConnection.setAuthenticationType(paramValue);
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_USE_AUTO_COMMIT.equals(paramName)
+                || TacokitDatabaseConnection.KEY_USE_AUTO_COMMIT.equals(paramName)) {
+            // ignore
+            // tckConnection.setUseAutoCommit(Boolean.valueOf(paramValue));
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_AUTO_COMMIT.equals(paramName)
+                || TacokitDatabaseConnection.KEY_AUTO_COMMIT.equals(paramName)) {
+            // ignore
+            // tckConnection.setAutoCommit(Boolean.valueOf(paramValue));
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_ENABLE_DB_TYPE.equals(paramName)
+                || TacokitDatabaseConnection.KEY_ENABLE_DB_TYPE.equals(paramName)) {
+            tckConnection.setEnableDBType(Boolean.valueOf(paramValue));
+        } else if (TacokitDatabaseConnection.KEY_DATASTORE_DB_TYPE.equals(paramName)
+                || TacokitDatabaseConnection.KEY_DB_TYPE.equals(paramName)) {
+            // already set
+            // tckConnection.setDatabaseType(paramValue);
+        }
+
     }
 
     @Override
@@ -399,5 +515,18 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
         }
         return componentMainName.concat(OUTPUT);
     }
+    
+    @Override
+    public boolean isGenericRepositoryValue(Connection connection, List<ComponentProperties> componentProperties, String paramName) {
+        return getGenericRepositoryValue(connection, componentProperties, paramName) != null || getGenericRepositoryValue(connection, componentProperties, paramName.replace(".dataSet.dataStore", "")) != null;
+    }
 
+    @Override
+    public Object getGenericRepositoryValue(Connection connection, List<ComponentProperties> componentProperties, String paramName) {
+        if (connection instanceof TacokitDatabaseConnection) {
+            TacokitDatabaseConnection tacokitDatabaseConnection = (TacokitDatabaseConnection)connection;
+            return tacokitDatabaseConnection.getPropertyValue(paramName);
+        }       
+        return null;
+    }
 }

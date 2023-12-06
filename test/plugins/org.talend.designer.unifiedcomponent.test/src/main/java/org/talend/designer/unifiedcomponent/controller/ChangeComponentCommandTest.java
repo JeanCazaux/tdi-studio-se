@@ -294,7 +294,7 @@ public class ChangeComponentCommandTest {
         command = new ChangeComponentCommand(node, unifiedParam, "JDBC");
         command.execute();
 
-        jdbcParam = node.getElementParameter("connection.driverTable");
+        jdbcParam = node.getElementParameter("configuration.dataSet.dataStore.jdbcDriver");
         snowflakeParam = node.getElementParameter("connection.account");
         Assert.assertNotNull(jdbcParam);
         Assert.assertNull(snowflakeParam);

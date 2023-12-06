@@ -93,7 +93,7 @@ public class StatsAndLogsManagerTest {
         process.getElementParameter(EParameterName.ON_FILES_FLAG.getName()).setValue(true);
         process.getElementParameter(EParameterName.ON_CONSOLE_FLAG.getName()).setValue(true);
         process.getElementParameter(EParameterName.ON_STATCATCHER_FLAG.getName()).setValue(true);
-        process.getElementParameter(EParameterName.DB_TYPE.getName()).setValue("tJDBCOutput");
+        process.getElementParameter(EParameterName.DB_TYPE.getName()).setValue("JDBCOutput");
 
         List<DataNode> statsAndLogsNodes = StatsAndLogsManager.getStatsAndLogsNodes(process);
         Assert.assertEquals(statsAndLogsNodes.size(), 7);
@@ -113,7 +113,7 @@ public class StatsAndLogsManagerTest {
         outgoingConnections = fileNode.getOutgoingConnections("FLOW");
         Assert.assertEquals(outgoingConnections.size(), 1);
         INode dbNode = outgoingConnections.get(0).getTarget();
-        Assert.assertEquals(dbNode.getComponent().getName(), "tJDBCOutput");
+        Assert.assertEquals(dbNode.getComponent().getName(), "JDBCOutput");
 
         outgoingConnections = dbNode.getOutgoingConnections("MAIN");
         Assert.assertEquals(outgoingConnections.size(), 1);
@@ -134,7 +134,7 @@ public class StatsAndLogsManagerTest {
         outgoingConnections = tStatCatcherNode.getOutgoingConnections("FLOW");
         Assert.assertEquals(outgoingConnections.size(), 1);
         dbNode = outgoingConnections.get(0).getTarget();
-        Assert.assertEquals(dbNode.getComponent().getName(), "tJDBCOutput");
+        Assert.assertEquals(dbNode.getComponent().getName(), "JDBCOutput");
 
         outgoingConnections = dbNode.getOutgoingConnections("MAIN");
         Assert.assertEquals(outgoingConnections.size(), 1);

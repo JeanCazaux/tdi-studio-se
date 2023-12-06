@@ -43,6 +43,7 @@ import org.talend.core.model.components.ComponentCategory;
 import org.talend.core.model.components.EComponentType;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.general.ModuleNeeded;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.metadata.types.JavaTypesManager;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EConnectionType;
@@ -80,6 +81,7 @@ import org.talend.sdk.component.studio.model.parameter.Metadatas;
 import org.talend.sdk.component.studio.mvn.Mvn;
 import org.talend.sdk.component.studio.service.ComponentService;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
+import org.talend.sdk.component.studio.util.TaCoKitSpeicalManager;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
 
 public class ComponentModel extends AbstractBasicComponent implements IAdditionalInfo {
@@ -219,10 +221,10 @@ public class ComponentModel extends AbstractBasicComponent implements IAdditiona
     public String getDisplayName() {
         return TaCoKitUtil.getDisplayName(index);
     }
-
+    
     @Override
     public boolean canParallelize() {
-        return "tJDBCNewOutput".equals(getDisplayName());
+        return TaCoKitSpeicalManager.canParallelize(getName());
     }
 
     /**
@@ -811,6 +813,10 @@ public class ComponentModel extends AbstractBasicComponent implements IAdditiona
 
     public ComponentIndex getIndex() {
         return index;
+    }
+    
+    public String getRepositoryType(Connection connection) {
+        return index.getFamilyDisplayName();
     }
 
 }

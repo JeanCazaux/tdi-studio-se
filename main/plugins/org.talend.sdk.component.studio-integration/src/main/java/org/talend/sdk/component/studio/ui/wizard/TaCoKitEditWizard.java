@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.IWorkbench;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.studio.GAV;
 import org.talend.sdk.component.studio.i18n.Messages;
@@ -68,6 +69,11 @@ public class TaCoKitEditWizard extends TaCoKitConfigurationWizard {
     }
 
     private void updateConfigurationItem() throws Exception {
+        String originaleObjectLabel = connectionItem.getConnection().getName();
+        if (connectionItem.getConnection() instanceof TacokitDatabaseConnection) {
+            connectionItem.getConnection().setName(getWizardPropertiesPage().getNameText().getText());
+        }
+        updateDQDependency(getWizardPropertiesPage().isNameModifiedByUser(), originaleObjectLabel);
         updateConnectionItem();
         refreshInFinish(getWizardPropertiesPage().isNameModifiedByUser());
         TaCoKitUpdateManager.updateTaCoKitSubConnection(getRuntimeData());

@@ -71,6 +71,22 @@
         "exclude":"PORT,DB_VERSION"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tOracleCDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT,DB_VERSION"}
+},
+{
+    "component_delegate":"tDBCDCOutput",
+    "component":"tOracleCDCOutput",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT,DB_VERSION"}
+},
+{
     "component_delegate":"tDBInvalidRows",
     "component":"tOracleInvalidRows",
     "category":"DI",

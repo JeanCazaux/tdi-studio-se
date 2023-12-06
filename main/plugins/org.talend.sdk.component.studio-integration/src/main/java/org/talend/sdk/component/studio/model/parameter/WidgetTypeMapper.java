@@ -15,10 +15,35 @@
  */
 package org.talend.sdk.component.studio.model.parameter;
 
-import static java.util.Locale.*;
-import static org.talend.core.model.process.EParameterFieldType.*;
-import static org.talend.sdk.component.studio.model.parameter.Metadatas.*;
-import static org.talend.sdk.component.studio.model.parameter.PropertyTypes.*;
+import static java.util.Locale.ROOT;
+import static org.talend.core.model.process.EParameterFieldType.CHECK;
+import static org.talend.core.model.process.EParameterFieldType.CLOSED_LIST;
+import static org.talend.core.model.process.EParameterFieldType.DATE;
+import static org.talend.core.model.process.EParameterFieldType.MEMO;
+import static org.talend.core.model.process.EParameterFieldType.MEMO_JAVA;
+import static org.talend.core.model.process.EParameterFieldType.MEMO_PERL;
+import static org.talend.core.model.process.EParameterFieldType.MEMO_SQL;
+import static org.talend.core.model.process.EParameterFieldType.MODULE_LIST;
+import static org.talend.core.model.process.EParameterFieldType.PASSWORD;
+import static org.talend.core.model.process.EParameterFieldType.PREV_COLUMN_LIST;
+import static org.talend.core.model.process.EParameterFieldType.SCHEMA_TYPE;
+import static org.talend.core.model.process.EParameterFieldType.TABLE;
+import static org.talend.core.model.process.EParameterFieldType.TACOKIT_INPUT_SCHEMA;
+import static org.talend.core.model.process.EParameterFieldType.TACOKIT_SUGGESTABLE_TABLE;
+import static org.talend.core.model.process.EParameterFieldType.TACOKIT_TEXT_AREA_SELECTION;
+import static org.talend.core.model.process.EParameterFieldType.TACOKIT_VALUE_SELECTION;
+import static org.talend.core.model.process.EParameterFieldType.TEXT;
+import static org.talend.core.model.process.EParameterFieldType.TEXT_AREA;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.ACTION_BUILT_IN_SUGGESTABLE;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.UI_CODE;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.UI_PATH_VALUE;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.UI_STRUCTURE_TYPE;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.UI_STRUCTURE_VALUE;
+import static org.talend.sdk.component.studio.model.parameter.Metadatas.UI_TEXTAREA;
+import static org.talend.sdk.component.studio.model.parameter.PropertyTypes.ARRAY;
+import static org.talend.sdk.component.studio.model.parameter.PropertyTypes.BOOLEAN;
+import static org.talend.sdk.component.studio.model.parameter.PropertyTypes.ENUM;
+import static org.talend.sdk.component.studio.model.parameter.PropertyTypes.STRING;
 
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.sdk.component.server.front.model.SimplePropertyDefinition;
@@ -61,8 +86,6 @@ public class WidgetTypeMapper {
             return getCheckType();
         } else if (isClosedList(property)) {
             return getClosedListType();
-        } else if (isPrevColumnList(property)) {
-            return getPrevColumnListType();
         } else if (isSuggestableTable(property)) {
             return getSuggestableTableType();
         } else if (isTable(property)) {
@@ -81,10 +104,25 @@ public class WidgetTypeMapper {
                 default: // FIXME: today we don't completely map all the widgets
                     return getDateType();
             }
+        } else if (isFileOrDirectory(property)) {
+            final String path = property.getMetadata().get(UI_PATH_VALUE);
+            switch (path) {
+            case "FILE": //$NON-NLS-1$
+                return EParameterFieldType.FILE;
+            case "DIRECTORY": //$NON-NLS-1$
+                return EParameterFieldType.DIRECTORY;
+            default:
+                return getTextType();
+            }
         }
         final String codeStyle = property.getMetadata().get(UI_CODE);
         if (codeStyle != null) {
             return getCodeType(codeStyle);
+        }
+        // PREV_COLUMN_LIST / COLUMN_LIST
+        final String built_in_suggestable = property.getMetadata().get(ACTION_BUILT_IN_SUGGESTABLE);
+        if (built_in_suggestable != null && STRING.equals(property.getType())) {
+            return getColumnListType(built_in_suggestable);
         }
         return getTextType();
     }
@@ -115,17 +153,12 @@ public class WidgetTypeMapper {
                 && TYPE_INPUT.equalsIgnoreCase(property.getMetadata().get(UI_STRUCTURE_TYPE));
     }
 
-    private boolean isPrevColumnList(final SimplePropertyDefinition property) {
-        final String builtInSuggestable = property.getMetadata().get("action::built_in_suggestable");
-        return "INCOMING_SCHEMA_ENTRY_NAMES".equals(builtInSuggestable) && STRING.equals(property.getType());
-    }
-
     protected EParameterFieldType getPrevColumnListType() {
         return PREV_COLUMN_LIST;
     }
 
     private boolean isSuggestableTable(final SimplePropertyDefinition property) {
-        final String builtInSuggestable = property.getMetadata().get("action::built_in_suggestable");
+        final String builtInSuggestable = property.getMetadata().get(ACTION_BUILT_IN_SUGGESTABLE);
         return "INCOMING_SCHEMA_ENTRY_NAMES".equals(builtInSuggestable) && ARRAY.equals(property.getType());
     }
 
@@ -143,6 +176,17 @@ public class WidgetTypeMapper {
             return MEMO_SQL;
         default:
             return MEMO;
+        }
+    }
+
+    protected EParameterFieldType getColumnListType(final String built_in_suggestable) {
+        switch (built_in_suggestable.toUpperCase(ROOT)) {
+        case "CURRENT_SCHEMA_ENTRY_NAMES": //$NON-NLS-1$
+            return EParameterFieldType.COLUMN_LIST;
+        case "INCOMING_SCHEMA_ENTRY_NAMES": //$NON-NLS-1$
+            return getPrevColumnListType();
+        default:
+            return getTextType();
         }
     }
 
@@ -241,6 +285,10 @@ public class WidgetTypeMapper {
 
     private boolean isDate(final SimplePropertyDefinition property) {
         return property.getMetadata().containsKey("ui::datetime");
+    }
+
+    private boolean isFileOrDirectory(final SimplePropertyDefinition property) {
+        return property.getMetadata().containsKey(UI_PATH_VALUE);
     }
 
     protected EParameterFieldType getTableType() {

@@ -49,6 +49,14 @@
         "exclude":"DB_VERSION"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tAS400CDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"DB_VERSION"}
+},
+{
     "component_delegate":"tDBLastInsertId",
     "component":"tAS400LastInsertId",
     "category":"DI",

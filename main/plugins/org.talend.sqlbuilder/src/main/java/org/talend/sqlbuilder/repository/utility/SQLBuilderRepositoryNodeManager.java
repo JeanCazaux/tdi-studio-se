@@ -48,10 +48,12 @@ import org.talend.core.model.metadata.builder.connection.QueriesConnection;
 import org.talend.core.model.metadata.builder.connection.Query;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataFromDataBase;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataUtils;
+import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.DatabaseConnectionItem;
 import org.talend.core.model.properties.ItemState;
 import org.talend.core.model.properties.PropertiesFactory;
 import org.talend.core.model.properties.Property;
+import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.model.repository.RepositoryObject;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
@@ -111,7 +113,7 @@ public class SQLBuilderRepositoryNodeManager {
         boolean flag = false;
         Object type = node.getProperties(EProperties.CONTENT_TYPE);
         if (type.equals(RepositoryNodeType.DATABASE)) {
-            return getItem(node).getConnection().isDivergency();
+            return SQLBuilderRepositoryNodeManager.getDatabaseConnection(node).isDivergency();
         }
 
         if (type.equals(RepositoryNodeType.TABLE)) {
@@ -136,7 +138,7 @@ public class SQLBuilderRepositoryNodeManager {
         boolean isDiffGray = false;
         Object type = node.getProperties(EProperties.CONTENT_TYPE);
         if (type.equals(RepositoryNodeType.DATABASE)) {
-            DatabaseConnection connection = (DatabaseConnection) getItem(node).getConnection();
+            DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(node);
             Set<MetadataTable> tables = ConnectionHelper.getTables(connection);
             for (MetadataTable table : tables) {
                 List<MetadataColumn> columns = table.getColumns();
@@ -347,8 +349,7 @@ public class SQLBuilderRepositoryNodeManager {
     @SuppressWarnings("unchecked")
     public static Map<String, List<String>> getAllNamesByRepositoryNode(RepositoryNode node) {
         Map<String, List<String>> allNames = new HashMap<String, List<String>>();
-        DatabaseConnectionItem item = getItem(getRoot(node));
-        DatabaseConnection connection = (DatabaseConnection) item.getConnection();
+        DatabaseConnection connection = (DatabaseConnection) SQLBuilderRepositoryNodeManager.getDatabaseConnection(getRoot(node));
         Set<MetadataTable> tablesFromEMF = ConnectionHelper.getTables(connection);
         boolean isOdbc = connection.getSID() == null || connection.getSID().length() == 0;
         String sid = isOdbc ? connection.getDatasourceName() : connection.getSID();
@@ -402,8 +403,7 @@ public class SQLBuilderRepositoryNodeManager {
      */
     @SuppressWarnings("unchecked")
     public RepositoryNode getRepositoryNodeFromDB(RepositoryNode oldNode, String selectedContext) {
-        DatabaseConnectionItem item = getItem(getRoot(oldNode));
-        DatabaseConnection connection = (DatabaseConnection) item.getConnection();
+        DatabaseConnection connection = (DatabaseConnection) SQLBuilderRepositoryNodeManager.getDatabaseConnection(getRoot(oldNode));
         IMetadataConnection iMetadataConnection = ConvertionHelper.convert(connection, false, selectedContext);
         try {
             modifyOldRepositoryNode(connection, iMetadataConnection, oldNode);
@@ -827,20 +827,17 @@ public class SQLBuilderRepositoryNodeManager {
      * @return
      */
     public static String getDbTypeFromRepositoryNode(RepositoryNode node) {
-        DatabaseConnection connection = (DatabaseConnection) getItem(getRoot(node)).getConnection();
-        return connection.getDatabaseType();
+        return getDatabaseConnection(node).getDatabaseType();
     }
-
-    /**
-     * method "getItem" get DatabaseConnectionItem by current RepositoryNode .
-     *
-     * @param newNode current RepositoryNode
-     * @return DatabaseConnectionItem : item current node.
-     */
-    public static DatabaseConnectionItem getItem(RepositoryNode newNode) {
-        IRepositoryViewObject repositoryObject = newNode.getObject();
-        DatabaseConnectionItem item = (DatabaseConnectionItem) repositoryObject.getProperty().getItem();
-        return item;
+    
+    public static DatabaseConnection getDatabaseConnection(IRepositoryNode node) {
+        DatabaseConnection connection = null;
+        if (ERepositoryObjectType.METADATA_TACOKIT_JDBC.equals(node.getObjectType())) {
+            connection = ConvertionHelper.fillJDBCParams4TacokitDatabaseConnection(((ConnectionItem) node.getObject().getProperty().getItem()).getConnection());
+        } else {
+            connection = (DatabaseConnection) ((DatabaseConnectionItem) node.getObject().getProperty().getItem()).getConnection();
+        }
+        return connection;
     }
 
     public static DatabaseConnectionItem getEMFItem(String id) {
@@ -856,7 +853,7 @@ public class SQLBuilderRepositoryNodeManager {
      * @return String :databaseName
      */
     public static String getDatabaseNameByRepositoryNode(RepositoryNode node) {
-        DatabaseConnection connection = (DatabaseConnection) getItem(node).getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(node);
         boolean isOdbc = connection.getSID() == null || connection.getSID().length() == 0;
         return isOdbc ? connection.getDatasourceName() : connection.getSID();
     }

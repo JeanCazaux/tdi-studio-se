@@ -205,7 +205,7 @@ public class MultipleThreadDynamicComposite extends ScrolledComposite implements
                 String repositoryValue = null;
 
                 if (propertyParam != null) {
-                    repositoryValue = propertyParam.getRepositoryValue();
+                    repositoryValue = propertyParam.calcRepositoryValue();
                 }
 
                 if (repositoryObjects != null && (repositoryObjects.size() != 0)) {

@@ -65,6 +65,14 @@
         "exclude":"PORT,DB_VERSION"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tSybaseCDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT,DB_VERSION"}
+},
+{
     "component_delegate":"tDBOutputBulk",
     "component":"tSybaseOutputBulk",
     "category":"DI",

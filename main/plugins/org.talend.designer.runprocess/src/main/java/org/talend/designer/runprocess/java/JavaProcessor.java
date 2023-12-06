@@ -1327,12 +1327,21 @@ public class JavaProcessor extends AbstractJavaProcessor implements IJavaBreakpo
     }
 
     protected String getLibsClasspath() throws ProcessorException {
-        final String classPathSeparator = extractClassPathSeparator();
-
         // for -cp libs str
         useRelativeClasspath = false;
         final String neededModulesJarStr = getNeededModulesJarStr();
+        return checkLibsClasspath(neededModulesJarStr);
+    }
 
+    protected String getLibsClasspath(List<ModuleNeeded> neededModules) throws ProcessorException {
+        // for -cp libs str
+        useRelativeClasspath = false;
+        final String neededModulesJarStr = getNeededModulesJarStr(neededModules);
+        return checkLibsClasspath(neededModulesJarStr);
+    }
+
+    private String checkLibsClasspath(String neededModulesJarStr) throws ProcessorException {
+        final String classPathSeparator = extractClassPathSeparator();
         final String basePathClasspath = getBasePathClasspath();
 
         String libsStr = basePathClasspath + classPathSeparator + neededModulesJarStr.toString();
@@ -1345,14 +1354,16 @@ public class JavaProcessor extends AbstractJavaProcessor implements IJavaBreakpo
         }
 
         // may have blank in classpath since use absolute path.
+        libsStr = StringUtils.replace(libsStr, "%", "%25"); //$NON-NLS-1$ //$NON-NLS-2$
         libsStr = StringUtils.replace(libsStr, " ", "%20"); //$NON-NLS-1$ //$NON-NLS-2$
         libsStr = StringUtils.replace(libsStr, "#", "%23"); //$NON-NLS-1$ //$NON-NLS-2$
-        
+
         // create classpath.jar
         if (!isExportConfig() && !isSkipClasspathJar() && isCorrespondingOS()) {
             try {
-                libsStr = ClasspathsJarGenerator.createJar(getProperty(), libsStr, classPathSeparator, useRelativeClasspath,
-                        ProcessorUtilities.isDynamicJobAndCITest());
+                libsStr = ClasspathsJarGenerator
+                        .createJar(getProperty(), libsStr, classPathSeparator, useRelativeClasspath,
+                                ProcessorUtilities.isDynamicJobAndCITest());
             } catch (Exception e) {
                 throw new ProcessorException(e);
             }
@@ -1573,50 +1584,14 @@ public class JavaProcessor extends AbstractJavaProcessor implements IJavaBreakpo
     }
 
     protected String getNeededModulesJarStr() {
+        List<ModuleNeeded> neededModules = getCPNeededModules();
+        return appendLibPath(neededModules);
+
+    }
+
+    private String appendLibPath(List<ModuleNeeded> neededModules) {
         final String classPathSeparator = extractClassPathSeparator();
         final String libPrefixPath = getRootWorkingDir(true);
-
-        int option = TalendProcessOptionConstants.MODULES_WITH_CHILDREN | TalendProcessOptionConstants.MODULES_WITH_CODESJAR;
-
-        if (isExportConfig() || isSkipClasspathJar()) {
-            option = option | TalendProcessOptionConstants.MODULES_EXCLUDE_SHADED;
-        }
-        Set<ModuleNeeded> neededModulesLogjarUnsorted = LastGenerationInfo.getInstance()
-                .getModulesNeededWithSubjobPerJob(process.getId(), process.getVersion());
-        neededModulesLogjarUnsorted.addAll(
-                LastGenerationInfo.getInstance().getCodesJarModulesNeededWithSubjobPerJob(process.getId(), process.getVersion()));
-        if (neededModulesLogjarUnsorted.isEmpty()) {
-            neededModulesLogjarUnsorted = getNeededModules(option);
-
-            // get codesjar libraries from related joblets
-            neededModulesLogjarUnsorted.addAll(getCodesJarModulesNeededOfJoblets());
-        }
-        JavaProcessorUtilities.checkJavaProjectLib(neededModulesLogjarUnsorted);
-
-        Set<ModuleNeeded> highPriorityModuleNeeded = LastGenerationInfo.getInstance().getHighPriorityModuleNeeded(process.getId(),
-                process.getVersion());
-
-        List<ModuleNeeded> neededModules = new ArrayList<ModuleNeeded>();
-
-        neededModules.addAll(neededModulesLogjarUnsorted);
-
-        UpdateLog4jJarUtils.sortClassPath4Log4j(highPriorityModuleNeeded, neededModules);
-
-        // Ignore hadoop confs jars in lib path.
-        if (ProcessorUtilities.hadoopConfJarCanBeLoadedDynamically(property)) {
-            Iterator<ModuleNeeded> moduleIter = neededModules.iterator();
-            while (moduleIter.hasNext()) {
-                ModuleNeeded module = moduleIter.next();
-                Object obj = module.getExtraAttributes().get(HadoopConstants.IS_DYNAMIC_JAR);
-                if (Boolean.valueOf(String.valueOf(obj))) {
-                    moduleIter.remove();
-                }
-            }
-        }
-
-        // remove lower version of same artifact
-        removeLowerVersionArtifacts(neededModules, highPriorityModuleNeeded);
-
         StringBuffer libPath = new StringBuffer();
         if (isExportConfig() || isRunAsExport()) {
             boolean hasLibPrefix = libPrefixPath.length() > 0;
@@ -1681,6 +1656,57 @@ public class JavaProcessor extends AbstractJavaProcessor implements IJavaBreakpo
             libPath.deleteCharAt(lastSep);
         }
         return libPath.toString();
+    }
+
+    protected String getNeededModulesJarStr(List<ModuleNeeded> neededModules) {
+        return appendLibPath(neededModules);
+    }
+
+    protected List<ModuleNeeded> getCPNeededModules() {
+        int option =
+                TalendProcessOptionConstants.MODULES_WITH_CHILDREN | TalendProcessOptionConstants.MODULES_WITH_CODESJAR;
+        if (isExportConfig() || isSkipClasspathJar()) {
+            option = option | TalendProcessOptionConstants.MODULES_EXCLUDE_SHADED;
+        }
+        Set<ModuleNeeded> neededModulesLogjarUnsorted = LastGenerationInfo
+                .getInstance()
+                .getModulesNeededWithSubjobPerJob(process.getId(), process.getVersion());
+        neededModulesLogjarUnsorted
+                .addAll(LastGenerationInfo
+                        .getInstance()
+                        .getCodesJarModulesNeededWithSubjobPerJob(process.getId(), process.getVersion()));
+        if (neededModulesLogjarUnsorted.isEmpty()) {
+            neededModulesLogjarUnsorted = getNeededModules(option);
+
+            // get codesjar libraries from related joblets
+            neededModulesLogjarUnsorted.addAll(getCodesJarModulesNeededOfJoblets());
+        }
+        JavaProcessorUtilities.checkJavaProjectLib(neededModulesLogjarUnsorted);
+
+        Set<ModuleNeeded> highPriorityModuleNeeded =
+                LastGenerationInfo.getInstance().getHighPriorityModuleNeeded(process.getId(), process.getVersion());
+
+        List<ModuleNeeded> neededModules = new ArrayList<ModuleNeeded>();
+
+        neededModules.addAll(neededModulesLogjarUnsorted);
+
+        UpdateLog4jJarUtils.sortClassPath4Log4j(highPriorityModuleNeeded, neededModules);
+
+        // Ignore hadoop confs jars in lib path.
+        if (ProcessorUtilities.hadoopConfJarCanBeLoadedDynamically(property)) {
+            Iterator<ModuleNeeded> moduleIter = neededModules.iterator();
+            while (moduleIter.hasNext()) {
+                ModuleNeeded module = moduleIter.next();
+                Object obj = module.getExtraAttributes().get(HadoopConstants.IS_DYNAMIC_JAR);
+                if (Boolean.valueOf(String.valueOf(obj))) {
+                    moduleIter.remove();
+                }
+            }
+        }
+
+        // remove lower version of same artifact
+        removeLowerVersionArtifacts(neededModules, highPriorityModuleNeeded);
+        return neededModules;
     }
 
     @Override

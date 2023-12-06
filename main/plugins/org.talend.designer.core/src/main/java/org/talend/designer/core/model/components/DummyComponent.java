@@ -23,6 +23,7 @@ import org.talend.commons.ui.runtime.image.ImageProvider;
 import org.talend.core.model.components.EComponentType;
 import org.talend.core.model.components.IMultipleComponentManager;
 import org.talend.core.model.general.ModuleNeeded;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EConnectionType;
 import org.talend.core.model.process.EParameterFieldType;
@@ -49,6 +50,8 @@ public class DummyComponent extends AbstractComponent {
 
     private boolean missingComponent = false;
 
+    private Connection connection;
+
     public DummyComponent(NodeType nodeType) {
         icon32 = ImageProvider.getImageDesc(EImage.COMPONENT_MISSING);
         icon16 = ImageProvider.getImageDesc(EImage.COMPONENT_MISSING);
@@ -62,6 +65,19 @@ public class DummyComponent extends AbstractComponent {
         this.componentName = componentName;
         this.originalFamilyName = "";
     }
+
+    public DummyComponent(String componentName, Connection connection) {
+        icon32 = ImageProvider.getImageDesc(EImage.COMPONENT_MISSING);
+        icon16 = ImageProvider.getImageDesc(EImage.COMPONENT_MISSING);
+        this.componentName = componentName;
+        this.originalFamilyName = "";
+        this.connection = connection;
+    }
+
+    public Connection getConnection() {
+        return this.connection;
+    }
+
 
     public boolean isMissingComponent() {
         return this.missingComponent;

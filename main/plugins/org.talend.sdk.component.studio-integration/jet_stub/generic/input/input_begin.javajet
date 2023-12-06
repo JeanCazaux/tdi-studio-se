@@ -126,9 +126,12 @@ input_<%=cid%>.start();
 globalMap.put("input_<%=cid%>", input_<%=cid%>);
 
 <%
-final List<? extends IConnection> connections = node.getOutgoingConnections(EConnectionType.FLOW_MAIN);
+List<? extends IConnection> connections = node.getOutgoingConnections(EConnectionType.FLOW_MAIN);
+if(connections == null || connections.isEmpty()) {
+    connections = node.getOutgoingConnections(EConnectionType.FLOW_MERGE);
+}
 boolean optionalRow = "true".equals(ElementParameterParser.getValue(node,"__OPTIONAL_ROW__"));
-if (!optionalRow && connections.isEmpty()) {
+if (!optionalRow && (connections == null || connections.isEmpty())) {
     throw new RuntimeException("Missing output connection for component " + family + "#" + originalName);
 }
 final String output = connections.isEmpty()? null: connections.iterator().next().getName();

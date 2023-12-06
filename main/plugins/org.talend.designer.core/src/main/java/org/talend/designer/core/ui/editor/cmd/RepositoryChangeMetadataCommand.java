@@ -14,7 +14,6 @@ package org.talend.designer.core.ui.editor.cmd;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +24,7 @@ import org.eclipse.ui.PlatformUI;
 import org.talend.commons.runtime.xml.XmlUtil;
 import org.talend.components.api.properties.ComponentProperties;
 import org.talend.core.GlobalServiceRegister;
+import org.talend.core.database.EDatabaseTypeName;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.metadata.ColumnNameChanged;
 import org.talend.core.model.metadata.IMetadataColumn;
@@ -60,6 +60,7 @@ import org.talend.designer.core.model.components.EmfComponent;
 import org.talend.designer.core.ui.editor.nodes.Node;
 import org.talend.designer.core.ui.editor.properties.controllers.ColumnListController;
 import org.talend.designer.core.ui.views.properties.ComponentSettingsView;
+import org.talend.designer.core.utils.ConnectionUtil;
 import org.talend.designer.core.utils.DesignerUtilities;
 import org.talend.metadata.managment.ui.utils.ConnectionContextHelper;
 import org.talend.repository.UpdateRepositoryUtils;
@@ -245,7 +246,7 @@ public class RepositoryChangeMetadataCommand extends ChangeMetadataCommand {
                         .equals(param.getChildParameters().get(EParameterName.PROPERTY_TYPE.getName()).getValue())) {
                     IElementParameter module = node.getElementParameter("module.moduleName");
                     if (module != null) {
-                        String repositoryValue = module.getRepositoryValue();
+                        String repositoryValue = module.calcRepositoryValue();
                         if (repositoryValue == null) {
                             List<ComponentProperties> componentProperties = null;
                             IGenericWizardService wizardService = null;
@@ -285,7 +286,8 @@ public class RepositoryChangeMetadataCommand extends ChangeMetadataCommand {
                 if (item instanceof ConnectionItem) {
                     List<? extends IElementParameter> elementParameters = new ArrayList(node.getElementParameters());
                     for (IElementParameter param : elementParameters) {
-                        if (param.getRepositoryValue() != null && !param.getRepositoryValue().equals("")) {//$NON-NLS-1$
+                        String repositoryValue = param.calcRepositoryValue();
+                        if (repositoryValue != null && !repositoryValue.equals("")) {//$NON-NLS-1$
                             /*
                              * Dead code. SalesforceSchemaConnectionItem is not used anymore. GenericConnectionItemImpl is an instance for item.
                              * "MODULENAME" is replaced with "module.moduleName".
@@ -296,12 +298,13 @@ public class RepositoryChangeMetadataCommand extends ChangeMetadataCommand {
                                         .getConnection();
                                 isCustomSfConn = sfConn.isUseCustomModuleName();
                             }
-                            if (param.getRepositoryValue().equals("TYPE") //$NON-NLS-1$
-                                    || (param.getRepositoryValue().equals("MODULENAME") && item instanceof SalesforceSchemaConnectionItem && !isCustomSfConn)) { //$NON-NLS-1$
+                            if (repositoryValue.equals("TYPE") //$NON-NLS-1$
+                                    || (repositoryValue.equals("MODULENAME") && item instanceof SalesforceSchemaConnectionItem //$NON-NLS-1$
+                                            && !isCustomSfConn)) {
                                 continue;
                             }
                             if (param.getFieldType().equals(EParameterFieldType.TABLE)
-                                    && param.getRepositoryValue().equals("XML_MAPPING")) { //$NON-NLS-1$
+                                    && repositoryValue.equals("XML_MAPPING")) { //$NON-NLS-1$
                                 List<Map<String, Object>> table = (List<Map<String, Object>>) node.getPropertyValue(param
                                         .getName());
                                 IMetadataTable metaTable = node.getMetadataList().get(0);
@@ -315,11 +318,12 @@ public class RepositoryChangeMetadataCommand extends ChangeMetadataCommand {
                                                 .equals(componentName))
                                         && connection instanceof XmlFileConnection
                                         && XmlUtil.isXSDFile(TalendQuoteUtils.removeQuotes(((XmlFileConnection) connection)
-                                                .getXmlFilePath())) && param.getRepositoryValue().equals("FILE_PATH")) {
+                                                .getXmlFilePath()))
+                                        && repositoryValue.equals("FILE_PATH")) {
                                     // do nothing
                                 } else {
                                     Object value = RepositoryToComponentProperty.getValue(
-                                            ((ConnectionItem) item).getConnection(), param.getRepositoryValue(),
+                                            ((ConnectionItem) item).getConnection(), repositoryValue,
                                             newOutputMetadata, componentName, null);
                                     if (value != null) {
                                         value = getParamValueForOldJDBC(param, value);
@@ -360,26 +364,12 @@ public class RepositoryChangeMetadataCommand extends ChangeMetadataCommand {
         // for JDBC component of mr process
         if (connection instanceof DatabaseConnection) {
             String databaseType = ((DatabaseConnection) connection).getDatabaseType();
-            if ("JDBC".equals(databaseType)) {
+            if ("JDBC".equals(databaseType) || EDatabaseTypeName.GENERAL_JDBC.getDbType().equals(databaseType)) {
                 IComponent component = node.getComponent();
                 if (component.getName().startsWith("tJDBC") || component.getName().startsWith("tELTJDBC")) {
                     if (EParameterName.DRIVER_JAR.getName().equals(paramName)) {
-                        List valueList = (List) objectValue;
-                        List newValue = new ArrayList<>();
-                        for (Object value : valueList) {
-                            if (value instanceof Map) {
-                                Map map = new HashMap();
-                                String driver = String.valueOf(((Map) value).get("drivers"));
-                                map.put("JAR_NAME", TalendTextUtils.removeQuotes(driver));
-                                newValue.add(map);
-                            }
-                        }
-                        if (!newValue.isEmpty()) {
-                            objectValue = newValue;
-                        }
-
+                        objectValue = ConnectionUtil.extractDriverValue(param, objectValue);
                     }
-
                 }
             }
         }

@@ -208,8 +208,6 @@ String versionField = ElementParameterParser.getValue(node,"__L2_VERSION_FIELD__
 	<%@ include file="./oracle.javajet"%>
 <%} else if("teradata_id".equals(dbmsId)){%>
 	<%@ include file="./teradata.javajet"%>
-<%} else if("postgresplus_id".equals(dbmsId)){%>
-	<%@ include file="./postgresplus.javajet"%>
 <%} else if("ibmdb2_id".equals(dbmsId)){%>
 	<%@ include file="./db2.javajet"%>
 <%} else if("postgres_id".equals(dbmsId)){%>

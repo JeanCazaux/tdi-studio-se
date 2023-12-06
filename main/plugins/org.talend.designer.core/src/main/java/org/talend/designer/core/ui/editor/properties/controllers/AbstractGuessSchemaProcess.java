@@ -127,7 +127,7 @@ public abstract class AbstractGuessSchemaProcess {
                  */
                 @Override
                 public String getMessage() {
-                    StringTokenizer tokenizer = new StringTokenizer(errorMessage, "\n");
+                    StringTokenizer tokenizer = new StringTokenizer(buffer.toString(), "\n");
                     StringBuilder sqlError = new StringBuilder();
                     if (tokenizer.countTokens() > 2) {
                         tokenizer.nextToken();
@@ -179,7 +179,7 @@ public abstract class AbstractGuessSchemaProcess {
 
     public static Boolean isEnableLog4jForGuessSchema() {
 
-        String isEnableLog4jForGuessSchema = System.getProperty(AbstractGuessSchemaProcess.ENABLE_LOG4J_FOR_GUESSSCHEMA, "false");//$NON-NLS-1$
+        String isEnableLog4jForGuessSchema = System.getProperty(AbstractGuessSchemaProcess.ENABLE_LOG4J_FOR_GUESSSCHEMA, "true");//$NON-NLS-1$
         Boolean isEnableLog4j = Boolean.valueOf(isEnableLog4jForGuessSchema);
 
         return isEnableLog4j;

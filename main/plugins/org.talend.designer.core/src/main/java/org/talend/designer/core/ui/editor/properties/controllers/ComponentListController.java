@@ -84,7 +84,7 @@ public class ComponentListController extends AbstractElementPropertySectionContr
 
                 if (ctrl.equals(selectionEvent.getSource()) && ctrl instanceof CCombo) {
                     boolean isDisposed = ((CCombo) ctrl).isDisposed();
-                    if (!isDisposed && (!elem.getPropertyValue(name).equals(((CCombo) ctrl).getText()))) {
+                    if (!isDisposed && (elem.getPropertyValue(name) == null || !elem.getPropertyValue(name).equals(((CCombo) ctrl).getText()))) {
 
                         String value = new String(""); //$NON-NLS-1$
                         List<? extends IElementParameter> elementParametersWithChildrens = elem

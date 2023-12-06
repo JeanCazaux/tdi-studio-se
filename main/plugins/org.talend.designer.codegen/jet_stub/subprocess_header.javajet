@@ -224,7 +224,7 @@ public static class <%=conn.getName() %>Struct<%=templateOrigin %> implements ro
 				<% if (column.getOriginalDbColumnName() == null) { %>
 				    return null;
 				<% } else { %>
-					return "<%=TalendTextUtils.escapeJavaText(TalendTextUtils.removeQuotes(column.getOriginalDbColumnName()))%>";
+					return "<%=TalendTextUtils.escapeJavaText(column.getOriginalDbColumnName())%>";
 				<% } %>
 				}
 

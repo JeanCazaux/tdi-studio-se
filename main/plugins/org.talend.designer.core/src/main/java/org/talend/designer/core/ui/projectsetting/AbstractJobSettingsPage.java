@@ -73,6 +73,7 @@ import org.talend.designer.core.ui.editor.cmd.ChangeValuesFromRepository;
 import org.talend.designer.core.ui.editor.cmd.LoadProjectSettingsCommand;
 import org.talend.designer.core.ui.editor.process.Process;
 import org.talend.designer.core.ui.views.properties.WidgetFactory;
+import org.talend.designer.core.utils.ConnectionUtil;
 import org.talend.designer.core.utils.DetectContextVarsUtils;
 import org.talend.metadata.managment.ui.wizard.metadata.ShowAddedContextdialog;
 import org.talend.repository.UpdateRepositoryUtils;
@@ -167,7 +168,7 @@ public abstract class AbstractJobSettingsPage extends ProjectSettingPage {
                 if (connection != null) {
                     boolean sameValues = true;
                     for (IElementParameter param : elementParams.getElementParameters()) {
-                        String repositoryValue = param.getRepositoryValue();
+                        String repositoryValue = param.calcRepositoryValue();
                         if (param.isShow(elementParams.getElementParameters()) && repositoryValue != null
                                 && !param.getName().equals("PROPERTY_TYPE")) {
                             Object repValue = RepositoryToComponentProperty.getValue(connection, repositoryValue, null);
@@ -252,15 +253,15 @@ public abstract class AbstractJobSettingsPage extends ProjectSettingPage {
                 Set<String> driverSet2 = new HashSet<String>();
 
                 for (Map<String, String> driverMap : driverList1) {
-                    String jar = driverMap.get("drivers");
+                    String jar = ConnectionUtil.extractDriverValueFromMap(driverMap);
                     if (jar != null) {
-                        driverSet1.add(TalendQuoteUtils.removeQuotes(jar));
+                        driverSet1.add(jar);
                     }
                 }
                 for (Map<String, String> driverMap : driverList2) {
-                    String jar = driverMap.get("drivers");
+                    String jar = ConnectionUtil.extractDriverValueFromMap(driverMap);
                     if (jar != null) {
-                        driverSet2.add(TalendQuoteUtils.removeQuotes(jar));
+                        driverSet2.add(jar);
                     }
                 }
 

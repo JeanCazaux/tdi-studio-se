@@ -59,7 +59,9 @@ import org.talend.core.model.components.IComponentsFactory;
 import org.talend.core.model.components.IComponentsHandler;
 import org.talend.core.model.components.filters.ComponentsFactoryProviderManager;
 import org.talend.core.model.components.filters.IComponentFactoryFilter;
+import org.talend.core.runtime.services.IGenericService;
 import org.talend.core.runtime.util.ComponentsLocationProvider;
+import org.talend.core.service.ITCKUIService;
 import org.talend.core.ui.IJobletProviderService;
 import org.talend.core.ui.ISparkJobletProviderService;
 import org.talend.core.ui.ISparkStreamingJobletProviderService;
@@ -73,6 +75,7 @@ import org.talend.designer.core.model.components.EmfComponent;
 import org.talend.designer.core.model.process.AbstractProcessProvider;
 import org.talend.designer.core.model.process.GenericProcessProvider;
 import org.talend.designer.core.ui.editor.jobletcontainer.JobletUtil;
+import org.talend.designer.core.utils.UnifiedComponentUtil;
 
 /**
  * Component factory that look for each component and load their information. <br/>
@@ -231,7 +234,15 @@ public class ComponentsFactory implements IComponentsFactory {
             if (StringUtils.isEmpty(componentName)) {
                 continue;
             }
+            if (IGenericService.getService().isTcompv0(component)
+                    && (UnifiedComponentUtil.isAdditionalJDBCComponent(component.getName())
+                            || component.getName().contains(ITCKUIService.get().getTCKJDBCType().getLabel()))) {
+                continue;
+            }
             String componentNameLowerCase = componentName.toLowerCase();
+            if (componentNameLowerCase.startsWith(ITCKUIService.get().getTCKJDBCType().getLabel().toLowerCase())) {
+                componentNameLowerCase = "t" + componentNameLowerCase;
+            }
             Map<String, Set<IComponent>> map = componentNameMap.get(componentNameLowerCase);
             if (map == null) {
                 map = new HashMap<String, Set<IComponent>>();

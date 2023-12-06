@@ -21,6 +21,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.runtime.xml.XmlUtil;
 import org.talend.commons.ui.gmf.util.DisplayUtils;
 import org.talend.components.api.properties.ComponentProperties;
@@ -45,6 +46,7 @@ import org.talend.core.model.metadata.builder.connection.Query;
 import org.talend.core.model.metadata.builder.connection.SAPConnection;
 import org.talend.core.model.metadata.builder.connection.SalesforceModuleUnit;
 import org.talend.core.model.metadata.builder.connection.SalesforceSchemaConnection;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.metadata.builder.connection.WSDLSchemaConnection;
 import org.talend.core.model.metadata.builder.connection.XmlFileConnection;
 import org.talend.core.model.metadata.builder.connection.impl.XmlFileConnectionImpl;
@@ -77,9 +79,11 @@ import org.talend.designer.core.model.process.jobsettings.JobSettingsConstants;
 import org.talend.designer.core.model.utils.emf.talendfile.ContextType;
 import org.talend.designer.core.ui.editor.nodes.Node;
 import org.talend.designer.core.ui.editor.process.Process;
+import org.talend.designer.core.ui.editor.process.ProcessUpdateManager;
 import org.talend.designer.core.ui.preferences.StatsAndLogsConstants;
 import org.talend.designer.core.ui.projectsetting.ImplicitContextLoadElement;
 import org.talend.designer.core.ui.views.jobsettings.JobSettings;
+import org.talend.designer.core.utils.ConnectionUtil;
 import org.talend.designer.core.utils.DesignerUtilities;
 import org.talend.designer.core.utils.JobSettingVersionUtil;
 import org.talend.designer.core.utils.SAPParametersUtils;
@@ -220,12 +224,6 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                 isSchemaEmpty = true;
             }
 
-            for (IElementParameter curParam : node.getElementParameters()) {
-                if (curParam.getFieldType().equals(EParameterFieldType.MEMO_SQL)) {
-                    if (curParam.getDefaultValues().size() > 0) {
-                    }
-                }
-            }
             if (isSchemaEmpty) {
                 allowAutoSwitch = true;
             }
@@ -294,7 +292,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                             }
                         }
                     }
-                    if (param.getRepositoryValue() != null) {
+                    if (param.calcRepositoryValue() != null) {
                         param.setReadOnly(false);
                         // for job settings extra.(feature 2710)
                         param.setRepositoryValueUsed(false);
@@ -307,7 +305,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
             List<ComponentProperties> componentProperties = null;
             IGenericWizardService wizardService = null;
             if (GlobalServiceRegister.getDefault().isServiceRegistered(IGenericWizardService.class)) {
-                wizardService = (IGenericWizardService) GlobalServiceRegister.getDefault()
+                wizardService = GlobalServiceRegister.getDefault()
                         .getService(IGenericWizardService.class);
             }
             if (wizardService != null && wizardService.isGenericConnection(connection)) {
@@ -335,12 +333,12 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
             }
             Map<Object, Object> contextMap = new HashMap<Object, Object>();
             if (elem instanceof INode) {
-                contextMap.put("NODE", (INode) elem);
+                contextMap.put("NODE", elem);
             }
 
             for (IElementParameter param : elementParameters) { // elementParameters: target component's element
 
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (param.getFieldType() == EParameterFieldType.PROPERTY_TYPE) {
                     continue;
                 }
@@ -353,6 +351,9 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                     newParamName = getParamNameForImplicitContext(param);
                 } else {
                     newParamName = getParamNameForOldJDBC(param);
+                }
+                if (connection instanceof TacokitDatabaseConnection) {
+                    newParamName = getParamNameForTacokitDatabaseConnection(param);
                 }
                 boolean isJDBCRepValue = false;
                 if (!isGenericRepositoryValue && newParamName != null) {
@@ -372,6 +373,14 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                 }
                 if (repositoryValue == null
                         || param.getRepositoryProperty() != null && !param.getRepositoryProperty().equals(propertyParamName)) {
+                    param.setRepositoryValueUsed(false);
+                    try {
+                        param.setReadOnly(false);// reset the readonly flag first
+                        param.setReadOnly(param.isReadOnly(param.getElement().getElementParameters()));
+                    } catch (Throwable e) {
+                        ExceptionHandler.process(e);
+                        param.setReadOnly(false);
+                    }
                     continue;
                 }
                 String componentName = elem instanceof INode ? (((INode) elem).getComponent().getName()) : null;
@@ -445,7 +454,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                     }
 
                     if (GlobalServiceRegister.getDefault().isServiceRegistered(IJsonFileService.class)) {
-                        IJsonFileService jsonService = (IJsonFileService) GlobalServiceRegister.getDefault()
+                        IJsonFileService jsonService = GlobalServiceRegister.getDefault()
                                 .getService(IJsonFileService.class);
                         boolean paramChanged = jsonService.changeFilePathFromRepository(connection, param, elem, objectValue);
                         if (paramChanged) {
@@ -453,6 +462,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                         }
                     }
 
+                    String repoValue = param.calcRepositoryValue();
                     if (objectValue != null) {
                         oldValues.put(param.getName(), param.getValue()); 
                         
@@ -462,7 +472,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                         }
                         
                         if (param.getFieldType().equals(EParameterFieldType.CLOSED_LIST)
-                                && "TYPE".equals(param.getRepositoryValue())) { //$NON-NLS-1$
+                                && "TYPE".equals(repoValue)) { //$NON-NLS-1$
                             String dbVersion = "";
                             if (connection instanceof DatabaseConnection) {
                                 dbVersion = ((DatabaseConnection) connection).getDbVersionString();
@@ -522,7 +532,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                             JobSettingVersionUtil.setDbVersion(elementParameter, dbType, dbVersion, false);
                             DesignerUtilities.setSchemaDB(elementParameter2, param.getValue());
                         } else if (param.getFieldType().equals(EParameterFieldType.CLOSED_LIST)
-                                && "FRAMEWORK_TYPE".equals(param.getRepositoryValue())) { //$NON-NLS-1$
+                                && "FRAMEWORK_TYPE".equals(repoValue)) { //$NON-NLS-1$
                             String[] list = param.getListItemsDisplayName();
                             for (int i = 0; i < list.length; i++) {
                                 if (objectValue.equals(list[i])) {
@@ -530,7 +540,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                                 }
                             }
                         } else if (param.getFieldType().equals(EParameterFieldType.CLOSED_LIST)
-                                && "EDI_VERSION".equals(param.getRepositoryValue())) {
+                                && "EDI_VERSION".equals(repoValue)) {
                             String[] list = param.getListItemsDisplayName();
                             for (String element : list) {
                                 if (objectValue.toString().toUpperCase().equals(element)) {
@@ -538,7 +548,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                                 }
                             }
                         } else if (param.getFieldType().equals(EParameterFieldType.CLOSED_LIST)
-                                && "DRIVER".equals(param.getRepositoryValue())) {
+                                && "DRIVER".equals(repoValue)) {
                             String[] list = param.getListItemsDisplayCodeName();
                             for (String element : list) {
                                 if (objectValue.toString().toUpperCase().equals(element)) {
@@ -546,7 +556,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                                 }
                             }
                         } else if (param.getFieldType().equals(EParameterFieldType.CLOSED_LIST)
-                                && "CONNECTION_MODE".equals(param.getRepositoryValue())) {//$NON-NLS-1$
+                                && "CONNECTION_MODE".equals(repoValue)) {//$NON-NLS-1$
                             if (!objectValue.equals(param.getValue())) {
                                 PropertyChangeCommand cmd = new PropertyChangeCommand(elem, "CONNECTION_MODE", objectValue);//$NON-NLS-1$
                                 cmd.execute();
@@ -622,28 +632,16 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                                 }
                             }
 
-                            if (isJDBCRepValue && param.getName().equals(EParameterName.DRIVER_JAR.getName())
-                                    && objectValue instanceof List) {
-                                List valueList = (List) objectValue;
-                                List newValue = new ArrayList<>();
-                                for (Object value : valueList) {
-                                    if (value instanceof Map) {
-                                        Map map = new HashMap();
-                                        String driver = String.valueOf(((Map) value).get("drivers"));
-                                        if (driver != null) {
-                                            map.put("JAR_NAME", TalendTextUtils.removeQuotes(driver));
-                                            newValue.add(map);
-                                        }
-                                    }
-                                }
-                                objectValue = newValue;
+                            if ((isJDBCRepValue && param.getName().equals(EParameterName.DRIVER_JAR.getName())) || param.getName()
+                                    .equals(JobSettingsConstants.getExtraParameterName(EParameterName.DRIVER_JAR.getName()))) {
+                                objectValue = ConnectionUtil.extractDriverValue(param, objectValue);
                             }
 
                             /**
                              * For tCreateTable, several parameter have the same repository value
                              * (e.g.DB_MYSQL_VERSION/DB_POSTGRE_VERSION/...=>DB_VERSION), avoid to set all...
                              */
-                            if (EParameterName.DB_VERSION.getName().equals(param.getRepositoryValue())
+                            if (EParameterName.DB_VERSION.getName().equals(repoValue)
                                     && !param.isShow(elem.getElementParameters())) {
                                 continue;
                             }
@@ -661,9 +659,20 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
 
                             elem.setPropertyValue(param.getName(), objectValue);
                         }
-                        param.setRepositoryValueUsed(true);
+                        if (elem instanceof Node) {
+                            if (!ProcessUpdateManager.isIgnoreJDBCRepositoryParameter((Node)elem, param.getName())) {
+                                boolean update = true;
+                                if (connection instanceof TacokitDatabaseConnection) {
+                                    update = RepositoryToComponentProperty.isGenericRepositoryValue(connection, null,
+                                            param.getName());
+                                }
+                                param.setRepositoryValueUsed(update);
+                            }
+                        } else {
+                            param.setRepositoryValueUsed(true);
+                        }
                     } else if (EParameterFieldType.TABLE.equals(param.getFieldType())
-                            && "XML_MAPPING".equals(param.getRepositoryValue())) { //$NON-NLS-1$
+                            && "XML_MAPPING".equals(repoValue)) { //$NON-NLS-1$
 
                         List<Map<String, Object>> table = (List<Map<String, Object>>) elem.getPropertyValue(param.getName());
                         if (((Node) elem).getMetadataList().size() > 0) {
@@ -673,7 +682,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                             param.setRepositoryValueUsed(true);
                         }
                     } else if (param.getFieldType().equals(EParameterFieldType.TABLE)
-                            && "WSDL_PARAMS".equals(param.getRepositoryValue()) && connection != null) { //$NON-NLS-1$
+                            && "WSDL_PARAMS".equals(repoValue) && connection != null) { //$NON-NLS-1$
                         List<Map<String, Object>> table = (List<Map<String, Object>>) elem.getPropertyValue(param.getName());
                         table.clear();
                         ArrayList parameters = ((WSDLSchemaConnection) connection).getParameters();
@@ -686,7 +695,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                         }
                         param.setRepositoryValueUsed(true);
                     } else if (param.getFieldType().equals(EParameterFieldType.TEXT)
-                            && "XPATH_QUERY".equals(param.getRepositoryValue())) { //$NON-NLS-1$
+                            && "XPATH_QUERY".equals(repoValue)) { //$NON-NLS-1$
                         param.setRepositoryValueUsed(true);
                     } else {
                         // For SAP
@@ -760,7 +769,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
             // Added TDQ-11688 show regex when "built-in"
             ITDQPatternService service = null;
             if (GlobalServiceRegister.getDefault().isServiceRegistered(ITDQPatternService.class)) {
-                service = (ITDQPatternService) GlobalServiceRegister.getDefault().getService(ITDQPatternService.class);
+                service = GlobalServiceRegister.getDefault().getService(ITDQPatternService.class);
             }
             if (service != null && service.isSinglePatternNode(elem)) {
                 IElementParameter regexParameter = ((Node) elem).getElementParameter("PATTERN_REGEX");
@@ -782,14 +791,15 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                     boolean supportJDBC = false;
                     List<IElementParameter> params = node.getElementParametersFromField(EParameterFieldType.PROPERTY_TYPE);
                     for (IElementParameter proParam : params) {
-                        if (proParam.getRepositoryValue() != null && proParam.getRepositoryValue().contains("JDBC")) {
+                        String repositoryValue = proParam.calcRepositoryValue();
+                        if (repositoryValue != null && repositoryValue.contains("JDBC")) {
                             supportJDBC = true;
                             break;
                         }
                     }
                     if (supportJDBC) {
                         if (EParameterName.URL.getName().equals(paramName)
-                                || EParameterName.URL.getName().equals(param.getRepositoryValue())) {
+                                || EParameterName.URL.getName().equals(param.calcRepositoryValue())) {
                             return "connection.jdbcUrl";
                         } else if (EParameterName.DRIVER_JAR.getName().equals(paramName)) {
                             return "connection.driverTable";
@@ -804,24 +814,48 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
         }
         return null;
     }
+    
+    private String getParamNameForTacokitDatabaseConnection(IElementParameter param) {
+        String paramName = param.getName();
+        // for JDBC component of mr process
+        if (EParameterName.URL.getName().equals(paramName)
+                || EParameterName.URL.getName().equals(param.getRepositoryValue())) {
+            return TacokitDatabaseConnection.KEY_URL;
+        } else if (EParameterName.DRIVER_JAR.getName().equals(paramName)) {
+            return TacokitDatabaseConnection.KEY_DRIVER;
+        } else if (EParameterName.DRIVER_CLASS.getName().equals(paramName)) {
+            return TacokitDatabaseConnection.KEY_DRIVER_CLASS;
+        } else if (EParameterName.MAPPING.getName().equals(paramName)) {
+            return TacokitDatabaseConnection.KEY_DATABASE_MAPPING;
+        } else if (EParameterName.USER.getName().equals(paramName)
+                || JobSettingsConstants.getExtraParameterName(EParameterName.USER.getName()).equals(paramName)) {
+            return TacokitDatabaseConnection.KEY_USER_ID;
+        } else if (EParameterName.PASS.getName().equals(paramName)
+                || JobSettingsConstants.getExtraParameterName(EParameterName.PASS.getName()).equals(paramName)) {
+            return TacokitDatabaseConnection.KEY_PASSWORD;
+        } 
+        
+        return null;
+    }
 
     private String getParamNameForImplicitContext(IElementParameter param) {
         String paramName = param.getName();
         if (connection instanceof DatabaseConnection && "JDBC".equals(((DatabaseConnection) connection).getDatabaseType())) {
+            String repositoryValue = param.calcRepositoryValue();
             if (EParameterName.URL.getName().equals(paramName)
-                    || EParameterName.URL.getName().equals(param.getRepositoryValue())) {
+                    || EParameterName.URL.getName().equals(repositoryValue)) {
                 return "connection.jdbcUrl";
             }
             if (EParameterName.DRIVER_JAR.getName().equals(paramName)
-                    || EParameterName.DRIVER_JAR.getName().equals(param.getRepositoryValue())) {
+                    || EParameterName.DRIVER_JAR.getName().equals(repositoryValue)) {
                 return "connection.driverTable";
             }
             if (EParameterName.DRIVER_CLASS.getName().equals(paramName)
-                    || EParameterName.DRIVER_CLASS.getName().equals(param.getRepositoryValue())) {
+                    || EParameterName.DRIVER_CLASS.getName().equals(repositoryValue)) {
                 return "connection.driverClass";
             }
             if (EParameterName.MAPPING.getName().equals(paramName)
-                    || EParameterName.MAPPING.getName().equals(param.getRepositoryValue())) {
+                    || EParameterName.MAPPING.getName().equals(repositoryValue)) {
                 return "connection.mappingFile";
             }
         }
@@ -1067,6 +1101,9 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
 
             IElementParameter queryParam = elem.getElementParameterFromField(EParameterFieldType.QUERYSTORE_TYPE,
                     currentParam.getCategory());
+            if (queryParam == null) {
+                queryParam = elem.getElementParameter(TacokitDatabaseConnection.KEY_DATASET_SQL_QUERY);
+            }
             IElementParameter queryStoreType = null;
             if (queryParam != null) {
                 queryStoreType = queryParam.getChildParameters().get(EParameterName.QUERYSTORE_TYPE.getName());
@@ -1077,7 +1114,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
 
                 if (propertyName.split(":")[1].equals(EParameterName.PROPERTY_TYPE.getName())) { //$NON-NLS-1$
                     if (queries != null && !queries.isEmpty()) {
-                        if (queryParam != null) {
+                        if (queryParam != null && queryStoreType != null) {
                             queryStoreType.setValue(value);
                             if (value.equals(EmfComponent.REPOSITORY)) {
                                 setQueryToRepositoryMode(queryParam, queries, item);
@@ -1086,10 +1123,10 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
                         // query change
                     }
                 } else {
-                    if (queryParam != null) {
+                    if (queryParam != null && queryStoreType != null) {
                         if (this.isGuessQuery || queries == null || (queries != null && queries.isEmpty())) {
                             queryStoreType.setValue(EmfComponent.BUILTIN);
-                        } else {
+                        } else if (queryStoreType != null){
                             queryStoreType.setValue(EmfComponent.REPOSITORY);
                             setQueryToRepositoryMode(queryParam, queries, item);
                         }
@@ -1212,7 +1249,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
 
         if (propertyName.split(":")[1].equals(propertyTypeName) && (EmfComponent.BUILTIN.equals(value))) { //$NON-NLS-1$
             for (IElementParameter param : elem.getElementParameters()) {
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (param.isShow(elem.getElementParameters()) && (repositoryValue != null)
                         && (!param.getName().equals(propertyTypeName))) {
                     boolean paramFlag = JobSettingsConstants.isExtraParameter(param.getName());
@@ -1225,7 +1262,7 @@ public class ChangeValuesFromRepository extends ChangeMetadataCommand {
             }
         } else {
             for (IElementParameter param : elem.getElementParameters()) {
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (param.isShow(elem.getElementParameters()) && (repositoryValue != null)) {
                     Object objectValue = RepositoryToComponentProperty.getValue(connection, repositoryValue, null);
                     if (dragAndDropAction == true && connection instanceof XmlFileConnectionImpl) {

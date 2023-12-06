@@ -36,17 +36,20 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.ui.gmf.util.DisplayUtils;
+import org.talend.core.model.components.IComponent;
 import org.talend.core.model.process.EComponentCategory;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.Element;
 import org.talend.core.model.process.IElementParameter;
 import org.talend.designer.core.model.FakeElement;
 import org.talend.designer.core.model.components.EParameterName;
+import org.talend.designer.core.ui.editor.nodes.Node;
 import org.talend.designer.core.ui.editor.properties.controllers.AbstractElementPropertySectionController;
 import org.talend.designer.core.ui.views.properties.composites.MissingSettingsMultiThreadDynamicComposite;
 import org.talend.sdk.component.studio.model.parameter.Layout;
 import org.talend.sdk.component.studio.model.parameter.LayoutParameter;
 import org.talend.sdk.component.studio.model.parameter.Level;
+import org.talend.sdk.component.studio.model.parameter.Metadatas;
 import org.talend.sdk.component.studio.model.parameter.TaCoKitElementParameter;
 import org.talend.sdk.component.studio.ui.composite.problemmanager.IProblemManager;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
@@ -68,6 +71,8 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
 
     protected Composite commonComposite;
 
+    private String form;
+
     private PropertyChangeListener redrawListener = evt -> {
         if (!"show".equals(evt.getPropertyName())) {
             return;
@@ -79,6 +84,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
             final Element element, final boolean isCompactView, final IProblemManager problemManager) {
         super(parentComposite, styles, section, element, isCompactView);
         this.problemManager = problemManager;
+        form = section == EComponentCategory.ADVANCED ? Metadatas.ADVANCED_FORM : Metadatas.MAIN_FORM;
         registProblemManager();
         postInit();
     }
@@ -87,6 +93,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
             final boolean isCompactView, final Color backgroundColor, final IProblemManager problemManager) {
         super(parentComposite, styles, section, element, isCompactView, backgroundColor);
         this.problemManager = problemManager;
+        form = section == EComponentCategory.ADVANCED ? Metadatas.ADVANCED_FORM : Metadatas.MAIN_FORM;
         registProblemManager();
         postInit();
     }
@@ -124,6 +131,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
                 .filter(Objects::nonNull)
                 .filter(TaCoKitElementParameter.class::isInstance)
                 .map(TaCoKitElementParameter.class::cast)
+                .filter(p -> p.getForm() == null || p.getForm().equals(form))
                 .forEach(p -> p.registerRedrawListener("show", redrawListener));
     }
 
@@ -132,6 +140,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
                 .filter(Objects::nonNull)
                 .filter(TaCoKitElementParameter.class::isInstance)
                 .map(TaCoKitElementParameter.class::cast)
+                .filter(p -> p.getForm() == null || p.getForm().equals(form))
                 .forEach(p -> p.unregisterRedrawListener("show", redrawListener));
     }
 
@@ -201,8 +210,68 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
         generator.initController(this);
         final Composite previousComposite = addCommonWidgets();
         final Optional<Layout> layout = getFormLayout();
-        layout.ifPresent(l -> fillComposite(commonComposite, l, previousComposite));
+        layout.ifPresent(l -> {
+            updateQueryTypeLayout(l);
+            fillComposite(commonComposite, l, previousComposite);
+        });
         resizeScrolledComposite();
+    }
+
+    private void updateQueryTypeLayout(Layout layout) {
+        if (Node.class.isInstance(elem)) {
+            IComponent component = Node.class.cast(elem).getComponent();
+            String compName = component.getName();
+            if (!compName.equals("JDBCInput") && !compName.equals("JDBCRow")) {
+                return;
+            }
+        }
+        final String queryTypeId = "configuration.dataSet.queryType";
+        final String sqlQueryId = "configuration.dataSet.sqlQuery";
+
+        if (findParentLayout(queryTypeId, layout, null) != null) {
+            return;
+        }
+
+        Layout parentLayout = findParentLayout(sqlQueryId, layout, null);
+        if (parentLayout != null) {
+            Layout sqlQueryLayout = parentLayout.getLevels().stream().flatMap(level -> level.getColumns().stream())
+                    .filter(ly -> ly.getPath().equals(sqlQueryId)).findFirst().get();
+            Level sqlQueryLevel = parentLayout.getLevels().stream().filter(l -> l.getColumns().contains(sqlQueryLayout))
+                    .findFirst().get();
+
+            Level queryTypeLevel = new Level();
+            queryTypeLevel.setHeight(1);
+            queryTypeLevel.setPosition(sqlQueryLevel.getPosition());
+
+            Layout queryTypeLayout = new Layout(queryTypeId);
+            queryTypeLayout.setHeight(1);
+            queryTypeLayout.setPosition(sqlQueryLayout.getPosition());
+
+            queryTypeLevel.getColumns().add(queryTypeLayout);
+
+            parentLayout.getLevels().add(parentLayout.getLevels().indexOf(sqlQueryLevel), queryTypeLevel);
+
+            // FIXME if in future there are more layouts after sqlQueryLayout, should set position + 1 for all
+            sqlQueryLevel.setPosition(sqlQueryLevel.getPosition() + 1);
+            sqlQueryLayout.setPosition(sqlQueryLayout.getPosition() + 1);
+        }
+    }
+
+    private Layout findParentLayout(String id, Layout layout, Layout parent) {
+        if (layout.getPath().equals(id)) {
+            return parent;
+        }
+        if (!layout.getLevels().isEmpty()) {
+            for (Level levels : layout.getLevels()) {
+                for (Layout ly : levels.getColumns()) {
+                    Layout toReturn = findParentLayout(id, ly, layout);
+                    if (toReturn != null) {
+                        return toReturn;
+                    }
+                }
+            }
+        }
+        return null;
     }
 
     /**
@@ -225,6 +294,7 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
         final Composite schemaComposite = addSchemas(commonComposite, existConnectionComposite);
         final Composite statCatcherComposite = addStatCatcher(schemaComposite);
         final Composite paralelizeComposite = addParalelize(commonComposite, statCatcherComposite);
+        // final Composite queryTypeComposite = addQueryType(commonComposite, paralelizeComposite);
         final Composite lastComposite = addParalelizeNum(commonComposite, paralelizeComposite);
         return lastComposite;
     }
@@ -311,6 +381,17 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
         return previousComposite;
     }
 
+    protected Composite addQueryType(final Composite parent, final Composite previous) {
+        final Composite composite = new Composite(parent, SWT.NONE);
+        composite.setBackground(parent.getBackground());
+        composite.setLayout(new FormLayout());
+        composite.setLayoutData(levelLayoutData(previous, 3));
+        final IElementParameter param = elem.getElementParameter("QUERYSTORE"); //$NON-NLS-1$
+        updateParameters(param);
+        addWidgetIfActive(composite, param);
+        return composite;
+    }
+
     protected Composite addStatCatcher(final Composite parent) {
         final IElementParameter parameter = elem.getElementParameter(EParameterName.TSTATCATCHER_STATS.getName());
         if (doShow(parameter)) {
@@ -373,7 +454,13 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
     private void fillComposite(final Composite composite, final Layout layout, final Composite previous) {
         if (layout.isLeaf()) {
             final String path = layout.getPath();
-            final IElementParameter current = elem.getElementParameter(path);
+            final IElementParameter current;
+            if (path.equals("configuration.dataSet.queryType")) {
+                current = elem.getElementParameter("QUERYSTORE"); //$NON-NLS-1$
+                updateParameters(current);
+            } else {
+                current = elem.getElementParameter(path);
+            }
             addWidgetIfActive(composite, current);
         } else {
             Composite previousLevel = previous;
@@ -406,6 +493,19 @@ public class TaCoKitComposite extends MissingSettingsMultiThreadDynamicComposite
                     }
                     fillComposite(columnComposite, column, null);
                 }
+            }
+        }
+    }
+
+    private void updateParameters(IElementParameter param) {
+        if (param != null) {
+            IElementParameter queryParam = elem.getElementParameter("configuration.dataSet.sqlQuery"); //$NON-NLS-1$
+            if (queryParam != null) {
+                int rowNum = queryParam.getNumRow();
+                param.setShow(true);
+                param.setNumRow(rowNum);
+                param.getChildParameters().get(EParameterName.QUERYSTORE_TYPE.getName()).setNumRow(rowNum);
+                param.getChildParameters().get(EParameterName.REPOSITORY_QUERYSTORE_TYPE.getName()).setNumRow(rowNum);
             }
         }
     }

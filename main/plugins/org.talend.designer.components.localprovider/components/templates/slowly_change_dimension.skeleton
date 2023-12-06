@@ -10,7 +10,6 @@ public class CLASS {
     public static final String NETEZZA = "NETEZZA";
     public static final String ORACLE = "ORACLE";
     public static final String POSTGRESQL = "POSTGRESQL";
-    public static final String POSTGREPLUS = "POSTGREPLUS";
     public static final String SYBASE = "SYBASE";
     public static final String INFORMIX = "INFORMIX";
     public static final String VERTICA = "VERTICA";
@@ -2517,53 +2516,6 @@ public class CLASS {
         	return "\" " +getSequence(scdConfiger.getSurrogateKeySequence());
         }
     }
-    public class PostgrePlusSCDManager extends SCDManager {
-        public PostgrePlusSCDManager(String cid) {
-            super(cid);
-        }
-        protected String getDBMSId() {
-            return "postgresplus_id";
-        }        
-        protected String getLProtectedChar() {
-            return "\\\"";
-        }
-        protected String getRProtectedChar() {
-            return "\\\"";
-        }
-        protected String getSequence(String surrogateKeySequence) {
-        	return "+ \"nextval('\"+((dbSchema_" + cid +"!= null && dbSchema_" +cid+".trim().length()!=0)?dbSchema_"+cid+" +\".\":\"\") +\"" + surrogateKeySequence + "\"+ \"')\" + \"";
-        }
-        protected String getIncrement() {
-            return "";
-        }        
-        protected String getDate(String endDateValue) {
-            return "'\" + " + endDateValue + " + \"-01-01'";
-        }        
-        protected String getYear(String endDateField) {
-            return "EXTRACT(YEAR FROM " + getLProtectedChar() + endDateField + getRProtectedChar() + ")";
-        }
-        protected String getActiveFieldTrueValue(JavaType activeFieldType) {
-            if(activeFieldType == JavaTypesManager.STRING) {
-                return "'true'";
-            } else if(activeFieldType == JavaTypesManager.BOOLEAN) {
-                return "TRUE";
-            } else {
-                return "1";
-            }            
-        }
-        protected String getActiveFieldFalseValue(JavaType activeFieldType) {
-            if(activeFieldType == JavaTypesManager.STRING) {
-                return "'false'";
-            } else if(activeFieldType == JavaTypesManager.BOOLEAN) {
-                return "FALSE";
-            } else {
-                return "0";
-            }            
-        }
-		protected String getDBSequenceWithSchemaPrefix (SCDConfiger scdConfiger) {
-        	return "\" " +getSequence(scdConfiger.getSurrogateKeySequence());
-        }
-    }
     public class SybaseSCDManager extends SCDManager {
         public SybaseSCDManager(String cid) {
             super(cid);
@@ -2669,8 +2621,6 @@ public class CLASS {
                 manager = new MysqlSCDManager(cid);
             } else if(dbType.equals(ORACLE)) {
                 manager = new OracleSCDManager(cid);
-            } else if(dbType.equals(POSTGREPLUS)) {
-                manager = new PostgrePlusSCDManager(cid);
             } else if(dbType.equals(POSTGRESQL)) {
                 manager = new PostgresqlSCDManager(cid);
             } else if(dbType.equals(SYBASE)) {

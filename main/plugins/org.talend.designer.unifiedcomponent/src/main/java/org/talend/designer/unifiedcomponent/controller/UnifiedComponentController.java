@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.CCombo;
 import org.eclipse.swt.custom.CLabel;
@@ -254,6 +255,10 @@ public class UnifiedComponentController extends AbstractElementPropertySectionCo
             String componentName = value == null ? null : value.toString();
             if (componentName != null) {
                 UnifiedObject unifiedObjectByName = dComp.getUnifiedObjectByName(componentName);
+                if (unifiedObjectByName == null) {
+                    componentName = StringUtils.prependIfMissing(componentName, "t");
+                    unifiedObjectByName = dComp.getUnifiedObjectByName(componentName);
+                }
                 if (unifiedObjectByName != null) {
                     return unifiedObjectByName.getDatabase();
                 }

@@ -45,7 +45,7 @@ public final class UpdateParameterUtils {
             return;
         }
         // if not a combo box or if this parameter is linked to repository, just skip
-        if (!testedParam.getFieldType().equals(EParameterFieldType.CLOSED_LIST) || testedParam.getRepositoryValue() != null) {
+        if (!testedParam.getFieldType().equals(EParameterFieldType.CLOSED_LIST) || testedParam.calcRepositoryValue() != null) {
             return;
         }
         boolean contains = false;
@@ -132,6 +132,16 @@ public final class UpdateParameterUtils {
                 }
             }
         }
+    }
+
+    public static boolean isTacokit(IElementParameter curParameter) {
+        if (curParameter != null && curParameter instanceof ElementParameter) {
+            Object sourceName = ((ElementParameter) curParameter).getTaggedValue("org.talend.sdk.component.source");//$NON-NLS-1$
+            if ("tacokit".equalsIgnoreCase(String.valueOf(sourceName))) { //$NON-NLS-1$
+                return true;
+            }
+        }
+        return false;
     }
 
 }

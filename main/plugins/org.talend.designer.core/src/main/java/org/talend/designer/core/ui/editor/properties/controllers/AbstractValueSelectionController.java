@@ -61,6 +61,8 @@ public abstract class AbstractValueSelectionController extends AbstractElementPr
     private boolean editableText = false;
 
     private Text text;
+    
+    private Button button;
 
     public AbstractValueSelectionController(IDynamicProperty dp) {
         super(dp);
@@ -107,7 +109,7 @@ public abstract class AbstractValueSelectionController extends AbstractElementPr
         final CLabel label = createLabel(subComposite, param.getDisplayName());
         setupLabelLayout(label, numInRow, nbInRow, top, lastControl);
 
-        final Button button = createEditButton(subComposite, param);
+        button = createEditButton(subComposite, param);
         setupButtonLayout(button, numInRow, nbInRow, label);
 
         text = createTextField(subComposite, param);
@@ -142,7 +144,15 @@ public abstract class AbstractValueSelectionController extends AbstractElementPr
         if (checkErrorsWhenViewRefreshed || valueChanged) {
             checkErrorsForPropertiesOnly(labelText);
         }
+        
         fixedCursorPosition(param, labelText, value, valueChanged);
+    
+        if (isTacokit(param)) {
+            labelText.setEditable(isWidgetEnabled(param));
+            if (button != null && !button.isDisposed()) {
+                button.setEnabled(isWidgetEnabled(param));
+            }
+        }      
     }
 
     /**
@@ -185,7 +195,7 @@ public abstract class AbstractValueSelectionController extends AbstractElementPr
     private Button createEditButton(final Composite parent, final IElementParameter param) {
         final Button editButton = getWidgetFactory().createButton(parent, "", SWT.PUSH);
         editButton.setImage(ImageProvider.getImage(CoreUIPlugin.getImageDescriptor(DOTS_BUTTON)));
-        editButton.setEnabled(!param.isRepositoryValueUsed());
+        editButton.setEnabled(isWidgetEnabled(param));
         editButton.addSelectionListener(createOnButtonClickedListener(param));
         return editButton;
     }

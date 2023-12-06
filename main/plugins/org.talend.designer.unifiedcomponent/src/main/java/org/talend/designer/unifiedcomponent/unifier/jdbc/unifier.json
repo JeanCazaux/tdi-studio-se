@@ -1,12 +1,12 @@
 [{
     "component_delegate":"tDBInput",
-    "component":"tJDBCInput",
+    "component":"JDBCInput",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.dataSet.dataStore.userId":"USERNAME",
+            "configuration.dataSet.dataStore.password":"PASSWORD",
         }
      },
      "connector":{
@@ -17,55 +17,55 @@
 },
 {
     "component_delegate":"tDBOutput",
-    "component" : "tJDBCOutput",
+    "component" : "JDBCOutput",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.dataSet.dataStore.userId":"USERNAME",
+            "configuration.dataSet.dataStore.password":"PASSWORD",
         }
      }
 },
 {
     "component_delegate":"tDBClose",
-    "component":"tJDBCClose",
+    "component":"JDBCClose",
     "category":"DI",
     "family":""
 },
 {
     "component_delegate":"tDBCommit",
-    "component":"tJDBCCommit",
+    "component":"JDBCCommit",
     "category":"DI",
     "family":""
 },
 {
     "component_delegate":"tDBConnection",
-    "component":"tJDBCConnection",
+    "component":"JDBCConnection",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.userId":"USERNAME",
+            "configuration.password":"PASSWORD",
         }
      }
 },
 {
     "component_delegate":"tDBRollback",
-    "component":"tJDBCRollback",
+    "component":"JDBCRollback",
     "category":"DI",
     "family":""
 },
 {
     "component_delegate":"tDBRow",
-    "component":"tJDBCRow",
+    "component":"JDBCRow",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.dataSet.dataStore.userId":"USERNAME",
+            "configuration.dataSet.dataStore.password":"PASSWORD",
         }
      },
      "connector":{
@@ -76,37 +76,37 @@
 },
 {
     "component_delegate":"tDBSP",
-    "component":"tJDBCSP",
+    "component":"JDBCSP",
     "category":"DI",
     "family":""
 },
 {
     "component_delegate":"tDBOutputBulk",
-    "component":"tJDBCOutputBulk",
+    "component":"JDBCOutputBulk",
     "category":"DI",
     "family":""
 },
 {
     "component_delegate":"tDBOutputBulkExec",
-    "component":"tJDBCOutputBulkExec",
+    "component":"JDBCOutputBulkExec",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.dataSet.dataStore.userId":"USERNAME",
+            "configuration.dataSet.dataStore.password":"PASSWORD",
         }
      }
 },
 {
     "component_delegate":"tDBBulkExec",
-    "component":"tJDBCBulkExec",
+    "component":"JDBCBulkExec",
     "category":"DI",
     "family":"",
     "parameter":{
         "mapping":{
-            "connection.userPassword.userId":"USERNAME",
-            "connection.userPassword.password":"PASSWORD",
+            "configuration.dataSet.dataStore.userId":"USERNAME",
+            "configuration.dataSet.dataStore.password":"PASSWORD",
         }
      }
 }

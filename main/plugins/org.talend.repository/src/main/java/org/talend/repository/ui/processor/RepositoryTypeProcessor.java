@@ -153,6 +153,9 @@ public class RepositoryTypeProcessor extends SingleTypeProcessor {
         // friendly.
         ERepositoryObjectType eRepositoryObjectType = ERepositoryObjectType.getTypeFromKey(repositoryType);
         if (eRepositoryObjectType != null) {
+            if (eRepositoryObjectType == ERepositoryObjectType.SNOWFLAKE) {
+                return ERepositoryObjectType.METADATA_CONNECTIONS;
+            }
             return eRepositoryObjectType;
         }
 
@@ -221,6 +224,15 @@ public class RepositoryTypeProcessor extends SingleTypeProcessor {
         if (item instanceof ConnectionItem) {
             ConnectionItem connectionItem = (ConnectionItem) item;
             Connection connection = connectionItem.getConnection();
+
+            ERepositoryObjectType snowflakeType = ERepositoryObjectType.SNOWFLAKE;
+            if (snowflakeType != null && snowflakeType.getType().equals(repositoryType)) {
+                return repositoryType.equals(connectionItem.getTypeName());
+            }
+            if (snowflakeType != null && snowflakeType.getType().equals(connectionItem.getTypeName())) {
+                return false;
+            }
+
             // tAdvancedFileOutputXML
             if (repositoryType != null && repositoryType.equals(ERepositoryCategoryType.XMLOUTPUT.getName())) {
                 if (connection instanceof XmlFileConnection && ((XmlFileConnection) connection).isInputModel()) {

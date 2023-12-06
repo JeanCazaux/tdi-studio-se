@@ -57,6 +57,14 @@
         "exclude":"PORT"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tDB2CDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT"}
+},
+{
     "component_delegate":"tDBBulkExec",
     "component":"tDB2BulkExec",
     "category":"DI",

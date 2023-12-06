@@ -12,6 +12,7 @@
  */
 package org.talend.sdk.component.studio.model.parameter;
 
+import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
 import org.talend.commons.exception.ExceptionHandler;
@@ -31,6 +33,7 @@ import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.model.action.IActionParameter;
 import org.talend.sdk.component.studio.model.action.SettingsActionParameter;
+import org.talend.sdk.component.studio.model.parameter.listener.RequiredValidator;
 import org.talend.sdk.component.studio.ui.composite.problemmanager.IProblemManager;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
 import org.talend.sdk.studio.process.TaCoKitNode;
@@ -142,6 +145,17 @@ public class TaCoKitElementParameter extends ElementParameter implements IAdditi
     }
 
     public void firePropertyChange(final String name, final Object oldValue, final Object newValue) {
+        if (newValue == null || String.valueOf(newValue).isEmpty()) {
+            RequiredValidator requiredValidator = Stream.of(pcs.getPropertyChangeListeners(name))
+                    .filter(RequiredValidator.class::isInstance).findFirst().map(RequiredValidator.class::cast).orElse(null);
+            if (requiredValidator != null) {
+                // hide other noises
+                requiredValidator.hideConstraint();
+                // fire RequiredValidator only
+                requiredValidator.propertyChange(new PropertyChangeEvent(this, name, oldValue, newValue));
+                return;
+            }
+        }
         pcs.firePropertyChange(name, oldValue, newValue);
     }
     
@@ -156,8 +170,8 @@ public class TaCoKitElementParameter extends ElementParameter implements IAdditi
     }
 
     @Override
-    public String getRepositoryValue() {
-        String valueFromParentClass = super.getRepositoryValue();
+    public String calcRepositoryValue() {
+        String valueFromParentClass = super.calcRepositoryValue();
         if (StringUtils.isNotBlank(valueFromParentClass)) {
             return valueFromParentClass;
         }

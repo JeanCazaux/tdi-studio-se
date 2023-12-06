@@ -89,7 +89,7 @@ public class ConnectionsListComposite extends Composite {
         // PreferenceManipulator prefManipulator = new
         // PreferenceManipulator(CorePlugin.getDefault().getPreferenceStore());
         // list = prefManipulator.readConnections();
-        list = getClonedList(LoginHelper.getInstance().getStoredConnections());
+        list = getClonedList(LoginHelper.getInstance().loadSavedConnections());
 
         if (list.isEmpty()) {
             boolean isOnlyRemoteConnection = brandingService.getBrandingConfiguration().isOnlyRemoteConnection();

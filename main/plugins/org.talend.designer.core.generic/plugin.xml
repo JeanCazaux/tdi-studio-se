@@ -146,6 +146,15 @@
               name="NewMarkLogicMigrationTask"
               version="7.0.1">
         </projecttask>
+        <projecttask
+               beforeLogon="false"
+               breaks="8.0.1"
+               class="org.talend.designer.core.generic.model.migration.NewTckJDBCMigrationTask"
+               description="Migration task for jobs using JDBC components to TCK"
+               id="org.talend.designer.core.generic.model.migration.NewTckJDBCMigrationTask"
+               name="NewTckJDBCMigrationTask"
+               version="8.0.1">
+       </projecttask>
        <!--<projecttask
              beforeLogon="false"
              breaks="6.3.0"

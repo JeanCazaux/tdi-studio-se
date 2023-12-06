@@ -349,8 +349,9 @@ public class DbTypeListController extends AbstractElementPropertySectionControll
             } else {
                 String componentDbType = ""; //$NON-NLS-1$
                 for (IElementParameter param : (List<IElementParameter>) node.getElementParameters()) {
-                    if (param.getRepositoryValue() != null) {
-                        if (param.getRepositoryValue().equals("TYPE")) { //$NON-NLS-1$
+                    String repositoryValue = param.calcRepositoryValue();
+                    if (repositoryValue != null) {
+                        if (repositoryValue.equals("TYPE")) { //$NON-NLS-1$
                             componentDbType = (String) param.getValue();
                         }
                     }

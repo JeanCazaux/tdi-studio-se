@@ -61,6 +61,7 @@ import org.talend.core.model.metadata.IMetadataConnection;
 import org.talend.core.model.metadata.builder.ConvertionHelper;
 import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.metadata.builder.connection.DatabaseConnection;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataFromDataBase;
 import org.talend.core.model.metadata.builder.database.ExtractMetaDataUtils;
 import org.talend.core.model.metadata.builder.database.JavaSqlFactory;
@@ -504,7 +505,7 @@ public class DbTableController extends AbstractElementPropertySectionController 
         openSQLEditorButton.setEnabled(!param.isReadOnly());
         openSQLEditorButton.setData(NAME, SQLEDITOR);
         openSQLEditorButton.setData(PARAMETER_NAME, param.getName());
-        if (param.getFieldType() == EParameterFieldType.DBTABLE) {
+        if (param.getFieldType() == EParameterFieldType.DBTABLE || TacokitDatabaseConnection.KEY_DATASET_TABLE_NAME.equals(param.getName())) {
             openSQLEditorButton.setEnabled(ExtractMetaDataUtils.getInstance().haveLoadMetadataNode());
         }
         openSQLEditorButton.addSelectionListener(openSQLListener);

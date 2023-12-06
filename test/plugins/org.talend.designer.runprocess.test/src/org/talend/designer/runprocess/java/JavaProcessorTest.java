@@ -37,6 +37,7 @@ import org.talend.designer.core.ui.editor.process.Process;
 import org.talend.designer.maven.utils.PomUtil;
 import org.talend.designer.runprocess.ProcessorException;
 import org.talend.designer.runprocess.ProcessorUtilities;
+import org.talend.designer.runprocess.spark.SparkJavaProcessor;
 
 /**
  * 
@@ -124,12 +125,12 @@ public class JavaProcessorTest {
     public void testRemoveLowerVersionArtifacts() throws Exception{
         List<ModuleNeeded> neededModules = new ArrayList<ModuleNeeded>();
         Set<ModuleNeeded> highPriorityModuleNeeded = new HashSet<ModuleNeeded>();
-        neededModules.add(createModule("dom4j", "1.2.0"));
-        neededModules.add(createModule("dom4j", "1.3.0"));
-        neededModules.add(createModule("dom4j", "1.4.0"));
+        neededModules.add(createModule("org.dom4j", "dom4j", "1.2.0"));
+        neededModules.add(createModule("org.dom4j", "dom4j", "1.3.0"));
+        neededModules.add(createModule("org.dom4j", "dom4j", "1.4.0"));
 
         // can not remove 1.2.0
-        highPriorityModuleNeeded.add(createModule("dom4j", "1.2.0"));
+        highPriorityModuleNeeded.add(createModule("org.dom4j", "dom4j", "1.2.0"));
 
         // remove 1.3.0
         JavaProcessor.removeLowerVersionArtifacts(neededModules, highPriorityModuleNeeded);
@@ -148,8 +149,8 @@ public class JavaProcessorTest {
         assertEquals("dom4j-1.4.0.jar", neededModules.get(0).getModuleName());
     }
 
-    private ModuleNeeded createModule(String jarName, String version) {
-        String mvnURI = "mvn:org.dom4j/" + jarName + "/" + version;
+    private ModuleNeeded createModule(String groupName, String jarName, String version) {
+        String mvnURI = "mvn:" + groupName + "/" + jarName + "/" + version;
         ModuleNeeded module = new ModuleNeeded("test", jarName + "-" + version + ".jar", "test", true, null, null, mvnURI);
         return module;
     }
@@ -162,5 +163,57 @@ public class JavaProcessorTest {
             localM2Path = localM2Path + PomUtil.getLocalRepositoryPath();
         }
         return localM2Path;
+    }
+
+    @Test
+    public void alignLibJarWithClasspath() throws ProcessorException {
+        Property property = PropertiesFactory.eINSTANCE.createProperty();
+        property.setId("_rHnrstwXEeijXfdWFqSaEA"); //$NON-NLS-1$
+        property.setLabel("test"); //$NON-NLS-1$
+        property.setVersion(VersionUtils.DEFAULT_VERSION);
+        Process process = new Process(property);
+        ProcessItem item = PropertiesFactory.eINSTANCE.createProcessItem();
+        ProcessType processType = TalendFileFactory.eINSTANCE.createProcessType();
+        property.setItem(item);
+        item.setProperty(property);
+        item.setProcess(processType);
+
+        // jars in classpath
+        List<ModuleNeeded> classPathNeededModules = new ArrayList<ModuleNeeded>();
+        classPathNeededModules.add(createModule("org.datanucleus", "datanucleus-rdbms", "4.0.4"));
+        classPathNeededModules.add(createModule("org.datanucleus", "datanucleus-rdbms", "4.1.19"));
+        classPathNeededModules.add(createModule("org.datanucleus", "datanucleus-core", "4.1.17"));
+
+        // datanucleus-rdbms-4.0.4.jar was set in tLibaryLoad
+        Set<ModuleNeeded> highPriorityModuleNeeded = new HashSet<ModuleNeeded>();
+        highPriorityModuleNeeded.add(createModule("org.datanucleus", "datanucleus-rdbms", "4.0.4"));
+
+        // -libsjar with datanucleus-rdbms-4.0.4.jar from tLibaryLoad and a lower version 3.2.9
+        Set<ModuleNeeded> libJarModuleNeeded = new HashSet<ModuleNeeded>();
+        libJarModuleNeeded.add(createModule("org.datanucleus", "datanucleus-rdbms", "4.0.4"));
+        libJarModuleNeeded.add(createModule("org.apache.logging.log4j", "log4j-api", "2.17.1"));
+        libJarModuleNeeded.add(createModule("org.datanucleus", "datanucleus-rdbms", "3.2.9"));
+
+        SparkJavaProcessor processor = new SparkJavaProcessor(process, property, false);
+
+        ProcessorUtilities.setExportConfig(JavaUtils.JAVA_APP_NAME, null, null);
+
+        // final String list that to add into -libsjar
+        List<String> libNames = new ArrayList<>();
+        libNames.add("datanucleus-rdbms-4.0.4.jar");
+        libNames.add("log4j-api-2.17.1.jar");
+        libNames.add("datanucleus-rdbms-3.2.9.jar");
+
+        processor
+                .alignLibJarWithClasspath(classPathNeededModules, libJarModuleNeeded, libNames,
+                        highPriorityModuleNeeded);
+
+        // 4.0.4 jar is in the tLibaryLoad so should remain the same
+        Assert.assertEquals("datanucleus-rdbms-4.0.4.jar", libNames.get(0));
+        // log4j-api-2.17.1.jar was not in the classpath so should not be deleted
+        Assert.assertEquals("log4j-api-2.17.1.jar", libNames.get(1));
+        // datanucleus-rdbms-3.2.9.jar should be aligned with 4.1.19 same as classpath
+        Assert.assertEquals("datanucleus-rdbms-4.1.19.jar", libNames.get(2));
+
     }
 }

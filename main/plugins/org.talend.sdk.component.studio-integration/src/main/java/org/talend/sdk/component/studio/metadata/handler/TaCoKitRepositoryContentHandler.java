@@ -20,21 +20,23 @@ import java.util.Map;
 
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.runtime.IPath;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EStructuralFeature.Setting;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.jface.wizard.IWizard;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.PlatformUI;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.PersistenceException;
 import org.talend.commons.ui.runtime.image.IImage;
 import org.talend.commons.utils.data.container.Container;
 import org.talend.commons.utils.data.container.RootContainer;
+import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.general.Project;
 import org.talend.core.model.metadata.MetadataManager;
 import org.talend.core.model.metadata.builder.connection.Connection;
+import org.talend.core.model.metadata.builder.connection.MetadataTable;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.properties.PropertiesFactory;
@@ -47,16 +49,15 @@ import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.model.repository.RepositoryViewObject;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.repository.utils.XmiResourceManager;
+import org.talend.core.runtime.services.IGenericWizardService;
+import org.talend.core.service.ITCKUIService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.IRepositoryNode.EProperties;
 import org.talend.repository.model.RepositoryNode;
-import org.talend.sdk.component.studio.metadata.action.CreateTaCoKitConfigurationAction;
-import org.talend.sdk.component.studio.metadata.action.EditTaCoKitConfigurationAction;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationItemModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.ValueModel;
-import org.talend.sdk.component.studio.metadata.node.ITaCoKitRepositoryNode;
 import org.talend.sdk.component.studio.util.ETaCoKitImage;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
@@ -235,7 +236,7 @@ public class TaCoKitRepositoryContentHandler extends AbstractRepositoryContentHa
     @Override
     public void addNode(final ERepositoryObjectType type, final RepositoryNode parentNode,
             final IRepositoryViewObject repositoryObject, final RepositoryNode node) {
-        if (TaCoKitUtil.isTaCoKitType(type)) {
+        if (TaCoKitUtil.isTaCoKitType(type) || ERepositoryObjectType.METADATA_CONNECTIONS.equals(type)) {
             String configId = repositoryObject.getProperty().getId();
             Project project = new Project(ProjectManager.getInstance().getProject(node.getObject().getProperty()));
             List<ConnectionItem> items = new ArrayList<ConnectionItem>();
@@ -245,7 +246,7 @@ public class TaCoKitRepositoryContentHandler extends AbstractRepositoryContentHa
                     try {
                         if (repObj != null && repObj.getProperty() != null) {
                             ConnectionItem item = (ConnectionItem) repObj.getProperty().getItem();
-                            if (!items.contains(item) && item.getTypeName().equals(configId)) {
+                            if (!items.contains(item) && configId.equals(item.getTypeName())) {
                                 items.add(item);
                             }
                         }
@@ -341,27 +342,23 @@ public class TaCoKitRepositoryContentHandler extends AbstractRepositoryContentHa
     }
 
     @Override
-    public IWizard newWizard(final IWorkbench workbench, final boolean creation, final RepositoryNode node,
-            final String[] existingNames) {
-        if (!(node instanceof ITaCoKitRepositoryNode)) {
-            return null;
+    public IWizard newSchemaWizard(IWorkbench workbench, boolean creation, IRepositoryViewObject object,
+            MetadataTable metadataTable, String[] existingNames, boolean forceReadOnly) {
+        if (GlobalServiceRegister.getDefault().isServiceRegistered(IGenericWizardService.class)) {
+            IGenericWizardService wizardService = (IGenericWizardService) GlobalServiceRegister.getDefault()
+                    .getService(IGenericWizardService.class);
+            return wizardService.newSchemaWizard(workbench, creation, object, metadataTable, existingNames, forceReadOnly);
         }
-        IWorkbench wb = workbench != null ? workbench : PlatformUI.getWorkbench();
+        return null;
+    }
+
+    @Override
+    public IWizard newWizard(IWorkbench workbench, boolean creation, RepositoryNode node, String[] existingNames) {
         if (creation) {
-            try {
-                CreateTaCoKitConfigurationAction createTaCoKitConfigurationAction = new CreateTaCoKitConfigurationAction(
-                        ITaCoKitRepositoryNode.class.cast(node).getConfigTypeNode());
-                createTaCoKitConfigurationAction.init(node);
-                return createTaCoKitConfigurationAction.createWizard(wb);
-            } catch (Exception e) {
-                ExceptionHandler.process(e);
-            }
-            return null;
-        } else {
-            EditTaCoKitConfigurationAction editTaCoKitConfigurationAction = new EditTaCoKitConfigurationAction();
-            editTaCoKitConfigurationAction.init(node);
-            return editTaCoKitConfigurationAction.createWizard(wb);
+            // reserve
+            return ITCKUIService.get().createTCKWizard(node.getContentType().getLabel(), new Path(""), false);
         }
+        return ITCKUIService.get().editTCKWizard(node);
     }
 
 }

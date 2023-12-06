@@ -555,7 +555,7 @@ public class DynamicComposite extends ScrolledComposite implements IDynamicPrope
     private void updateRepositoryListExtra(IElementParameter param, List<String> repositoryConnectionNameList,
             List<String> repositoryConnectionValueList, boolean extra) {
 
-        String repositoryValue = param.getParentParameter().getRepositoryValue();
+        String repositoryValue = param.getParentParameter().calcRepositoryValue();
         if (repositoryValue != null) {
             List<String> connectionNamesList = new ArrayList<String>();
             List<String> connectionValuesList = new ArrayList<String>();

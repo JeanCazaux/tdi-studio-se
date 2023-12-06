@@ -49,6 +49,7 @@ import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.actions.SelectionProviderAction;
 import org.talend.commons.ui.runtime.image.EImage;
 import org.talend.commons.ui.runtime.image.ImageProvider;
+import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.DatabaseConnectionItem;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.sqlbuilder.util.ConnectionParameters;

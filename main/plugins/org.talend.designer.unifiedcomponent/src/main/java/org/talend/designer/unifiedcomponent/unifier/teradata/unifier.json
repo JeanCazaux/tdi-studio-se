@@ -51,6 +51,12 @@
     "family":""
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tTeradataCDC",
+    "category":"DI",
+    "family":""
+},
+{
     "component_delegate":"tDBSCD",
     "component":"tTeradataSCD",
     "category":"DI",

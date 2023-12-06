@@ -210,9 +210,9 @@
 
    <CODEGENERATION>
      <IMPORTS>
-       <IMPORT NAME="Driver-JavaDB" MODULE="derby.jar" MVN="mvn:org.talend.libraries/derby/6.0.0"  REQUIRED="true" />
-       <IMPORT NAME="Driver-JavaDB" MODULE="derbyclient.jar" MVN="mvn:org.talend.libraries/derbyclient/6.0.0"  REQUIRED="true" />
-       <IMPORT NAME="Driver-JavaDB" MODULE="derbynet.jar" MVN="mvn:org.talend.libraries/derbynet/6.0.0"  REQUIRED="true"/>
+       <IMPORT NAME="Driver-JavaDB" MODULE="derby-10.14.2.0.jar" MVN="mvn:org.apache.derby/derby/10.14.2.0"  REQUIRED="true" />
+       <IMPORT NAME="Driver-JavaDB" MODULE="derbyclient-10.14.2.0.jar" MVN="mvn:org.apache.derby/derbyclient/10.14.2.0"  REQUIRED="true" />
+       <IMPORT NAME="Driver-JavaDB" MODULE="derbynet-10.14.2.0.jar" MVN="mvn:org.apache.derby/derbynet/10.14.2.0"  REQUIRED="true"/>
      </IMPORTS>
    </CODEGENERATION>
 

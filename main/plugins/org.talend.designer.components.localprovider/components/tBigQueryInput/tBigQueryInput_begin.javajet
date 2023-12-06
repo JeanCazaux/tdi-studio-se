@@ -295,7 +295,7 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee_<%=cid%>.getMessage());
 		%>
 		//Dynamic end
 	<%
-	} else if (authMode.equals("SERVICEACCOUNT")) {
+	} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 	%>
 
 		<%@ include file="@{org.talend.designer.components.localprovider}/components/tBigQueryInput/ServiceAccountBigQueryHelper.javajet"%>
@@ -390,7 +390,7 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee_<%=cid%>.getMessage());
 		//Dynamic end
 	<%
 	} else {
-		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 	}
 
 	if (authMode.equals("OAUTH") || authMode.equals("TOKEN")) {
@@ -441,14 +441,14 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee_<%=cid%>.getMessage());
                     Object value_<%=cid%> = null;
                     nb_line_<%=cid%> ++;
     <%
-	} else if (authMode.equals("SERVICEACCOUNT")) {
+	} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 	%>
 		for (com.google.cloud.bigquery.FieldValueList field_<%=cid %> : result_<%=cid%>.iterateAll()) {
 			Object value_<%=cid%>;
 			nb_line_<%=cid%> ++;
 	<%
 	} else {
-		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+		throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 	}
 		%>
 		int fieldsCount_<%=cid %> = field_<%=cid %>.size();
@@ -500,12 +500,12 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",ee_<%=cid%>.getMessage());
 								%>
 								value_<%=cid%> = field_<%=cid %>.get(column_index_<%=cid%>).getV();
 								<%
-								} else if (authMode.equals("SERVICEACCOUNT")) {
+								} else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
 								%>
 								value_<%=cid%> = field_<%=cid %>.get(column_index_<%=cid%>).getValue();
 								<%
 								} else {
-									throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
+									throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\", \"OAUTH\" or \"TOKEN\", but it is " + authMode);
 								}
 								%>
 								if(com.google.api.client.util.Data.isNull(value_<%=cid%>)) value_<%=cid%> = null;

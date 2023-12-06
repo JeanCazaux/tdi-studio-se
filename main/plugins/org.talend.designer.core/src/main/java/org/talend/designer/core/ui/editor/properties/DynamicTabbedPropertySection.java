@@ -503,7 +503,7 @@ public class DynamicTabbedPropertySection extends AbstractPropertySection implem
         // if (extra) {
         // paramName = extraPropertyTypeName;
         // }
-        String repositoryValue = elem.getElementParameter(paramName).getRepositoryValue();
+        String repositoryValue = elem.getElementParameter(paramName).calcRepositoryValue();
         if (repositoryValue != null) {
             List<String> connectionNamesList = new ArrayList<String>();
             List<String> connectionValuesList = new ArrayList<String>();

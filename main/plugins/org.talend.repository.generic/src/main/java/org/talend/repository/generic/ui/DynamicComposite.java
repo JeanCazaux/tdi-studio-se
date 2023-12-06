@@ -223,7 +223,7 @@ public class DynamicComposite extends MissingSettingsMultiThreadDynamicComposite
                     genericElementParameter.setValue(values);
                 }
                 if (properties != null && isRepository(element)) {
-                    String repositoryValue = genericElementParameter.getRepositoryValue();
+                    String repositoryValue = genericElementParameter.calcRepositoryValue();
                     if (genericElementParameter.isShow(currentParameters) && (repositoryValue != null)
                             && (!genericElementParameter.getName().equals(EParameterName.PROPERTY_TYPE.getName()))
                             && genericElementParameter.getCategory() == section) {

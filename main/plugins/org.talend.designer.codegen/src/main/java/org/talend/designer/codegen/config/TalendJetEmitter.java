@@ -378,7 +378,7 @@ public class TalendJetEmitter extends JETEmitter {
                         // Construct a proper URL for relative lookup.
                         //
                         URL url = new File(project.getLocation() + "/" + "runtime" + "/") //$NON-NLS-1$ //$NON-NLS-2$
-                                .toURL();
+                                .toURI().toURL();
                         URLClassLoader theClassLoader = new URLClassLoader(new URL[] { url }, jetEmitter.classLoader);
                         Class theClass = theClassLoader.loadClass((packageName.length() == 0 ? "" : packageName + ".") //$NON-NLS-1$ //$NON-NLS-2$
                                 + jetCompiler.getSkeleton().getClassName());
@@ -633,7 +633,7 @@ public class TalendJetEmitter extends JETEmitter {
             final IWorkspace workspace = ResourcesPlugin.getWorkspace();
             IProject project = workspace.getRoot().getProject(projectName);
 
-            URL url = new File(project.getLocation() + "/runtime").toURL(); //$NON-NLS-1$
+            URL url = new File(project.getLocation() + "/runtime").toURI().toURL(); //$NON-NLS-1$
             currentClassLoader = jetbean.getClassLoader();
             theClassLoader = new URLClassLoader(new URL[] { url }, jetbean.getClassLoader());
         }

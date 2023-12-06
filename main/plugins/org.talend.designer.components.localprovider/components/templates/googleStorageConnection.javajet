@@ -6,12 +6,13 @@ imports="
   "
 %>
 <%
+String pathToServerAccoutKeyFile;
 if(("true").equals(useExistingConn)) {
   %>
   com.google.cloud.storage.Storage storage_<%=cid%> = (com.google.cloud.storage.Storage)globalMap.get("service_<%=connection%>");
 <% } else {
-  if ("SERVICE_ACCOUNT".equals(authType) || "GS_SERVICE_ACCOUNT".equals(authType)) {
-    String pathToServerAccoutKeyFile;
+  if ("SERVICE_ACCOUNT".equals(authType) || "GS_SERVICE_ACCOUNT".equals(authType)
+        || "APPLICATION_DEFAULT_CREDENTIALS".equals(authType) || "GS_APPLICATION_DEFAULT_CREDENTIALS".equals(authType)) {
     if("SERVICE_ACCOUNT".equals(authType)) {
       pathToServerAccoutKeyFile = ElementParameterParser.getValue(node, "__SERVICE_ACCOUNT_KEY__");
     }else {
@@ -24,8 +25,12 @@ if(("true").equals(useExistingConn)) {
       public com.google.cloud.storage.Storage newStorage() throws java.io.IOException {
           com.google.auth.Credentials credential_<%=cid%> = null;
           try {
-            credential_<%=cid%> = com.google.auth.oauth2.GoogleCredentials
+            <% if("APPLICATION_DEFAULT_CREDENTIALS".equals(authType) || "GS_APPLICATION_DEFAULT_CREDENTIALS".equals(authType)) { %>
+                credential_<%=cid%> = com.google.auth.oauth2.GoogleCredentials.getApplicationDefault();
+            <% } else { %>
+                credential_<%=cid%> = com.google.auth.oauth2.GoogleCredentials
                 .fromStream(new java.io.FileInputStream(<%=pathToServerAccoutKeyFile%>));
+            <% } %>
           } catch (IOException e_<%=cid%>) {
             globalMap.put("<%=cid%>_ERROR_MESSAGE",e_<%=cid%>.getMessage());
             <% if(isLog4jEnabled) { %>

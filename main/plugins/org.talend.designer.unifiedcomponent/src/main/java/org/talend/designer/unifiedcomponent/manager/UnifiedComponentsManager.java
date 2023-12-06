@@ -17,6 +17,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -109,6 +110,15 @@ public class UnifiedComponentsManager {
                     initDelegateComponent(jdbcUnifier);
                 }
             }
+            
+            // Remove the unifier which have only one component          
+            Iterator<String> iter = delegateComponents.keySet().iterator();
+            while (iter.hasNext()) {
+                String key = iter.next();
+                if (delegateComponents.get(key).getUnifiedObjects().size() < 2) {
+                    iter.remove();
+                }
+            }       
         }
 
         return delegateComponents.values();

@@ -16,32 +16,50 @@
 package org.talend.sdk.component.studio.model.action;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Optional;
+import java.util.Set;
 
-import org.eclipse.jface.window.Window;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.talend.commons.CommonsPlugin;
+import org.talend.commons.runtime.service.ITaCoKitService;
+import org.talend.commons.utils.PasswordEncryptUtil;
+import org.talend.core.GlobalServiceRegister;
+import org.talend.core.ILibraryManagerService;
+import org.talend.core.model.context.ContextUtils;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.process.IContext;
 import org.talend.core.model.process.IContextManager;
 import org.talend.core.model.process.IContextParameter;
-import org.talend.designer.core.ui.editor.properties.controllers.uidialog.OpenContextChooseComboDialog;
+import org.talend.core.model.properties.ContextItem;
+import org.talend.core.service.IMetadataManagmentUiService;
+import org.talend.core.service.ITCKUIService;
+import org.talend.core.utils.TalendQuoteUtils;
+import org.talend.designer.core.model.utils.emf.talendfile.ContextType;
+import org.talend.metadata.managment.ui.utils.ConnectionContextHelper;
 import org.talend.sdk.component.studio.Lookups;
+import org.talend.sdk.component.studio.lang.Pair;
 import org.talend.sdk.component.studio.model.parameter.TableActionParameter;
+import org.talend.sdk.component.studio.model.parameter.ValueConverter;
 import org.talend.sdk.component.studio.websocket.WebSocketClient.V1Action;
+import org.talend.utils.security.StudioEncryption;
+
 
 public class Action<T> {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(Action.class.getName());
+    
+    private static boolean isCommandline = CommonsPlugin.isHeadless();
 
     public static final String STATUS = "status";
 
@@ -66,10 +84,28 @@ public class Action<T> {
 
     private IContextManager contextManager;
 
+    private IContext context;
+
+    private Connection connection;
+
     public Action(final String actionName, final String family, final Type type) {
         this.actionName = actionName;
         this.family = family;
         this.type = type.toString();
+    }
+
+    public Action(final String actionName, final String family, final Type type, IContext context) {
+        this.actionName = actionName;
+        this.family = family;
+        this.type = type.toString();
+        this.context = context;
+    }
+
+    public Action(final String actionName, final String family, final Type type, Connection connection) {
+        this.actionName = actionName;
+        this.family = family;
+        this.type = type.toString();
+        this.connection = connection;
     }
 
     /**
@@ -115,7 +151,39 @@ public class Action<T> {
 
     @SuppressWarnings("unchecked")
     public Map<String, T> callback() {
-        return actionClient().execute(Map.class, family, type, actionName, payload());
+        Map<String, String> payLoad = payload();
+        if (ITCKUIService.get().getTCKJDBCType().getLabel().equals(getFamily())) {
+            retrieveDrivers(payLoad);
+        }
+        return actionClient().execute(Map.class, family, type, actionName, payLoad);
+    }
+
+    protected void retrieveDrivers(Map<String, String> payLoad) {
+        List<String> neededList = new ArrayList<String>();
+        for (String key : payLoad.keySet()) {
+            if (key.matches("\\S*.jdbcDriver\\[\\d\\].path")) {
+                neededList.add(TalendQuoteUtils.removeQuotesIfExist(payLoad.get(key)));
+            } else if (key.matches("driverJars\\[\\d\\].path")) {
+                String values = payLoad.get(key);
+                List<Map<String, Object>> driverList = new ArrayList<Map<String, Object>>();
+                ITaCoKitService service = ITaCoKitService.getInstance();
+                if (service != null) {
+                    driverList = service.convertToTable(values);
+                }
+                for (Map<String, Object> map : driverList) {
+                    for (String k : map.keySet()) {
+                        if (k.matches("\\S*.jdbcDriver\\[\\].path")) {
+                            neededList.add(TalendQuoteUtils.removeQuotesIfExist(map.get(k).toString()));
+                        }
+                    }
+                }
+            }           
+        }
+        ILibraryManagerService librairesManagerService = (ILibraryManagerService) GlobalServiceRegister.getDefault()
+                .getService(ILibraryManagerService.class);
+        if (librairesManagerService != null && neededList.size() > 0) {
+            librairesManagerService.retrieve(neededList, null, new NullProgressMonitor());
+        }
     }
 
     protected final String getActionName() {
@@ -131,22 +199,62 @@ public class Action<T> {
     }
 
     protected final Map<String, String> payload() {
-        final Map<String, String> payload = new HashMap<>();
-        IContext context = selectContext();
-        parameters.values().stream()
-                .flatMap(List::stream)
-                .flatMap(actionParam -> actionParam.parameters().stream())
-                .forEach(param -> {
-                    final String initialValue = param.getSecond();
-                    String value = Optional.ofNullable(context)
-                            .map(cx -> Optional.ofNullable(
-                                    cx.getContextParameter(initialValue.replace("context.", "")))
-                                    .map(IContextParameter::getValue)
-                                    .orElse(initialValue)
-                            ).orElse(initialValue);
-                    payload.put(param.getFirst(), value);
-                });
+        final Map<String, String> payload = new HashMap<>();       
+        selectContext();
+        Set<Entry<String, List<IActionParameter>>> entrySet = parameters.entrySet();
+        for (Entry<String, List<IActionParameter>> entry : entrySet) {
+            List<IActionParameter> listValues = entry.getValue();
+            for (IActionParameter actPrameter : listValues) {
+                Collection<Pair<String, String>> parameters2 = actPrameter.parameters();
+                for (Pair<String, String> pair : parameters2) {
+                    String first = pair.getFirst();
+                    String second = pair.getSecond();
+                    String value = second;
+                    IContextParameter contextParameter = null;
+                    if (context != null) {
+                        contextParameter = context.getContextParameter(second.replace("context.", ""));
+                    }
+
+                    boolean isContextValue = false;
+                    if (contextParameter != null) {
+                        value = contextParameter.getValue();
+                        isContextValue = true;
+                        if (PasswordEncryptUtil.isPasswordType(contextParameter.getType())) {
+                            if (StudioEncryption.hasEncryptionSymbol(value)) {
+                                value = StudioEncryption.getStudioEncryption(StudioEncryption.EncryptionKeyName.SYSTEM)
+                                        .decrypt(value);
+                            }
+                        }
+                    }
+
+                    if (actPrameter instanceof TableActionParameter && isContextValue) {
+                        extractTableActionParameter(payload, first, value);
+                        continue;
+                    }
+
+                    if (!StringUtils.isBlank(value) && !StringUtils.equals(value, "[]")) {
+                        payload.put(first, value.toString());
+                    }
+                }
+            }
+        }
         return payload;
+    }
+
+    private void extractTableActionParameter(Map<String, String> payload, String keyPath, String value) {
+        String[] tableValue = value.split(";");
+        int beginIndex = keyPath.indexOf("["), endIndex = keyPath.indexOf("]");
+        String regular = keyPath;
+        if (beginIndex > 0 && endIndex > 0 && beginIndex < endIndex) {
+            regular = regular.substring(0, beginIndex + 1) + "%d" + keyPath.substring(endIndex);
+        }
+        for (int i = 0; i < tableValue.length; i++) {
+            keyPath = regular.replaceFirst("%d", String.valueOf(i));
+            value = TalendQuoteUtils.removeQuotesIfExist(tableValue[i]);
+            if (!StringUtils.isBlank(value) && !StringUtils.equals(value, "[]")) {
+                payload.put(keyPath, value.toString());
+            }
+        }
     }
 
     public IContextManager getContextManager() {
@@ -157,45 +265,49 @@ public class Action<T> {
         this.contextManager = contextManager;
     }
 
-    private IContext selectContext() {
-        if (getContextManager() == null) {
-            return null;
-        }
-        final List<IContext> allContexts = getContextManager().getListContext();
-        if (allContexts.size() == 1) {
-            return getContextManager().getDefaultContext();
-        }
-        final IContext[] selectedContext = { getContextManager().getDefaultContext() };
-        try {
-            if (!CommonsPlugin.isHeadless() && PlatformUI.isWorkbenchRunning()) {
-                final Display display = Display.getDefault();
-                if (display != null) {
-                    display.syncExec(new Runnable() {
+    private void selectContext() {
+        final List<IContext> allContexts = new ArrayList<IContext>();
 
-                        @Override
-                        public void run() {
-                            Shell shell = null;
-                            final IWorkbenchWindow activeWindow = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-                            if (activeWindow != null) {
-                                shell = activeWindow.getShell();
-                            } else {
-                                shell = display.getActiveShell();
-                            }
-                            OpenContextChooseComboDialog dialog = new OpenContextChooseComboDialog(shell, allContexts);
-                            dialog.create();
-                            dialog.getShell().setMinimumSize(200, 200);
-                            if (Window.OK == dialog.open()) {
-                                selectedContext[0] = dialog.getSelectedContext();
+        if (getContextManager() != null) {
+            allContexts.addAll(getContextManager().getListContext());
+            context = getContextManager().getDefaultContext();
+        }
+        if (connection != null && connection.isContextMode()) {
+            ContextItem contextItem = ContextUtils.getContextItemById2(connection.getContextId());
+            if (contextItem != null) {
+                for (Object obj : contextItem.getContext()) {
+                    ContextType contextType = (ContextType) obj;
+                    IContext jobContext = ContextUtils.convert2IContext(contextType, contextItem.getProperty().getId());
+                    allContexts.add(jobContext);
+                    if (contextItem.getDefaultContext().equals(jobContext.getName())) {
+                        context = jobContext;
+                    }
+                }
+            } else {
+                LOGGER.error("Can't load context item id:" + connection.getContextId());
+            }
+        }
+
+        if (allContexts != null && allContexts.size() > 0
+                && GlobalServiceRegister.getDefault().isServiceRegistered(IMetadataManagmentUiService.class)) {
+            IMetadataManagmentUiService mmUIService = GlobalServiceRegister.getDefault()
+                    .getService(IMetadataManagmentUiService.class);
+            if (!isCommandline) {
+                Display.getDefault().syncExec(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        if (PlatformUI.isWorkbenchRunning()) {
+                            IContext selectedContext = mmUIService.promptConfirmLauch(Display.getDefault().getActiveShell(),
+                                    allContexts, context);
+                            if (selectedContext != null) {
+                                context = selectedContext;
                             }
                         }
-                    });
-                }
+                    }
+                });
             }
-        } catch (RuntimeException e) {
-            LOGGER.error("Error while selecting context: " + e.getMessage());
         }
-
-        return selectedContext[0];
     }
 
     public enum Type {

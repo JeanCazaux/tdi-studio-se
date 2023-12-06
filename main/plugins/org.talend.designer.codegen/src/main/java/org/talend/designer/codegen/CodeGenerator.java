@@ -599,6 +599,13 @@ public class CodeGenerator implements ICodeGenerator {
 
                 } else {
                     // if (!isIterate) {
+                    if (isTacokitProcessor(node)) {
+                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_RECORDS_END, incomingName, typeGen));
+                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_DATA_BEGIN, incomingName, typeGen));
+                        codeComponent.append(generatesTreeCode(subProcess, node, ECodePart.MAIN, typeGen));
+                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_DATA_END, incomingName, typeGen));
+                    }
+                	
                     codeComponent.append(generateComponentCode(subProcess, node, ECodePart.END, incomingName, typeGen));
                     // }
                     if (node.getComponent() instanceof Component) {
@@ -629,12 +636,6 @@ public class CodeGenerator implements ICodeGenerator {
                         }
                     }
 
-                    if (isTacokitProcessor(node)) {
-                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_RECORDS_END, incomingName, typeGen));
-                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_DATA_BEGIN, incomingName, typeGen));
-                        codeComponent.append(generatesTreeCode(subProcess, node, ECodePart.MAIN, typeGen));
-                        codeComponent.append(generateComponentCode(subProcess, node, ECodePart.PROCESS_DATA_END, incomingName, typeGen));
-                    }
                     codeComponent.append(generatesTreeCode(subProcess, node, part, typeGen));
                     // if (isIterate) {
                     // codeComponent.append(generateComponentCode(node,
@@ -655,11 +656,14 @@ public class CodeGenerator implements ICodeGenerator {
         return codeComponent;
     }
 
+    private static final String TACOKIT_PROCESSOR_CODE_DIR = "tacokit/jet_stub/generic/processor";
+    
     private boolean isTacokitProcessor(final INode node) {
-        return "org.talend.sdk.component.studio.ComponentModel".equals(node.getComponent().getClass().getName())
-                && !NodeUtil.getIncomingConnections(node, IConnectionCategory.DATA).isEmpty(); //has input data
+        final String componentModelClass = node.getComponent().getClass().getName();
+        return ("org.talend.sdk.component.studio.ComponentModel".equals(componentModelClass) || "org.talend.sdk.component.studio.AdditionalJDBCComponentModel".equals(componentModelClass))
+                && (!NodeUtil.getIncomingConnections(node, IConnectionCategory.DATA).isEmpty() || TACOKIT_PROCESSOR_CODE_DIR.equals(node.getComponent().getTemplateFolder()));
     }
-
+    
     private StringBuffer generateSeperateEndCode(NodesSubTree subProcess, INode node, String incomingName, ETypeGen typeGen)
             throws CodeGeneratorException {
         StringBuffer codeComponent = new StringBuffer();

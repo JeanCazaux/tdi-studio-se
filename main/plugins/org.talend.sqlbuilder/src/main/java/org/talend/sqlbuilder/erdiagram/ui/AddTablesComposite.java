@@ -110,8 +110,7 @@ public class AddTablesComposite extends Composite {
 
         listTables = new org.eclipse.swt.widgets.List(div1, SWT.MULTI | SWT.H_SCROLL | SWT.V_SCROLL | SWT.BORDER);
         listTables.setLayoutData(new GridData(GridData.FILL_BOTH));
-        DatabaseConnectionItem item = SQLBuilderRepositoryNodeManager.getItem(getRootNode());
-        tables = ConnectionHelper.getTables((DatabaseConnection) item.getConnection());
+        tables = ConnectionHelper.getTables(SQLBuilderRepositoryNodeManager.getDatabaseConnection(getRootNode()));
         for (MetadataTable table : tables) {
             if (table.getSourceName() != null) {
                 listTables.add(table.getSourceName());

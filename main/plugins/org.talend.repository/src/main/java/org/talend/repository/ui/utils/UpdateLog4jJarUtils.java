@@ -171,6 +171,8 @@ public class UpdateLog4jJarUtils {
                 log4j1To2Api.setMavenUri("mvn:org.apache.logging.log4j/log4j-1.2-api/"+LOG4J_VERSION);//$NON-NLS-1$
                 moduleNeededList.add(log4j1To2Api);
             }
+            
+            pruneForLog4j2Modules(moduleNeededList);
             moduleNeededList.addAll(getLog4j2Modules());
         } else {
             boolean usedjclOverSlf4jBefore = false;
@@ -206,6 +208,16 @@ public class UpdateLog4jJarUtils {
             moduleNeededList.add(slf4jApi);
         }
 
+    }
+
+    private static void pruneForLog4j2Modules(Collection<ModuleNeeded> moduleNeededList) {
+        Iterator<ModuleNeeded> iterator = moduleNeededList.iterator();
+        while(iterator.hasNext()) {
+            ModuleNeeded next = iterator.next();
+            if(next.getModuleName().contains("slf4j-reload4j")) {
+                iterator.remove();
+            }
+        }
     }
 
     public static List<ModuleNeeded> getLog4j2Modules() {

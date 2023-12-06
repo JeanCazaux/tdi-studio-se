@@ -41,11 +41,11 @@ public class Level {
         return this.columns;
     }
 
-    void setPosition(final int position) {
+    public void setPosition(final int position) {
         this.position = position;
     }
 
-    void setHeight(final int height) {
+    public void setHeight(final int height) {
         this.height = height;
     }
 

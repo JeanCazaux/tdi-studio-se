@@ -65,8 +65,7 @@ public class SessionTreeNodeManager {
         // Gets the root RepositoryNode
         RepositoryNode root = getRoot(repositoryNode);
         // Gets the DatabaseConnection
-        DatabaseConnection connection = (DatabaseConnection) ((ConnectionItem) root.getObject().getProperty().getItem())
-                .getConnection();
+        DatabaseConnection connection = SQLBuilderRepositoryNodeManager.getDatabaseConnection(root);
 
         if (EDatabaseTypeName.ACCESS.getDisplayName().equals(connection.getDatabaseType())) {
             if (connection.getURL().lastIndexOf("=") != connection.getURL().length() - 1) { //$NON-NLS-1$

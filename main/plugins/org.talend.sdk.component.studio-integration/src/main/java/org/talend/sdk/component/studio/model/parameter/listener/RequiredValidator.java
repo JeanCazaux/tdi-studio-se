@@ -29,11 +29,12 @@ public class RequiredValidator extends PropertyValidator {
 
     @Override
     boolean validate(final Object newValue) {
-        if (newValue == null) {
-            return false;
-        }
-        String value = (String) newValue;
-        return !value.isEmpty();
+        return !isEmpty(newValue);
+    }
+
+    @Override
+    public void hideConstraint() {
+        super.hideConstraint();
     }
 
 }

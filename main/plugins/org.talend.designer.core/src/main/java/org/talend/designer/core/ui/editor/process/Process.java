@@ -141,7 +141,6 @@ import org.talend.core.ui.ILastVersionChecker;
 import org.talend.core.ui.component.ComponentsFactoryProvider;
 import org.talend.core.ui.process.IGEFProcess;
 import org.talend.core.utils.KeywordsValidator;
-import org.talend.cwm.helper.StudioEncryptionHelper;
 import org.talend.designer.core.DesignerPlugin;
 import org.talend.designer.core.ITestContainerGEFService;
 import org.talend.designer.core.i18n.Messages;
@@ -1086,7 +1085,7 @@ public class Process extends Element implements IProcess2, IGEFProcess, ILastVer
                                 if (!param.isSerialized()) {
                                     continue;
                                 }
-                                if (parameter.isRepositoryValueUsed() && parameter.getRepositoryValue() != null) {
+                                if (parameter.isRepositoryValueUsed() && parameter.calcRepositoryValue() != null) {
                                     component.setGenericPropertyValue(parameter);
                                 }
                             }
@@ -1636,8 +1635,10 @@ public class Process extends Element implements IProcess2, IGEFProcess, ILastVer
             } else if (param.getFieldType().equals(EParameterFieldType.ENCODING_TYPE)) {
                 // fix for bug 2193
                 boolean setToCustom = false;
+                String repositoryValue = null;
                 if (EmfComponent.REPOSITORY.equals(elemParam.getPropertyValue(EParameterName.PROPERTY_TYPE.getName()))
-                        && param.getRepositoryValue() != null && param.getRepositoryValue().equals("ENCODING")) { //$NON-NLS-1$
+                        && (repositoryValue = param.calcRepositoryValue()) != null
+                        && repositoryValue.equals("ENCODING")) { //$NON-NLS-1$
                     setToCustom = true;
                 }
                 String tempValue = (String) param.getChildParameters().get(EParameterName.ENCODING_TYPE.getName()).getValue();

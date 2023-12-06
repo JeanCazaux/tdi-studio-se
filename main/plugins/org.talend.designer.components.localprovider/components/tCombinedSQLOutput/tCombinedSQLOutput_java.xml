@@ -49,7 +49,6 @@
 				<ITEM NAME="MYSQL" VALUE="MYSQL" />
 				<ITEM NAME="DBORACLE" VALUE="DBORACLE" />
 				<ITEM NAME="PARACCEL" VALUE="PARACCEL" />
-				<ITEM NAME="POSTGREPLUS" VALUE="POSTGREPLUS" />
 				<ITEM NAME="POSTGRE" VALUE="POSTGRE" />
 				<ITEM NAME="SQLITE" VALUE="SQLITE" />
 				<ITEM NAME="SYBASE" VALUE="SYBASE" />
@@ -63,7 +62,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_AS400" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tAS400Connection|tJDBCConnection$" 
+			FILTER="REGEXP:^tAS400Connection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='AS400'" 
@@ -73,7 +72,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_DB2" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tDB2Connection|tJDBCConnection$" 
+			FILTER="REGEXP:^tDB2Connection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='DB2'" 
@@ -83,7 +82,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_FIREBIRD" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tFirebirdConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tFirebirdConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='FIREBIRD'" 
@@ -93,7 +92,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_GREENPLUM" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tGreenplumConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tGreenplumConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='GREENPLUM'" 
@@ -103,7 +102,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_HIVE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tHiveConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tHiveConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='HIVE'" 
@@ -113,7 +112,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_INGRES" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tIngresConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tIngresConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='INGRES'" 
@@ -123,7 +122,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_INTERBASE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tInterbaseConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tInterbaseConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='INTERBASE'" 
@@ -133,7 +132,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_MSSQL" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tMSSqlConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tMSSqlConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='MSSQL'" 
@@ -143,7 +142,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_MYSQL" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tMysqlConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tMysqlConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='MYSQL'" 
@@ -153,7 +152,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_DBORACLE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tOracleConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tOracleConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='DBORACLE'" 
@@ -163,27 +162,17 @@
 		<PARAMETER 
 			NAME="CONNECTION_PARACCEL" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tParAccelConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tParAccelConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='PARACCEL'" 
-		/>		
-		
-		<!-- Postgreplus -->
-		<PARAMETER 
-			NAME="CONNECTION_POSTGREPLUS" 
-			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tPostgresPlusConnection|tJDBCConnection$" 
-			REQUIRED="true"
-			NUM_ROW="3"
-			SHOW_IF="DBTYPE=='POSTGREPLUS'" 
-		/>		
-		
+		/>
+
 		<!-- PostgreSQL -->
 		<PARAMETER 
 			NAME="CONNECTION_POSTGRE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tPostgresqlConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tPostgresqlConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='POSTGRE'" 
@@ -193,7 +182,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_SQLITE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tSQLiteConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tSQLiteConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='SQLITE'" 
@@ -203,7 +192,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_SYBASE" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tSybaseConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tSybaseConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='SYBASE'" 
@@ -213,7 +202,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_TERADATA" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tTeradataConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tTeradataConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='TERADATA'" 
@@ -223,7 +212,7 @@
 		<PARAMETER 
 			NAME="CONNECTION_VERTICA" 
 			FIELD="COMPONENT_LIST"
-			FILTER="REGEXP:^tVerticaConnection|tJDBCConnection$" 
+			FILTER="REGEXP:^tVerticaConnection|JDBCConnection$"
 			REQUIRED="true"
 			NUM_ROW="3"
 			SHOW_IF="DBTYPE=='VERTICA'" 
@@ -247,7 +236,6 @@
       		<DEFAULT IF="DBTYPE=='MYSQL'">mysql_id</DEFAULT>
       		<DEFAULT IF="DBTYPE=='DBORACLE'">oracle_id</DEFAULT>
       		<DEFAULT IF="DBTYPE=='POSTGRE'">postgres_id</DEFAULT>
-      		<DEFAULT IF="DBTYPE=='POSTGREPLUS'">postgresplus_id</DEFAULT>
       		<DEFAULT IF="DBTYPE=='SQLITE'">sqlite_id</DEFAULT>
       		<DEFAULT IF="DBTYPE=='PARACCEL'">paraccel_id</DEFAULT>
       		<DEFAULT IF="DBTYPE=='SYBASE'">sybase_id</DEFAULT>

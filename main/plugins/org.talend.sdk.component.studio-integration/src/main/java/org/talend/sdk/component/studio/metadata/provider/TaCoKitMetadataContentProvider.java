@@ -27,10 +27,13 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.ui.navigator.CommonNavigator;
 import org.eclipse.ui.navigator.CommonViewer;
 import org.talend.commons.exception.ExceptionHandler;
+import org.talend.commons.exception.PersistenceException;
 import org.talend.commons.runtime.model.repository.ERepositoryStatus;
 import org.talend.commons.runtime.service.ITaCoKitService;
 import org.talend.commons.utils.data.container.Container;
 import org.talend.commons.utils.data.container.RootContainer;
+import org.talend.core.model.metadata.builder.ConvertionHelper;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Property;
 import org.talend.core.model.repository.ERepositoryObjectType;
@@ -396,7 +399,7 @@ public class TaCoKitMetadataContentProvider extends AbstractMetadataContentProvi
     private void loadFromStorage(ITaCoKitRepositoryNode parentNode, Set<IRepositoryViewObject> allObjs,
             Set<IRepositoryViewObject> usedObjs, Container<String, IRepositoryViewObject> container,
             Container<String, IRepositoryViewObject> tacokitRootContainer) throws Exception {
-        if (container == null) {
+        if (container == null || isJDBCLeafNode(parentNode)) {
             return;
         }
         ConfigTypeNode configTypeNode = parentNode.getConfigTypeNode();
@@ -488,7 +491,11 @@ public class TaCoKitMetadataContentProvider extends AbstractMetadataContentProvi
                         TaCoKitLeafRepositoryNode leafRepositoryNode = createLeafRepositoryNode((RepositoryNode) parentNode,
                                 parentNode, itemModule, configTypeNodeMap.get(module.getConfigurationId()), member);
                         parentNode.getChildren().add(leafRepositoryNode);
-                        initTaCoKitNode(leafRepositoryNode, allObjs, usedObjs, tacokitRootContainer, true);
+                        if (isJDBCLeafNode(leafRepositoryNode)) {
+                            addGenericDatabaseChildren(leafRepositoryNode);
+                        } else {
+                            initTaCoKitNode(leafRepositoryNode, allObjs, usedObjs, tacokitRootContainer, true);
+                        }
                         leafRepositoryNode.setInitialized(true);
                     } catch (Exception e) {
                         ExceptionHandler.process(e);
@@ -497,6 +504,31 @@ public class TaCoKitMetadataContentProvider extends AbstractMetadataContentProvi
             }
         }
 
+    }
+    
+    private void addGenericDatabaseChildren(TaCoKitLeafRepositoryNode leafRepositoryNode) throws Exception {
+        ConnectionItem connectionItem = (ConnectionItem)leafRepositoryNode.getObject().getProperty().getItem();
+        IProxyRepositoryFactory factory = ProxyRepositoryFactory.getInstance();
+        if (factory.getStatus(leafRepositoryNode.getObject()) != ERepositoryStatus.DELETED) {
+            List<IRepositoryViewObject> validationRules = null;
+
+            try {
+                // note: could be optimized and get this only for metadata related repository types.
+                // but the loss of performance is really minimized still here.
+                validationRules = factory.getAll(ERepositoryObjectType.METADATA_VALIDATION_RULES);
+            } catch (PersistenceException e2) {
+                ExceptionHandler.process(e2);
+            }
+            
+            ((ProjectRepositoryNode)leafRepositoryNode.getRoot()).createTables(leafRepositoryNode, leafRepositoryNode.getObject(), ConvertionHelper.fillJDBCParams4TacokitDatabaseConnection(connectionItem.getConnection()), validationRules);
+        }       
+    }
+    
+    public static boolean isJDBCLeafNode(ITaCoKitRepositoryNode tacoNode) {
+        if (TacokitDatabaseConnection.KEY_JDBC_DATASTORE_NAME.equals(tacoNode.getConfigTypeNode().getName())) {
+            return true;
+        }
+        return false;
     }
 
     private TaCoKitFamilyRepositoryNode createFamilyRepositoryNode(final RepositoryNode parentNode,
@@ -513,7 +545,7 @@ public class TaCoKitMetadataContentProvider extends AbstractMetadataContentProvi
         return configurationRepositoryNode;
     }
 
-    private TaCoKitLeafRepositoryNode createLeafRepositoryNode(final RepositoryNode parentNode,
+    public static TaCoKitLeafRepositoryNode createLeafRepositoryNode(final RepositoryNode parentNode,
             final ITaCoKitRepositoryNode parentTaCoKitNode, final TaCoKitConfigurationItemModel model,
             final ConfigTypeNode configurationTypeNode, final IRepositoryViewObject viewObject) throws Exception {
         TaCoKitLeafRepositoryNode leafNode = new TaCoKitLeafRepositoryNode(viewObject, parentNode, parentTaCoKitNode,

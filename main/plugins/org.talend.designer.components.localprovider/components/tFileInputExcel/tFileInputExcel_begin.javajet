@@ -300,8 +300,8 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e.getMessage());
         	}
         }
 		sheetList_<%= cid %> = sheet_FilterNullList_<%= cid %>;
-	if(sheetList_<%= cid %>.size()>0){
         int nb_line_<%= cid %> = 0;
+	if(sheetList_<%= cid %>.size()>0){
 
         int begin_line_<%= cid %> = <%if(("").equals(header.trim())){%>0<%}else{%><%= header %><%}%>;
 
@@ -755,8 +755,8 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e.getMessage());
 			}
 		}
 		sheetList_<%=cid%> = sheetList_FilterNull_<%=cid%>;
-	if(sheetList_<%= cid %>.size()>0){
 		int nb_line_<%= cid %> = 0;
+	if(sheetList_<%= cid %>.size()>0){
 
         int begin_line_<%= cid %> = <%if(("").equals(header.trim())){%>0<%}else{%><%= header %><%}%>;
 

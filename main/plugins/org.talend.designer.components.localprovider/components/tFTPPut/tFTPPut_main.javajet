@@ -21,6 +21,7 @@
     String connection = ElementParameterParser.getValue(node, "__CONNECTION__");
     String useExistingConn = ElementParameterParser.getValue(node, "__USE_EXISTING_CONNECTION__");
     boolean sftp = false;
+    boolean renameAfterUpload = ("true").equals(ElementParameterParser.getValue(node, "__RENAME_AFTER__"));
     boolean ftps = false;
     boolean isLog4jEnabled = ("true").equals(ElementParameterParser.getValue(node.getProcess(), "__LOG4J_ACTIVATE__"));
     boolean useGlob = ("true").equals(ElementParameterParser.getValue(node, "__PERL5_REGEX__"));
@@ -105,12 +106,21 @@ try{
                         }
                         String destRename_<%= cid %> =  map<%=cid %>.get(key<%=cid %>);
                         final String dest_<%=cid%>;
-                        if (destRename_<%= cid %> == null || destRename_<%= cid %>.isEmpty()) {
-                            dest_<%=cid%> = remoteDir_<%=cid%> + "/" + listings<%=cid %>[m<%=cid %>].getName();
-                        }
-                        else {
-                            dest_<%=cid%> = remoteDir_<%=cid%> + "/" + destRename_<%= cid %>;
-                        }
+<%
+                            if (renameAfterUpload) {
+%>
+                                dest_<%=cid%> = remoteDir_<%=cid%>+"/"+listings<%=cid %>[m<%=cid %>].getName();
+<%
+                            } else {
+%>
+                                if (destRename_<%= cid %> == null || destRename_<%= cid %>.isEmpty()) {
+                                    dest_<%=cid%> = remoteDir_<%=cid%> + "/" + listings<%=cid %>[m<%=cid %>].getName();
+                                } else {
+                                    dest_<%=cid%> = remoteDir_<%=cid%> + "/" + destRename_<%= cid %>;
+                                }
+<%
+                            }
+%>
                         
                         try{
                             c_<%=cid%>.put(listings<%=cid %>[m<%=cid %>].getAbsolutePath(), dest_<%=cid%>, monitor<%=cid%>, mode<%=cid%>);
@@ -171,6 +181,32 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e_<%=cid%>.getMessage());
                 <%}%>
                 System.err.println("No matches found for mask '" + key<%=cid %> + "'!");
             }
+<%
+            if (renameAfterUpload) {
+%>
+                //do rename
+                if (!((map<%=cid %>.get(key<%=cid %>) == null) || map<%=cid %>.get(key<%=cid %>).isEmpty() || key<%=cid %>.equals(map<%=cid %>.get(key<%=cid %>)))){
+                    <%
+                    if(("overwrite").equals(sftpoverwrite) || ("resume").equals(sftpoverwrite)){
+                    %>
+                        try{
+                            c_<%=cid%>.rm(<%=remotedir %>+"/"+map<%=cid %>.get(key<%=cid %>));
+                        }catch(com.jcraft.jsch.SftpException e_<%=cid%>){
+                        }
+                    <%
+                    }
+                    %>
+                    try{
+                        c_<%=cid%>.rename(<%=remotedir %>+"/"+key<%=cid %>, <%=remotedir %>+"/"+map<%=cid %>.get(key<%=cid %>));
+                        globalMap.put("<%=cid %>_CURRENT_STATUS", "File rename OK.");
+                    }catch(com.jcraft.jsch.SftpException e_<%=cid%>){
+                        globalMap.put("<%=cid %>_CURRENT_STATUS", "File rename fail.");
+                        throw e_<%=cid%>;
+                    }
+                }
+<%
+            }
+%>
                     }
 
 <%
@@ -292,12 +328,21 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e_<%=cid%>.getMessage());
                         
                         final String destRename_<%= cid %> =  map<%=cid %>.get(key<%=cid %>);
                         final String dest_<%=cid%>;
-                        if (destRename_<%= cid %> == null || destRename_<%= cid %>.isEmpty()) {
+<%
+                        if (renameAfterUpload) {
+%>
                             dest_<%=cid%> = listings<%=cid %>[m<%=cid %>].getName();
+<%
+                        } else {
+%>
+                            if (destRename_<%= cid %> == null || destRename_<%= cid %>.isEmpty()) {
+                                dest_<%=cid%> = listings<%=cid %>[m<%=cid %>].getName();
+                            } else {
+                                dest_<%=cid%> = destRename_<%= cid %>;
+                            }
+<%
                         }
-                        else {
-                            dest_<%=cid%> = destRename_<%= cid %>;
-                        }
+%>
                         globalMap.put("<%=cid %>_CURRENT_FILE_EXISTS", remoteExistsFiles_<%=cid%>.contains(dest_<%=cid%>));
                         
 <%
@@ -358,6 +403,26 @@ globalMap.put("<%=cid%>_ERROR_MESSAGE",e_<%=cid%>.getMessage());
                             currentStatus_<%=cid %> = "File rename OK.";
                             msg_<%=cid%>.add("file: " + file_in_localDir_<%=cid%>.getAbsolutePath() + ", size: "
                                             + file_in_localDir_<%=cid%>.length() + " bytes upload successfully");
+<%
+                        }
+%>
+<%
+                        if (renameAfterUpload) {
+%>
+                            //do rename
+                            if (destRename_<%= cid %> != null && !destRename_<%= cid %>.isEmpty() && ! destRename_<%= cid %>.equals(dest_<%=cid%>)) {
+<%
+                                if(!"never".equals(ftpsoverwrite)){
+%>
+                                    if ((remoteExistsFiles_<%=cid%>.contains(destRename_<%=cid%>))){
+                                        ftpExecutorAndChecker_<%=cid %>.executeAndCheckResult(() -> effectivelyFinalFtp_<%=cid %>.deleteFile(destRename_<%= cid %>));
+                                    }
+<%
+                                }
+%>
+                                ftpExecutorAndChecker_<%=cid %>.executeAndCheckResult(() -> effectivelyFinalFtp_<%=cid %>.rename(dest_<%=cid%>, destRename_<%= cid %>));
+                                globalMap.put("<%=cid %>_CURRENT_STATUS", "File rename OK.");
+                            }
 <%
                         }
 %>

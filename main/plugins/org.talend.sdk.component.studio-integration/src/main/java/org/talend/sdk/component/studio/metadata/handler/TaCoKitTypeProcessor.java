@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.eclipse.jface.viewers.Viewer;
+import org.talend.core.model.properties.TacokitDatabaseConnectionItem;
 import org.talend.core.model.repository.ERepositoryObjectType;
+import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.IRepositoryNode.EProperties;
 import org.talend.repository.model.RepositoryNode;
 import org.talend.repository.ui.processor.MultiTypesProcessor;
@@ -32,8 +34,11 @@ import org.talend.sdk.component.studio.metadata.node.TaCoKitFamilyRepositoryNode
  */
 public class TaCoKitTypeProcessor extends MultiTypesProcessor {
 
+    boolean isJDBC;
+
     public TaCoKitTypeProcessor(final String[] repositoryTypes) {
         super(repositoryTypes);
+        isJDBC = getShowRootTypes().contains(ERepositoryObjectType.METADATA_TACOKIT_JDBC);
     }
 
     /**
@@ -60,6 +65,15 @@ public class TaCoKitTypeProcessor extends MultiTypesProcessor {
             }
         }
         ERepositoryObjectType nodeObjectType = (ERepositoryObjectType) node.getProperties(EProperties.CONTENT_TYPE);
+        if (ENodeType.SIMPLE_FOLDER == node.getType()) {
+            return true;
+        }
+        if (isJDBC) {
+            if (node.getObject() != null && node.getObject().getProperty() != null) {
+                return TacokitDatabaseConnectionItem.class.isInstance(node.getObject().getProperty().getItem());
+            }
+        }
+
         if (getShowRootTypes().contains(nodeObjectType)) {
             return true;
         }

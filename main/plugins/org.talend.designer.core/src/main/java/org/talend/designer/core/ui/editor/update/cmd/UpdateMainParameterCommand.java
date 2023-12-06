@@ -180,7 +180,7 @@ public class UpdateMainParameterCommand extends Command {
                                             if (param.getCategory() != category) {
                                                 continue;
                                             }
-                                            String repositoryValue = param.getRepositoryValue();
+                                            String repositoryValue = param.calcRepositoryValue();
                                             if (param.isShow(process.getElementParameters()) && (repositoryValue != null)
                                                     && (!param.getName().equals(EParameterName.PROPERTY_TYPE.getName()))) {
                                                 Object objectValue = RepositoryToComponentProperty.getValue(
@@ -245,7 +245,7 @@ public class UpdateMainParameterCommand extends Command {
                             if (param.getCategory() != category) {
                                 continue;
                             }
-                            String repositoryValue = param.getRepositoryValue();
+                            String repositoryValue = param.calcRepositoryValue();
                             if (param.isShow(process.getElementParameters()) && (repositoryValue != null)) {
                                 // for mysql db verion
                                 if (EParameterName.DB_TYPE.getName().equals(param.getName()) && "TYPE".equals(repositoryValue)) {

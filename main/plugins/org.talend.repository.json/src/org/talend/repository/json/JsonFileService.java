@@ -35,7 +35,7 @@ public class JsonFileService implements IJsonFileService {
     @Override
     public boolean changeFilePathFromRepository(Object jsonConneciton, IElementParameter filePathParm, IElement elem, Object value) {
         boolean isParamChanged = false;
-        if (jsonConneciton instanceof JSONFileConnection && "FILE_PATH".equals(filePathParm.getRepositoryValue())) {
+        if (jsonConneciton instanceof JSONFileConnection && "FILE_PATH".equals(filePathParm.calcRepositoryValue())) {
             if (LinkUtils.isRemoteFile(TalendTextUtils.removeQuotes(String.valueOf(value)))) {
                 elem.setPropertyValue("USEURL", true);
                 IElementParameter elementParameter = elem.getElementParameter("URLPATH");

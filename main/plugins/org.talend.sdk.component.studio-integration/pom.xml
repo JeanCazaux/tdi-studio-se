@@ -21,7 +21,7 @@
     <system-rules.version>1.16.0</system-rules.version>
     <common-io.version>2.9.0</common-io.version>
     <commons-lang.version>2.6</commons-lang.version>
-    <junit5.version>5.9.0</junit5.version>
+    <junit5.version>5.9.3</junit5.version>
     <commons-cli.version>1.4</commons-cli.version>
     <slf4j.version>1.7.34</slf4j.version>
     <xbean.version>4.20</xbean.version>

@@ -42,6 +42,7 @@ import org.talend.commons.ui.runtime.swt.tableviewer.TableViewerCreatorColumnNot
 import org.talend.commons.ui.swt.advanced.dataeditor.control.ExtendedPushButton;
 import org.talend.commons.ui.swt.extended.table.ExtendedTableModel;
 import org.talend.commons.ui.swt.tableviewer.TableViewerCreator;
+import org.talend.commons.ui.swt.tableviewer.TableViewerCreatorColumn;
 import org.talend.commons.utils.data.list.IListenableListListener;
 import org.talend.commons.utils.data.list.ListenableListEvent;
 import org.talend.core.CorePlugin;
@@ -60,7 +61,6 @@ import org.talend.core.model.utils.TalendTextUtils;
 import org.talend.core.ui.metadata.celleditor.ModuleListCellEditor;
 import org.talend.core.ui.properties.tab.IDynamicProperty;
 import org.talend.designer.core.IDesignerCoreService;
-import org.talend.designer.core.model.FakeElement;
 import org.talend.designer.core.model.components.EParameterName;
 import org.talend.designer.core.ui.editor.cmd.PropertyChangeCommand;
 import org.talend.designer.core.ui.editor.connections.Connection;
@@ -76,7 +76,7 @@ import org.talend.designer.runprocess.ItemCacheManager;
 /**
  * DOC yzhang class global comment. Detailled comment <br/>
  *
- * $Id: TableController.java 1 2006-12-14 下午05:44:30 +0000 (下午05:44:30) yzhang $
+ * $Id: TableController.java 1 2006-12-14 ����05:44:30 +0000 (����05:44:30) yzhang $
  *
  */
 public class TableController extends AbstractTableController {
@@ -90,6 +90,8 @@ public class TableController extends AbstractTableController {
 
     private ITDQPatternService dqPatternService = null;
     
+    private boolean isReadOnly = false;
+
     /**
      * DOC yzhang TableController constructor comment.
      *
@@ -118,8 +120,8 @@ public class TableController extends AbstractTableController {
         tableEditorModel.setData(elem, param, getProcess(elem, part));
         AbstractPropertiesTableEditorView<Map<String, Object>> tableEditorView = getPropertiesTableEditorView(parentComposite, SWT.NONE, tableEditorModel,param, !param.isBasedOnSchema(), false);
         tableEditorView.getExtendedTableViewer().setCommandStack(getCommandStack());
-        boolean editable = !param.isReadOnly() && (elem instanceof FakeElement || !param.isRepositoryValueUsed());
-        tableEditorView.setReadOnly(!editable);
+        isReadOnly = !isTableViewerEditable(param);
+        tableEditorView.setReadOnly(isReadOnly);
         tableEditorModel.setModifiedBeanListenable(tableEditorView.getTableViewerCreator());
         tableEditorModel.addModifiedBeanListenerForAggregateComponent();
 
@@ -310,7 +312,8 @@ public class TableController extends AbstractTableController {
         AbstractPropertiesTableEditorView<Map<String, Object>> tableEditorView = getPropertiesTableEditorView(subComposite,
                 SWT.NONE, tableEditorModel, param, !param.isBasedOnSchema(), false);
         tableEditorView.getExtendedTableViewer().setCommandStack(getCommandStack());
-        tableEditorView.setReadOnly(param.isReadOnly());
+        isReadOnly = !isTableViewerEditable(param);
+        tableEditorView.setReadOnly(isReadOnly);
         final Table table = tableEditorView.getTable();
         int toolbarSize = 0;
         if (!param.isBasedOnSchema()) {
@@ -369,8 +372,20 @@ public class TableController extends AbstractTableController {
                 tableViewerCreator.getTableViewer().refresh();
             }
         }
+        boolean isReadOnlyNow = !isTableViewerEditable(param);
+        if (isReadOnlyNow != isReadOnly) {
+            isReadOnly = isReadOnlyNow;
+            tableViewerCreator.setReadOnly(isReadOnly);
+            for (Object obj : tableViewerCreator.getColumns()) {
+                if (obj instanceof TableViewerCreatorColumn) {
+                    TableViewerCreatorColumn column = (TableViewerCreatorColumn) obj;
+                    column.setModifiable(!isReadOnly);
+                }
+            }
+            revertToolBarButtonState(!isReadOnly);
+        }
     }
-
+    
     @SuppressWarnings("unchecked")
     private void checkAndSetDefaultValue(IElementParameter param) {
         if (param != null && param.getFieldType() == EParameterFieldType.TABLE) {
@@ -712,6 +727,10 @@ public class TableController extends AbstractTableController {
         }
     }
 
+    protected boolean isTableViewerEditable(IElementParameter param) {
+        return !param.isReadOnly() && (isWidgetEnabled(param) || !param.isRepositoryValueUsed());
+    }
+    
     private void updateContextList(IElementParameter param) {
         List<String> contextParameterNamesList = new ArrayList<String>();
 
@@ -912,10 +931,11 @@ public class TableController extends AbstractTableController {
      *
      * if flag is false, will set the button for unenabled state. (bug 3740)
      */
-    private void revertToolBarButtonState(boolean flag) {
+    protected void revertToolBarButtonState(boolean flag) {
 
         PropertiesTableToolbarEditorView toolBar = (PropertiesTableToolbarEditorView) hashCurControls.get(TOOLBAR_NAME);
         if (toolBar != null) {
+            toolBar.getExtendedTableViewer().setReadOnly(!flag);
             for (ExtendedPushButton btn : toolBar.getButtons()) {
                 if (flag) {
                     btn.getButton().setEnabled(btn.getEnabledState());

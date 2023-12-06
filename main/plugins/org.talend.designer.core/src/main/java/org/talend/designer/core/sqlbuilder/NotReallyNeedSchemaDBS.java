@@ -35,7 +35,6 @@ public class NotReallyNeedSchemaDBS {
             needSchemaDBNames.add(EDatabaseTypeName.ORACLESN.getProduct());
             needSchemaDBNames.add(EDatabaseTypeName.ORACLE_OCI.getProduct());
             needSchemaDBNames.add(EDatabaseTypeName.PSQL.getProduct());
-            needSchemaDBNames.add(EDatabaseTypeName.PLUSPSQL.getProduct());
         } catch (Exception e) {
             // e.printStackTrace();
             ExceptionHandler.process(e);

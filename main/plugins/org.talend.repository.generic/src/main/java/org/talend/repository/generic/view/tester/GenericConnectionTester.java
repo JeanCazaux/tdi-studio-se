@@ -39,10 +39,19 @@ public class GenericConnectionTester extends CoMetadataNodeTester {
                         ERepositoryObjectType.METADATA_CON_COLUMN, contentType);
                 boolean queryTest = checkImplicatedTeser(queryTester, repositoryNode, ERepositoryObjectType.METADATA_CON_QUERY,
                         contentType);
-                return isGenericType || schemaTest || schemaColTest || queryTest;
+                
+                boolean isNewJDBC = isNewJDBCObjectType(contentType);
+                return isGenericType || schemaTest || schemaColTest || queryTest || isNewJDBC;
             }
         }
         return null;
+    }
+    
+    private boolean isNewJDBCObjectType(ERepositoryObjectType contentType) {
+        if (ERepositoryObjectType.METADATA_TACOKIT_JDBC.equals(contentType)) {
+            return true;
+        }
+        return false;
     }
 
     @Override
@@ -50,7 +59,7 @@ public class GenericConnectionTester extends CoMetadataNodeTester {
             ERepositoryObjectType testerType, ERepositoryObjectType propertyType) {
         boolean isTypeNode = subTester.isTypeNode(repositoryNode, testerType);
         ERepositoryObjectType parentItemType = subTester.findParentItemType(repositoryNode);
-        boolean isGenericType = GenericWizardServiceFactory.getGenericWizardService().isGenericType(parentItemType);
+        boolean isGenericType = GenericWizardServiceFactory.getGenericWizardService().isGenericType(parentItemType) || isNewJDBCObjectType(parentItemType);
         return isTypeNode && isGenericType;
     }
 

@@ -455,8 +455,8 @@
       		<IMPORT MODULE="httpclient-cache-4.3.1.jar" NAME="httpclient-cache" MVN="mvn:org.apache.httpcomponents/httpclient-cache/4.3.1" REQUIRED="true"/>
 	      	<IMPORT NAME="httpcore-4.4.13" MODULE="httpcore-4.4.13.jar" MVN="mvn:org.apache.httpcomponents/httpcore/4.4.13" REQUIRED="true"/>
 	      	<IMPORT MODULE="httpmime-4.3.1.jar" NAME="httpmime" MVN="mvn:org.apache.httpcomponents/httpmime/4.3.1" REQUIRED="true"/>
-            <IMPORT NAME="json" MODULE="json-20230227.jar" MVN="mvn:org.json/json/20230227" REQUIRED="true"/>
-            <IMPORT NAME="components-servicenow" MODULE="components-servicenow-1.0.1-20210428.jar" MVN="mvn:org.talend.components/components-servicenow/1.0.1-20210428" REQUIRED="true"/>
+            <IMPORT NAME="json" MODULE="json-20231013.jar" MVN="mvn:org.json/json/20231013" REQUIRED="true"/>
+            <IMPORT NAME="components-servicenow" MODULE="components-servicenow-1.1-20231115.jar" MVN="mvn:org.talend.components/components-servicenow/1.1-20231115" REQUIRED="true"/>
         </IMPORTS>
     </CODEGENERATION>
     <RETURNS>

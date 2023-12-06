@@ -87,8 +87,8 @@
 
 <CODEGENERATION>
   <IMPORTS>
-    <IMPORT NAME="JFreeChart" MODULE="jfreechart-1.0.3.jar" MVN="mvn:org.talend.libraries/jfreechart-1.0.3/6.0.0"  UrlPath="platform:/plugin/org.talend.libraries.jfreechart/lib/jfreechart-1.0.3.jar" REQUIRED="true"/>
-    <IMPORT NAME="JCommon" MODULE="jcommon-1.0.6.jar" MVN="mvn:org.talend.libraries/jcommon-1.0.6/6.0.0"  REQUIRED="true"/>
+    <IMPORT NAME="JFreeChart" MODULE="jfreechart-1.0.3.jar" MVN="mvn:jfree/jfreechart/1.0.3"  UrlPath="platform:/plugin/org.talend.libraries.jfreechart/lib/jfreechart-1.0.3.jar" REQUIRED="true"/>
+    <IMPORT NAME="JCommon" MODULE="jcommon-1.0.6.jar" MVN="mvn:jfree/jcommon/1.0.6"  REQUIRED="true"/>
   </IMPORTS>
 </CODEGENERATION>
 

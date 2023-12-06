@@ -21,24 +21,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
-import org.talend.components.api.properties.ComponentProperties;
 import org.talend.core.GlobalServiceRegister;
 import org.talend.core.model.components.IComponent;
 import org.talend.core.model.components.IComponentsHandler;
 import org.talend.core.model.components.IComponentsService;
 import org.talend.core.model.metadata.IMetadataTable;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.INode;
 import org.talend.core.model.process.INodeConnector;
 import org.talend.core.model.utils.IComponentName;
 import org.talend.core.repository.RepositoryComponentSetting;
+import org.talend.core.runtime.services.IGenericService;
+import org.talend.core.service.ITCKUIService;
 import org.talend.core.ui.component.ComponentsFactoryProvider;
-import org.talend.core.utils.TalendQuoteUtils;
 import org.talend.daikon.NamedThing;
 import org.talend.daikon.properties.Properties;
 import org.talend.daikon.properties.property.Property;
@@ -71,9 +72,15 @@ public class UnifiedComponentUtil {
             if (elementParameter != null && elementParameter.getValue() != null) {
                 String emfCompName = String.valueOf(elementParameter.getValue());
                 String paletteType = component.getPaletteType();
-                IComponentsService compService = GlobalServiceRegister.getDefault().getService(IComponentsService.class);
-                IComponent emfComponent = compService.getComponentsFactory().get(emfCompName, paletteType);
+                IComponent emfComponent = IComponentsService.get().getComponentsFactory().get(emfCompName, paletteType);
                 if (emfComponent != null) {
+                    if (IGenericService.getService().isTcompv0(emfComponent)
+                            && (UnifiedComponentUtil.isAdditionalJDBCComponent(emfCompName)
+                                    || emfCompName.contains(ITCKUIService.get().getTCKJDBCType().getLabel()))) {
+                        emfComponent = IComponentsService.get().getComponentsFactory().getComponents().stream()
+                                .filter(c -> emfCompName.equals("t" + c.getName()) && !IGenericService.getService().isTcompv0(c))
+                                .findFirst().orElse(emfComponent);
+                    }
                     return emfComponent;
                 } else {
                     log.error("Can't find component " + emfCompName);
@@ -167,7 +174,7 @@ public class UnifiedComponentUtil {
                 }
                 if ("JDBC".equals(dbTypeName) || isAdditionalJDBC(dbTypeName)) {
                     String compDBType = service.getUnifiedCompDisplayName(service.getDelegateComponent(component),
-                            component.getName());
+                            StringUtils.prependIfMissing(component.getName(), "t"));
                     if (!dbTypeName.equals(compDBType)) {
                         continue;
                     }
@@ -204,6 +211,13 @@ public class UnifiedComponentUtil {
             IComponentsService compService = GlobalServiceRegister.getDefault().getService(IComponentsService.class);
             IComponent emfComponent = compService.getComponentsFactory().get(emfCompName, paletteType);
             if (emfComponent != null) {
+                if (IGenericService.getService().isTcompv0(emfComponent)
+                        && (UnifiedComponentUtil.isAdditionalJDBCComponent(emfCompName)
+                                || emfCompName.contains(ITCKUIService.get().getTCKJDBCType().getLabel()))) {
+                    emfComponent = IComponentsService.get().getComponentsFactory().getComponents().stream()
+                            .filter(c -> emfCompName.equals("t" + c.getName()) && !IGenericService.getService().isTcompv0(c))
+                            .findFirst().orElse(emfComponent);
+                }
                 return emfComponent;
             } else {
                 log.error("Can't find component " + emfCompName);
@@ -272,20 +286,67 @@ public class UnifiedComponentUtil {
                     }
                 }
             }
-            if (node.getElementParameter("connection.jdbcUrl") != null) {
-                node.getElementParameter("connection.jdbcUrl").setValue(TalendQuoteUtils.addQuotes(bean.getUrl()));
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_URL) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_URL).setValue(bean.getUrl());
             }
-            if (node.getElementParameter("connection.driverClass") != null) {
-                node.getElementParameter("connection.driverClass").setValue(TalendQuoteUtils.addQuotes(bean.getDriverClass()));
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_URL) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_URL)
+                        .setValue(bean.getUrl());
             }
-            ComponentProperties componentProperties = node.getComponentProperties();
-            if(componentProperties != null) {
-                Map<String, Object> map = new HashMap<String, Object>();
-                map.put("jdbcUrl", TalendQuoteUtils.addQuotes(bean.getUrl()));
-                map.put("driverClass", TalendQuoteUtils.addQuotes(bean.getDriverClass()));
-                map.put("drivers", bean.getPaths());
-                setCompPropertiesForJDBC(componentProperties, map);
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_URL) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_URL).setValue(bean.getUrl());
             }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_DRIVER) != null) {
+                List<Map<String, Object>> list = new ArrayList<>();
+                bean.getPaths().forEach(path -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(TacokitDatabaseConnection.KEY_DRIVER_PATH, path);
+                    list.add(map);
+                });
+                if (!list.isEmpty()) {
+                    node.getElementParameter(TacokitDatabaseConnection.KEY_DRIVER).setValue(list);
+                }
+            }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER) != null) {
+                List<Map<String, Object>> list = new ArrayList<>();
+                bean.getPaths().forEach(path -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_PATH, path);
+                    list.add(map);
+                });
+                if (!list.isEmpty()) {
+                    node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER).setValue(list);
+                }
+            }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER) != null) {
+                List<Map<String, Object>> list = new ArrayList<>();
+                bean.getPaths().forEach(path -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put(TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER_PATH, path);
+                    list.add(map);
+                });
+                if (!list.isEmpty()) {
+                    node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER).setValue(list);
+                }
+            }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_DRIVER_CLASS) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_DRIVER_CLASS).setValue(bean.getDriverClass());
+            }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_CLASS) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_DATASTORE_DRIVER_CLASS)
+                        .setValue(bean.getDriverClass());
+            }
+            if (node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER_CLASS) != null) {
+                node.getElementParameter(TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER_CLASS).setValue(bean.getDriverClass());
+            }
+            // ComponentProperties componentProperties = node.getComponentProperties();
+            // if(componentProperties != null) {
+            // Map<String, Object> map = new HashMap<String, Object>();
+            // map.put("jdbcUrl", TalendQuoteUtils.addQuotes(bean.getUrl()));
+            // map.put("driverClass", TalendQuoteUtils.addQuotes(bean.getDriverClass()));
+            // map.put("drivers", bean.getPaths());
+            // setCompPropertiesForJDBC(componentProperties, map);
+            // }
         }
     }
 
@@ -323,6 +384,21 @@ public class UnifiedComponentUtil {
             return true;
         }
         return false;
+    }
+
+    public static boolean isAdditionalJDBCComponent(String componentName) {
+        return getAdditionalJDBC().values().stream().map(UnifiedJDBCBean::getComponentKey)
+                .anyMatch(compKey -> componentName.contains(compKey));
+    }
+
+    public static String getAdditionalJDBCMappingComponent(String componentName) {
+        if (isAdditionalJDBCComponent(componentName)) {
+            String newJDBCName = ITCKUIService.get().getTCKJDBCType().getLabel();
+            for (UnifiedJDBCBean bean : getAdditionalJDBC().values()) {
+                componentName = componentName.replace(bean.getComponentKey(), newJDBCName);
+            }
+        }
+        return componentName;
     }
 
     public static boolean isUnsupportedComponent(String compName, UnifiedJDBCBean unifiedJDBCBean) {

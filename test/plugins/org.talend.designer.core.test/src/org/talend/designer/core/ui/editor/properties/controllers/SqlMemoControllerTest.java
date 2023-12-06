@@ -12,8 +12,10 @@
 // ============================================================================
 package org.talend.designer.core.ui.editor.properties.controllers;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -153,6 +155,6 @@ public class SqlMemoControllerTest {
         elem.setPropertyValue(EParameterName.FAMILY.getName(), "jdbc");
         instance.curParameter = param;
 
-        assertFalse(instance.visibleOpenSQLEditorButton());
+        assertTrue(instance.visibleOpenSQLEditorButton());
     }
 }

@@ -23,6 +23,7 @@ import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.talend.commons.exception.ExceptionHandler;
 import org.talend.commons.exception.PersistenceException;
+import org.talend.core.model.metadata.builder.connection.Connection;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.relationship.Relation;
@@ -88,9 +89,16 @@ public class TaCoKitUpdateManager extends RepositoryUpdateManager {
         if (object == parameter) {
             return true;
         }
+        if (result.getContextModeConnectionItem() != null) {
+            object = result.getContextModeConnectionItem();
+        }
         if (object instanceof ConnectionItem && parameter instanceof ConnectionItem) {
             ConnectionItem parentConnItem = (ConnectionItem) parameter;
             ConnectionItem childConnItem = (ConnectionItem) object;
+            Connection connection = childConnItem.getConnection();
+            if (!TaCoKitConfigurationModel.isTacokit(connection)) {
+                return false;
+            }
             TaCoKitConfigurationModel configuration = new TaCoKitConfigurationModel(childConnItem.getConnection());
             if (configuration != null && parentConnItem.getProperty() != null) {
                 String parentItemId = parentConnItem.getProperty().getId();
@@ -108,6 +116,11 @@ public class TaCoKitUpdateManager extends RepositoryUpdateManager {
             if (repositoryNode != null && repositoryNode.isLeafNode()) {
                 List<IRepositoryNode> listNodes = new ArrayList<IRepositoryNode>();
                 getChildTaCoKitRepositoryNode(listNodes, repositoryNode.getChildren());
+                IRepositoryViewObject repositoryObject = repositoryNode.getObject();
+                ConnectionItem repositoryConnectionItem = null;
+                if (repositoryObject.getProperty() != null && repositoryObject.getProperty().getItem() instanceof ConnectionItem) {
+                    repositoryConnectionItem = (ConnectionItem)repositoryObject.getProperty().getItem();
+                }
                 for (IRepositoryNode subNode : listNodes) {
                     IRepositoryViewObject repObj = subNode.getObject();
                     if (repObj != null && repObj.getProperty() != null) {
@@ -116,7 +129,11 @@ public class TaCoKitUpdateManager extends RepositoryUpdateManager {
                         if (subItem != null && subItem instanceof ConnectionItem) {
                             ConnectionItem subConnItem = (ConnectionItem) subItem;
                             if (subConnItem != null && subConnItem.getConnection() != null) {
-                                //
+                                if (repositoryConnectionItem != null && repositoryConnectionItem.getConnection() != null) {
+                                    subConnItem.getConnection().setContextMode(repositoryConnectionItem.getConnection().isContextMode());
+                                    subConnItem.getConnection().setContextId(repositoryConnectionItem.getConnection().getContextId());
+                                    subConnItem.getConnection().setContextName(repositoryConnectionItem.getConnection().getContextName());
+                                }
                                 TaCoKitConfigurationModel module = new TaCoKitConfigurationModel(subConnItem.getConnection());
                                 final Map<String, PropertyDefinitionDecorator> tree = module.buildPropertyTree();
                                 Map<String, String> properties = module.getProperties();

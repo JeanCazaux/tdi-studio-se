@@ -22,7 +22,7 @@
 
 while (outputHandler_<%=cid%>.hasMoreData()){
 <% for (final IConnection connection : node.getOutgoingSortedConnections()) {
-        if (connection.getLineStyle() != EConnectionType.FLOW_MAIN) {
+        if ((connection.getLineStyle() != EConnectionType.FLOW_MAIN) && (connection.getLineStyle() != EConnectionType.FLOW_MERGE)) {
             continue;
         }
 %>

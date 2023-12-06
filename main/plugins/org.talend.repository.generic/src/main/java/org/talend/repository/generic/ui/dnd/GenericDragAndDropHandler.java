@@ -112,7 +112,7 @@ public class GenericDragAndDropHandler extends AbstractDragAndDropServiceHandler
                 value = EConnectionParameterName.GENERIC_PASSWORD.getDisplayName();
             }
             for (ComponentProperties compPro : componentProperties) {
-                if (isGenericPropertiesValue(value)) {
+                if (isGenericPropertiesValue(connection, value)) {
                     Properties properties = compPro.getProperties(value);
                     if (properties != null) {
                         return getPropertiesValue(connection, properties, value);
@@ -209,15 +209,15 @@ public class GenericDragAndDropHandler extends AbstractDragAndDropServiceHandler
     }
 
     @Override
-    public boolean isGenericRepositoryValue(List<ComponentProperties> componentProperties, String paramName) {
-        return getGenericRepositoryValue(componentProperties, paramName) != null;
+    public boolean isGenericRepositoryValue(Connection connection, List<ComponentProperties> componentProperties, String paramName) {
+        return getGenericRepositoryValue(connection, componentProperties, paramName) != null;
     }
 
     @Override
-    public Object getGenericRepositoryValue(List<ComponentProperties> componentProperties, String paramName) {
+    public Object getGenericRepositoryValue(Connection connection, List<ComponentProperties> componentProperties, String paramName) {
         if (componentProperties != null && paramName != null) {
             for (ComponentProperties compPro : componentProperties) {
-                if (isGenericPropertiesValue(paramName)) {
+                if (isGenericPropertiesValue(connection, paramName)) {
                     Properties properties = compPro.getProperties(paramName);
                     if (properties != null) {
                         for (NamedThing nameThing : properties.getProperties()) {
@@ -235,7 +235,7 @@ public class GenericDragAndDropHandler extends AbstractDragAndDropServiceHandler
                 }
             }
             if (paramName.indexOf(IGenericConstants.EXP_SEPARATOR) != -1) {
-                return getGenericRepositoryValue(componentProperties,
+                return getGenericRepositoryValue(connection, componentProperties,
                         paramName.substring(paramName.indexOf(IGenericConstants.EXP_SEPARATOR) + 1));
             }
         }
@@ -243,7 +243,7 @@ public class GenericDragAndDropHandler extends AbstractDragAndDropServiceHandler
     }
 
     @Override
-    public boolean isGenericPropertiesValue(String paramName) {
+    public boolean isGenericPropertiesValue(Connection connection, String paramName) {
         if (EConnectionParameterName.GENERIC_DRIVER_JAR.getDisplayName().equals(paramName)) {
             return true;
         }

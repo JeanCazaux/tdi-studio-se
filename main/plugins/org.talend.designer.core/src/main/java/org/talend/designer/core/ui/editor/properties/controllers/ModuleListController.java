@@ -41,7 +41,6 @@ import org.eclipse.swt.layout.FormData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.views.properties.tabbed.ITabbedPropertyConstants;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
@@ -363,11 +362,10 @@ public class ModuleListController extends AbstractElementPropertySectionControll
             text.setText(txt);
         }
 
-        if (param.isContextMode()) {
+        if (isTacokit(param) || param.isContextMode()) {
             Button buttonEdit = (Button) hashCurControls.get(param.getName() + BUTTON_EDIT);
-            text.setBackground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
-            text.setEnabled(false);
-            buttonEdit.setEnabled(false);
+            text.setEnabled(isWidgetEnabled(param));
+            buttonEdit.setEnabled(isWidgetEnabled(param));
         }
     }
 

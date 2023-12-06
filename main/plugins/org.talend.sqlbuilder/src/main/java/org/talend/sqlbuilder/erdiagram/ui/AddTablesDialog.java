@@ -103,9 +103,8 @@ public class AddTablesDialog extends Dialog {
     @SuppressWarnings("unchecked")//$NON-NLS-1$
     public void setRootNode(RepositoryNode rootNode) {
         this.rootNode = rootNode;
-        DatabaseConnectionItem item = SQLBuilderRepositoryNodeManager.getItem(getRootNode());
         tables = new HashSet<MetadataTable>();
-        tables.addAll(ConnectionHelper.getTables((DatabaseConnection) item.getConnection()));
+        tables.addAll(ConnectionHelper.getTables(SQLBuilderRepositoryNodeManager.getDatabaseConnection(getRootNode())));
     }
 
     public List<MetadataTable> getTables() {

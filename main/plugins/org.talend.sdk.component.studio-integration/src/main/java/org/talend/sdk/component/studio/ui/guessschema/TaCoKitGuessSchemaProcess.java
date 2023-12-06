@@ -31,17 +31,18 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.talend.core.model.components.IComponent;
+import org.talend.core.model.process.ElementParameterParser;
 import org.talend.core.model.process.IConnection;
+import org.talend.core.model.process.IConnectionCategory;
 import org.talend.core.model.process.IContext;
 import org.talend.core.model.process.IElementParameter;
 import org.talend.core.model.process.INode;
 import org.talend.core.model.process.IProcess;
 import org.talend.core.model.properties.Property;
-import org.talend.designer.core.model.components.EParameterName;
+import org.talend.core.model.utils.NodeUtil;
 import org.talend.designer.core.model.components.ElementParameter;
 import org.talend.designer.core.model.process.DataProcess;
 import org.talend.designer.core.ui.editor.process.Process;
-import org.talend.designer.core.ui.editor.properties.controllers.AbstractGuessSchemaProcess;
 import org.talend.designer.runprocess.IProcessor;
 import org.talend.designer.runprocess.ProcessorUtilities;
 import org.talend.sdk.component.server.front.model.ActionReference;
@@ -51,6 +52,7 @@ import org.talend.sdk.component.studio.enums.ETaCoKitComponentType;
 import org.talend.sdk.component.studio.i18n.Messages;
 import org.talend.sdk.component.studio.metadata.model.ComponentModelSpy;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
+import org.talend.sdk.component.studio.util.TaCoKitSpeicalManager;
 import org.talend.sdk.component.studio.util.TaCoKitUtil;
 
 /**
@@ -112,6 +114,7 @@ public class TaCoKitGuessSchemaProcess {
             restoreDatastoreParameters(node);
             IProcessor processor = ProcessorUtilities.getProcessor(process, null);
             processor.setContext(context);
+            processor.setProxyParameters(TaCoKitSpeicalManager.getProxyForGuessSchema());
             final String debug = System.getProperty("org.talend.tacokit.guessschema.debug", null);
             executeProcess = processor.run(debug == null || debug.isEmpty() ? null :
                             singletonList(debug).toArray(new String[0]),
@@ -174,7 +177,7 @@ public class TaCoKitGuessSchemaProcess {
         private void buildProcess() {
             IProcess originalProcess;
             originalProcess = new Process(property);
-
+        
             List<? extends IConnection> incomingConnections = new ArrayList<>(node.getIncomingConnections());
             List<? extends IConnection> outgoingConnections = new ArrayList<>(node.getOutgoingConnections());
             try {
@@ -205,21 +208,15 @@ public class TaCoKitGuessSchemaProcess {
                 //And here have a side effect before already: if job design is : (tsetproxy==>on_subjob_ok==>tfixedflowinput==>a tacokit processor connector), that tsetproxy will affect guess schema result, 
                 //IMHO, we should never promise that, as user will find that example not works for tck input connector. Here revert the wrong promise for standalone connector, but not processor connector.
                 if (isProcessor) {//when processor tck connector, here only keep the old action, TODO remove this special code.
-                    retrieveNodes(nodes, new HashSet<>(), node);
+                    final String family = ElementParameterParser.getValue(node, "__FAMILY__");
+                    final boolean dataLineOnly = TaCoKitSpeicalManager.JDBC.equals(family);
+                    retrieveNodes(nodes, new HashSet<>(), node, dataLineOnly);
                 }
 
                 DataProcess dataProcess = new DataProcess(originalProcess);
                 dataProcess.buildFromGraphicalProcess(nodes);
                 process = dataProcess.getDuplicatedProcess();
-                IElementParameter log4jElemParam = process.getElementParameter(EParameterName.LOG4J_ACTIVATE.getName());
-                if (log4jElemParam != null) {
-                    Boolean isEnableLog4j = AbstractGuessSchemaProcess.isEnableLog4jForGuessSchema();
-                    log4jElemParam.setValue(isEnableLog4j);
-                }
-                process.getContextManager()
-                        .getListContext()
-                        .addAll(originalProcess.getContextManager().getListContext());
-                process.getContextManager().setDefaultContext(this.context);
+                configContext(process, node);
                 List<INode> nodeList = dataProcess.getNodeList();
                 INode newNode = null;
                 // INode newNode = dataProcess.buildNodeFromNode(node, process);
@@ -269,20 +266,32 @@ public class TaCoKitGuessSchemaProcess {
                 node.setOutgoingConnections(outgoingConnections);
             }
         }
+        
+        protected void configContext(IProcess inProcess, INode inNode) {
+            IContext selectContext = context;
+            inProcess.getContextManager().getListContext().clear();
+            inProcess.getContextManager().getListContext().addAll(inNode.getProcess().getContextManager().getListContext());
+            inProcess.getContextManager().setDefaultContext(selectContext);
+        }
 
         private void retrieveNodes(final List<INode> nodeList, final Set<INode> recordedNodes,
-                final INode currentNode) {
+                final INode currentNode, final boolean dataLineOnly) {
             if (currentNode == null || recordedNodes.contains(currentNode)) {
                 return;
             }
             nodeList.add(currentNode);
             recordedNodes.add(currentNode);
-            List<? extends IConnection> incomingConnections = currentNode.getIncomingConnections();
+            List<? extends IConnection> incomingConnections = dataLineOnly ? NodeUtil.getIncomingConnections(currentNode, IConnectionCategory.MAIN | IConnectionCategory.DATA) : currentNode.getIncomingConnections();
             if (incomingConnections != null && !incomingConnections.isEmpty()) {
                 for (IConnection conn : incomingConnections) {
                     if (conn != null) {
-                        retrieveNodes(nodeList, recordedNodes, conn.getSource());
+                        retrieveNodes(nodeList, recordedNodes, conn.getSource(), dataLineOnly);
                     }
+                }
+            } else if(dataLineOnly) {
+                List<? extends IConnection> dependencyConnections = NodeUtil.getIncomingConnections(currentNode, IConnectionCategory.DEPENDENCY);
+                if(dependencyConnections!=null && !dependencyConnections.isEmpty()) {
+                    currentNode.setIncomingConnections(new ArrayList<>());
                 }
             }
         }

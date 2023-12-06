@@ -45,6 +45,7 @@ import org.talend.core.hadoop.repository.HadoopRepositoryUtil;
 import org.talend.core.language.ECodeLanguage;
 import org.talend.core.model.components.EComponentType;
 import org.talend.core.model.general.ModuleNeeded;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.IContext;
 import org.talend.core.model.process.IContextParameter;
@@ -630,13 +631,16 @@ public class JavaProcessUtil {
                             String value = context.getContextParameter(contextPara.getName()).getValue();
                             if (StringUtils.isBlank(value)) {
                                 continue;
-                            }
+                            }                   
                             if (!value.contains(";")) { //$NON-NLS-1$
                                 modulesNeeded
                                         .add(ModuleNeeded.newInstance(null, TalendTextUtils.removeQuotes(value), null, true));
                                 continue;
                             }
-                            if (curParam.getName().equals(EParameterName.DRIVER_JAR.getName())) {
+                            if (curParam.getName().equals(EParameterName.DRIVER_JAR.getName())
+                                    || TacokitDatabaseConnection.KEY_DATASTORE_DRIVER.equals(curParam.getName())
+                                    || TacokitDatabaseConnection.KEY_SP_DATASTORE_DRIVER.equals(curParam.getName())
+                                    || TacokitDatabaseConnection.KEY_DRIVER.equals(curParam.getName())) {
                                 Stream.of(value.split(";")).forEach(s -> { //$NON-NLS-1$
                                     ModuleNeeded module = null;
                                     String jarName = TalendTextUtils.removeQuotes(s);
@@ -679,6 +683,16 @@ public class JavaProcessUtil {
             }
         }
     }
+    
+    private static boolean isTacokitJDBCDriverPathValue(String value) {
+        if (value == null) {
+            return false;
+        }
+        if (value.startsWith("[{") && value.endsWith("}]")) {
+            return true;
+        }
+        return false;
+    }
 
     public static ModuleNeeded getModuleValue(final IProcess process, String moduleValue) {
         if (ContextParameterUtils.isContainContextParam(moduleValue)) {
@@ -720,7 +734,7 @@ public class JavaProcessUtil {
                         if (name.equals("DRIVER_JAR")) { //$NON-NLS-1$
                             object = map.get("JAR_NAME"); //$NON-NLS-1$
                         } else {
-                            object = map.get("drivers");//$NON-NLS-1$
+                            object = ConnectionUtil.extractDriverValueFromMap(map);
                         }
                         if (object != null && object instanceof String) {
                             String driverName = (String) object;

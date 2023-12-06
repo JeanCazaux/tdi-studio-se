@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.gef.commands.Command;
 import org.talend.core.model.metadata.QueryUtil;
 import org.talend.core.model.metadata.builder.connection.Query;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.process.EParameterFieldType;
 import org.talend.core.model.process.IElement;
 import org.talend.core.model.process.IElementParameter;
@@ -70,7 +71,7 @@ public class RepositoryChangeQueryCommand extends Command {
             }
         } else {
             for (IElementParameter param : (List<IElementParameter>) elem.getElementParameters()) {
-                if (param.getFieldType() == EParameterFieldType.MEMO_SQL) {
+                if (param.getFieldType() == EParameterFieldType.MEMO_SQL || TacokitDatabaseConnection.KEY_DATASET_SQL_QUERY.equals(param.getName())) {
                     // modified by hyWang
                     String queryStr = query.getValue();
                     if (!query.isContextMode()) {
@@ -99,7 +100,7 @@ public class RepositoryChangeQueryCommand extends Command {
 
         if (propertyName.equals(EParameterName.QUERYSTORE_TYPE.getName()) && (EmfComponent.BUILTIN.equals(value))) {
             for (IElementParameter param : elem.getElementParameters()) {
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (param.isShow(elem.getElementParameters()) && (repositoryValue != null)
                         && (!param.getName().equals(EParameterName.QUERYSTORE_TYPE.getName()))) {
                     param.setRepositoryValueUsed(true);

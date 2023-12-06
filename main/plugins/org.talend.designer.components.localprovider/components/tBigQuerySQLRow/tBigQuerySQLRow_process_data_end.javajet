@@ -31,20 +31,20 @@ imports="
                 }
             }
                 <%
-                } else if (authMode.equals("SERVICEACCOUNT")) {
+                } else if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
                 %>
                     }
                 }
 
                 <%
                 } else {
-                    throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\" or \"OAUTH\"or \"TOKEN\", but it is " + authMode);
+                    throw new IllegalArgumentException("authentication mode should be either \"SERVICEACCOUNT\", \"APPLICATION_DEFAULT_CREDENTIALS\" or \"OAUTH\"or \"TOKEN\", but it is " + authMode);
                 }
                 log4jFileUtil.retrievedDataNumberInfo(node);
             }
         }
     }
-                if (authMode.equals("SERVICEACCOUNT")) {
+                if (authMode.equals("SERVICEACCOUNT") || authMode.equals("APPLICATION_DEFAULT_CREDENTIALS")) {
                     %>
                             if (job_<%=cid%>.getStatistics().getNumChildJobs() != null) {
                                 globalMap.put("<%=cid%>_STATISTICS_CHILD", childJobs_<%=cid%>.stream()

@@ -14,6 +14,7 @@ package org.talend.sdk.component.studio.service;
 
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -36,6 +37,7 @@ import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.model.utils.ComponentInstallerTaskRegistryReader;
 import org.talend.core.model.utils.IComponentInstallerTask;
 import org.talend.core.runtime.CoreRuntimePlugin;
+import org.talend.designer.core.utils.UnifiedComponentUtil;
 import org.talend.repository.model.IProxyRepositoryFactory;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
@@ -43,7 +45,10 @@ import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.ServerManager;
 import org.talend.sdk.component.studio.metadata.TaCoKitCache;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
+import org.talend.sdk.component.studio.metadata.node.ITaCoKitRepositoryNode;
 import org.talend.sdk.component.studio.model.parameter.PropertyDefinitionDecorator;
+import org.talend.sdk.component.studio.model.parameter.TableElementParameter;
+import org.talend.sdk.component.studio.model.parameter.ValueConverter;
 import org.talend.sdk.component.studio.model.parameter.ValueSelectionParameter;
 import org.talend.sdk.component.studio.model.parameter.VersionParameter;
 import org.talend.sdk.component.studio.toolbar.ReloadAction;
@@ -123,6 +128,14 @@ public class TaCoKitService implements ITaCoKitService {
     }
 
     @Override
+    public boolean isTaCoKitConnection(Object connection) {
+        if (connection instanceof Connection) {
+            return TaCoKitConfigurationModel.isTacokit((Connection) connection);
+        }
+        return false;
+    }
+
+    @Override
     public String getParentItemIdFromItem(Object item) {
         String parentItemId = null;
         if (item instanceof ConnectionItemImpl) {
@@ -190,6 +203,7 @@ public class TaCoKitService implements ITaCoKitService {
 
     @Override
     public boolean isNeedMigration(String componentName, Map<String, String> persistedProperties) {
+        componentName = UnifiedComponentUtil.getAdditionalJDBCMappingComponent(componentName);
         TaCoKitCache currentCache = Lookups.taCoKitCache();
         Optional<ComponentDetail> detail = Lookups.service().getDetail(componentName);
         if (!detail.isPresent()) {
@@ -233,5 +247,42 @@ public class TaCoKitService implements ITaCoKitService {
     @Override
     public boolean isValueSelectionParameter(Object parameter) {
         return (parameter instanceof ValueSelectionParameter);
+    }
+
+    @Override
+    public boolean isTaCoKitRepositoryNode(Object node) {
+        if (node instanceof ITaCoKitRepositoryNode) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public List<Map<String, Object>> convertToTable(String value) {
+        return ValueConverter.toTable(value);
+    }
+    
+    @Override
+    public List<String> getValuesFromTableParameter(Object parameter, String... keys) {
+        if (parameter instanceof TableElementParameter) {
+            TableElementParameter tableElementParameter = (TableElementParameter) parameter;
+            String value = tableElementParameter.getStringValue();
+            return getValuesFromTableParameterValue(value, keys);
+        }
+        return null;
+    }
+
+    @Override
+    public List<String> getValuesFromTableParameterValue(String value, String... keys) {
+        List<String> valueList = new ArrayList<String>();
+        List<Map<String, Object>> listValues = convertToTable(value);
+        for (Map<String, Object> map : listValues) {
+            for (String key: keys) {
+                if (map.containsKey(key)) {
+                    valueList.add(map.get(key).toString());
+                } 
+            }
+        }
+        return valueList;
     }
 }

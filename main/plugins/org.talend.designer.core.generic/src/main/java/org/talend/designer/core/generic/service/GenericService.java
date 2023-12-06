@@ -17,6 +17,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.talend.commons.runtime.model.components.IComponentConstants;
 import org.talend.components.api.component.ComponentDefinition;
@@ -41,6 +43,7 @@ import org.talend.daikon.properties.Properties;
 import org.talend.designer.core.generic.model.Component;
 import org.talend.designer.core.generic.model.GenericElementParameter;
 import org.talend.designer.core.generic.utils.ComponentsUtils;
+import org.talend.repository.model.IRepositoryNode;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.RepositoryNode;
 
@@ -77,7 +80,10 @@ public class GenericService implements IGenericService {
             String displayName = wizardDefinition.getDisplayName();
             String folder = "metadata/" + name; //$NON-NLS-1$
             int ordinal = 100;
-            ERepositoryObjectType repositoryType = interService.createRepositoryType(name, displayName, name, folder, ordinal);
+            ERepositoryObjectType repositoryType = ERepositoryObjectType.valueOf(name);
+            if (repositoryType == null) {
+                repositoryType = interService.createRepositoryType(name, displayName, name, folder, ordinal);
+            }
             if ("JDBC".equals(name)) { //$NON-NLS-1$
                 Class<ComponentProperties> jdbcClass = ReflectionUtils.getClass(
                         "org.talend.components.jdbc.wizard.JDBCConnectionWizardProperties",
@@ -224,6 +230,45 @@ public class GenericService implements IGenericService {
                 }
             }
         }
+    }
+
+    @Override
+    public Set<ComponentDefinition> getJDBCComponentDefinitions() {
+        return ComponentsUtils.getComponentService().getAllComponents().stream().filter(def -> def.getFamilies() != null
+                && def.getFamilies().length > 0 && def.getFamilies()[0] != null && def.getFamilies()[0].contains("JDBC"))
+                .collect(Collectors.toSet());
+    }
+
+    @Override
+    public void mergeGenericNodes(RepositoryNode parent, String type) {
+        List<IRepositoryNode> base = parent.getChildren();
+        ERepositoryObjectType baseType = parent.getContentType();
+        ComponentsUtils.getComponentService().getTopLevelComponentWizards().stream()
+                .filter(d -> type.equalsIgnoreCase(d.getName())).forEach(d -> {
+                    RepositoryNode node = IGenericWizardInternalService.getService().createRepositoryNode(parent,
+                            d.getDisplayName(), ERepositoryObjectType.valueOf(type), ENodeType.SYSTEM_FOLDER);
+                    node.getRoot().initNode(node);
+                    parent.getChildren().remove(node);
+                    List<IRepositoryNode> toMerge = node.getChildren();
+                    toMerge.stream().filter(RepositoryNode.class::isInstance)
+                            .forEach(n -> RepositoryNode.class.cast(n).setParent(parent));
+                    base.addAll(toMerge);
+                    deepMerge(base, baseType);
+                });
+    }
+
+    private void deepMerge(List<IRepositoryNode> list, ERepositoryObjectType baseType) {
+        Map<String, RepositoryNode> baseMap = list.stream().map(RepositoryNode.class::cast)
+                .filter(node -> node.getType() == ENodeType.SIMPLE_FOLDER).filter(node -> node.getContentType() == baseType)
+                .collect(Collectors.toMap(node -> node.getObject().getProperty().getLabel(), Function.identity()));
+        Map<String, RepositoryNode> toMergeMap = list.stream().map(RepositoryNode.class::cast)
+                .filter(node -> node.getType() == ENodeType.SIMPLE_FOLDER).filter(node -> node.getContentType() != baseType)
+                .collect(Collectors.toMap(node -> node.getObject().getProperty().getLabel(), Function.identity()));
+        baseMap.keySet().stream().filter(key -> toMergeMap.containsKey(key))
+                .forEach(key -> baseMap.get(key).getChildren().addAll(toMergeMap.get(key).getChildren()));
+        list.removeAll(toMergeMap.values());
+        baseMap.keySet().stream().filter(key -> toMergeMap.containsKey(key))
+                .forEach(key -> deepMerge(baseMap.get(key).getChildren(), baseType));
     }
 
 }

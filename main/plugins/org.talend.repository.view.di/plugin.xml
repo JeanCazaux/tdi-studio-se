@@ -701,7 +701,7 @@
             contentProvider="org.talend.repository.view.di.metadata.content.MetadataDbConnectionsContentProvider"
             icon="icons/dbConnections.gif"
             id="org.talend.repository.viewer.metadata.dbConnections"
-            labelProvider="org.talend.repository.viewer.label.RepositoryViewLabelProvider"
+            labelProvider="org.talend.repository.view.di.metadata.label.MetadataDBConnectionLabelProvider"
             name="DB connections"
             priority="high">
          <triggerPoints>

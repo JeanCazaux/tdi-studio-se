@@ -20,6 +20,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.ui.IWorkbench;
+import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
 import org.talend.core.model.properties.ConnectionItem;
 import org.talend.core.model.repository.RepositoryManager;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
@@ -36,12 +37,18 @@ import org.talend.sdk.component.studio.util.TaCoKitConst;
  */
 public class TaCoKitCreateWizard extends TaCoKitConfigurationWizard {
 
+    boolean isNew = true;
+
     public TaCoKitCreateWizard(final IWorkbench workbench, final TaCoKitConfigurationRuntimeData runtimeData) {
         super(workbench, runtimeData);
     }
 
     @Override protected boolean isNew() {
-        return true;
+        return isNew;
+    }
+
+    public void setNew(boolean isNew) {
+        this.isNew = isNew;
     }
 
     /**
@@ -99,8 +106,11 @@ public class TaCoKitCreateWizard extends TaCoKitConfigurationWizard {
         if (parentNode != null) {
             model.setParentItemId(parentNode.getObject().getId());
         }
+        if (connectionItem.getConnection() instanceof TacokitDatabaseConnection) {
+            connectionItem.getConnection().setName(getWizardPropertiesPage().getNameText().getText());
+        }
         factory.create(connectionItem, getWizardPropertiesPage().getDestinationPath());
         RepositoryManager.refreshCreatedNode(TaCoKitConst.METADATA_TACOKIT);
-        // RepositoryUpdateManager.updateFileConnection(connectionItem);
+        notifyDQSQLExplorer();
     }
 }

@@ -343,7 +343,7 @@ public abstract class AbstractPreferenceComposite extends MultipleThreadDynamicC
         }
         IElementParameter elementParameter = elem.getElementParameter(paramName); // ?
         if (elementParameter != null && elementParameter.getCategory() == section
-                && elementParameter.getRepositoryValue() != null) {
+                && elementParameter.calcRepositoryValue() != null) {
             return true;
         }
         return false;

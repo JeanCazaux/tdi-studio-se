@@ -57,6 +57,14 @@
         "exclude":"PORT"}
 },
 {
+    "component_delegate":"tDBCDC",
+    "component":"tIngresCDC",
+    "category":"DI",
+    "family":"",
+    "parameter":{
+        "exclude":"PORT"}
+},
+{
     "component_delegate":"tDBOutputBulk",
     "component":"tIngresOutputBulk",
     "category":"DI",

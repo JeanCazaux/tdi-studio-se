@@ -35,7 +35,7 @@ import org.talend.sdk.component.studio.util.TaCoKitUtil;
 
 public class VirtualComponentModel extends ComponentModel {
 
-    private VirtualComponentModelType modelType;
+    protected VirtualComponentModelType modelType;
 
     public VirtualComponentModel(ComponentIndex index, ComponentDetail detail, ConfigTypeNodes configTypeNodes,
                                  ImageDescriptor image32, String reportPath, boolean isCatcherAvailable, VirtualComponentModelType modelType) {
@@ -50,7 +50,7 @@ public class VirtualComponentModel extends ComponentModel {
         if (TaCoKitConst.UNSET_CONNECTION_NAME.equals(main)) {
             main = index.getId().getFamily();
         }
-        if (isMadeByTalend()) {
+        if (isMadeByTalend() && !TaCoKitUtil.isJDBCFamily(main)) {
             if (isNetSuiteComponent(index)) {
                 return TaCoKitConst.COMPONENT_NAME_PREFIX + TaCoKitUtil.getFullComponentName(getProcessedNetSuiteFamilyName(index), modelType.getDisplayName());
             }
@@ -61,7 +61,18 @@ public class VirtualComponentModel extends ComponentModel {
 
     @Override
     public String getDisplayName() {
-        return getName();
+        final Optional<String> optionalCreateConnectionActionName = Lookups.taCoKitCache().getActionList(this.index.getId().getFamily()).getItems().stream().filter(e -> TaCoKitConst.CREATE_CONNECTION_ATCION_NAME.equals(e.getType())).map(e -> e.getName()).findFirst();
+        String main = optionalCreateConnectionActionName.orElse(index.getId().getFamily());
+        if (TaCoKitConst.UNSET_CONNECTION_NAME.equals(main)) {
+            main = index.getId().getFamily();
+        }
+        if (isMadeByTalend()) {
+            if (isNetSuiteComponent(index)) {
+                return TaCoKitConst.COMPONENT_NAME_PREFIX + TaCoKitUtil.getFullComponentName(getProcessedNetSuiteFamilyName(index), modelType.getDisplayName());
+            }
+            return TaCoKitConst.COMPONENT_NAME_PREFIX + TaCoKitUtil.getFullComponentName(main, modelType.getDisplayName());
+        }
+        return TaCoKitUtil.getFullComponentName(main, modelType.getDisplayName());
     }
 
     /**
@@ -153,8 +164,8 @@ public class VirtualComponentModel extends ComponentModel {
         return detail.getId().getId() + this.modelType.getDisplayName();
     }
 
-    public static String getDefaultConnectionName(ComponentIndex index) {
-
+    public static String getDefaultConnectionName(ComponentModel component) {
+        ComponentIndex index = component.getIndex();
         final Optional<String> optionalCreateConnectionActionName = Lookups.taCoKitCache().getActionList(index.getId().getFamily()).getItems().stream().filter(e -> TaCoKitConst.CREATE_CONNECTION_ATCION_NAME.equals(e.getType())).map(e -> e.getName()).findFirst();
         String main = optionalCreateConnectionActionName.orElse(index.getId().getFamily());
         if (TaCoKitConst.UNSET_CONNECTION_NAME.equals(main)) {
@@ -165,6 +176,14 @@ public class VirtualComponentModel extends ComponentModel {
             if (isNetSuiteComponent(index)) {
                 return TaCoKitConst.COMPONENT_NAME_PREFIX + TaCoKitUtil.getFullComponentName(getProcessedNetSuiteFamilyName(index),
                         VirtualComponentModelType.CONNECTION.getDisplayName());
+            } else if (isJDBCComponent(index)) {
+                String familyName = getProcessedNetSuiteFamilyName(index);
+                if (ComponentModel.class.isInstance(component)) {
+                    if (IAdditionalJDBCComponent.class.isInstance(component)) {
+                        familyName = ((IAdditionalJDBCComponent) component).getDatabaseType();
+                    }
+                }
+                return TaCoKitUtil.getFullComponentName(familyName, VirtualComponentModelType.CONNECTION.getDisplayName());
             }
             return TaCoKitConst.COMPONENT_NAME_PREFIX + TaCoKitUtil.getFullComponentName(main,
                     VirtualComponentModelType.CONNECTION.getDisplayName());
@@ -174,6 +193,13 @@ public class VirtualComponentModel extends ComponentModel {
 
     private static boolean isNetSuiteComponent(ComponentIndex index) {
         if ("NetSuite".equals(index.getId().getFamily())) {
+            return true;
+        }
+        return false;
+    }
+    
+    private static boolean isJDBCComponent(ComponentIndex index) {
+        if ("JDBC".equals(index.getId().getFamily())) {
             return true;
         }
         return false;

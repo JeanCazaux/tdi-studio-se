@@ -15,15 +15,30 @@ package org.talend.repository.preference;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
+import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.fieldassist.AutoCompleteField;
+import org.eclipse.jface.fieldassist.ComboContentAdapter;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
@@ -31,17 +46,25 @@ import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.layout.FormAttachment;
+import org.eclipse.swt.layout.FormData;
+import org.eclipse.swt.layout.FormLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.DirectoryDialog;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Link;
 import org.eclipse.ui.PlatformUI;
 import org.talend.analysistask.ItemAnalysisReportManager;
+import org.talend.commons.report.ItemsReportUtil;
+import org.talend.commons.report.ReportAccessDialog;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
 import org.talend.commons.ui.runtime.exception.ExceptionMessageDialog;
 import org.talend.commons.ui.runtime.image.EImage;
@@ -54,9 +77,14 @@ import org.talend.core.GlobalServiceRegister;
 import org.talend.core.database.EDatabase4DriverClassName;
 import org.talend.core.database.EDatabaseTypeName;
 import org.talend.core.database.conn.version.EDatabaseVersion4Drivers;
+import org.talend.core.model.general.Project;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.core.runtime.projectsetting.ProjectPreferenceManager;
 import org.talend.core.service.IAuditService;
+import org.talend.core.service.IDetectCVEService;
+import org.talend.core.service.IDetectCVEService.CVEData;
+import org.talend.core.service.IDetectCVEService.PatchVersion;
+import org.talend.core.ui.IInstalledPatchService;
 import org.talend.repository.ProjectManager;
 import org.talend.repository.RepositoryPlugin;
 import org.talend.repository.i18n.Messages;
@@ -74,6 +102,12 @@ import org.talend.utils.sugars.TypedReturnCode;
  *
  */
 public class AuditProjectSettingPage extends ProjectSettingPage {
+
+    private static final String LEARN_MORE_URL = Messages.getString("AuditProjectSettingPage.cveDetect.learnMoreLink");
+
+    private Set<CVEData> cveDataSet;
+
+    private Combo versionCombo;
 
     private Button generateButton;
 
@@ -121,6 +155,7 @@ public class AuditProjectSettingPage extends ProjectSettingPage {
         Composite composite = new Composite(parent, SWT.NULL);
         GridLayout layout = new GridLayout(1, false);
         composite.setLayout(layout);
+        createDetectCVEArea(composite);
         if (GlobalServiceRegister.getDefault().isServiceRegistered(IAuditService.class)) {
             IAuditService service = (IAuditService) GlobalServiceRegister.getDefault().getService(IAuditService.class);
             if (service != null) {
@@ -132,6 +167,194 @@ public class AuditProjectSettingPage extends ProjectSettingPage {
         createProjectAnalysisArea(composite);
         return composite;
     }
+
+    private void createDetectCVEArea(Composite parent) {
+        Composite composite = new Composite(parent, SWT.NONE);
+        composite.setLayout(new GridLayout(1, false));
+        composite.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        Group detectCVEGroup = new Group(composite, SWT.NONE);
+        detectCVEGroup.setText(Messages.getString("AuditProjectSettingPage.cveDetect.group"));
+        GridDataFactory.fillDefaults().span(1, 1).align(SWT.FILL, SWT.BEGINNING).grab(true, false).applyTo(detectCVEGroup);
+        detectCVEGroup.setLayout(new GridLayout(1, false));
+
+        Composite noteComp = new Composite(detectCVEGroup, SWT.NONE);
+        noteComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        noteComp.setLayout(new FormLayout());
+        Label noteLabel = new Label(noteComp, SWT.NONE);
+        noteLabel.setText(Messages.getString("AuditProjectSettingPage.cveDetect.noteText"));
+        FormData noteLabelFormData = new FormData();
+        noteLabelFormData.top = new FormAttachment(0, 0);
+        noteLabelFormData.left = new FormAttachment(0, 0);
+        noteLabel.setLayoutData(noteLabelFormData);
+        Link learnMoreLabel = new Link(noteComp, SWT.NONE);
+        learnMoreLabel.setText("<a>" + Messages.getString("AuditProjectSettingPage.cveDetect.learnMore") + "</a>");
+        FormData linkFormData = new FormData();
+        linkFormData.top = new FormAttachment(0, 0);
+        linkFormData.left = new FormAttachment(noteLabel, 5);
+        learnMoreLabel.setLayoutData(linkFormData);
+        learnMoreLabel.addSelectionListener(new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                Program.launch(LEARN_MORE_URL);
+            }
+
+        });
+
+        Composite comboComp = new Composite(detectCVEGroup, SWT.NONE);
+        comboComp.setLayoutData(new GridData(SWT.FILL, SWT.FILL, false, false));
+        comboComp.setLayout(new FormLayout());
+        Label versionLabel = new Label(comboComp, SWT.NONE);
+        versionLabel.setText(Messages.getString("AuditProjectSettingPage.cveDetect.versionLabel"));
+        FormData labelFormData = new FormData();
+        labelFormData.bottom = new FormAttachment(100, 0);
+        labelFormData.left = new FormAttachment(0, 0);
+        versionLabel.setLayoutData(labelFormData);
+        versionCombo = new Combo(comboComp, SWT.SINGLE | SWT.BORDER);
+        FormData comboFormData = new FormData();
+        comboFormData.top = new FormAttachment(0, 0);
+        comboFormData.left = new FormAttachment(versionLabel, 5);
+        comboFormData.width = 100;
+        versionCombo.setLayoutData(comboFormData);
+        String[] patchVersionList = getCVEVersionList();
+        versionCombo.setItems(patchVersionList);
+        versionCombo.setText(getDefaultCVEFromVersion(patchVersionList));
+        AutoCompleteField comboField = new AutoCompleteField(versionCombo, new ComboContentAdapter(), new String[] {});
+        comboField.setProposals(patchVersionList);
+
+        Button generateButton = new Button(detectCVEGroup, SWT.NONE);
+        generateButton.setText(Messages.getString("AuditProjectSettingPage.cveDetect.generateButton"));
+        generateButton.addSelectionListener(new SelectionAdapter() {
+
+            @Override
+            public void widgetSelected(SelectionEvent e) {
+                generateCVEReport();
+            }
+
+        });
+    }
+
+    private Set<CVEData> getCVEData() {
+        if (cveDataSet == null && IDetectCVEService.get() != null) {
+            cveDataSet = IDetectCVEService.get().loadCVEData("");
+        }
+        return cveDataSet;
+    }
+
+    private String[] getCVEVersionList() {
+        Set<CVEData> cveData = getCVEData();
+        if (cveData == null || cveData.isEmpty()) {
+            return new String[] {};
+        }
+
+        Set<PatchVersion> versionSet = cveData.stream().map(data -> data.getPatchVersion()).collect(Collectors.toSet());
+        List<PatchVersion> versionList = new ArrayList<PatchVersion>(versionSet);
+        Collections.sort(versionList, new Comparator<PatchVersion>() {
+
+            @Override
+            public int compare(PatchVersion o1, PatchVersion o2) {
+                return o2.compareTo(o1);
+            }
+        });
+        PatchVersion patchVersionStart = versionList.get(versionList.size() - 1);
+        Date parseVersion = patchVersionStart.parseVersion();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(parseVersion);
+        calendar.add(Calendar.MONTH, -1);
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM");
+        String versionFrom = "R" + df.format(calendar.getTime());
+        List<String> versionStrlist = versionList.stream().map(version -> version.getVersion()).collect(Collectors.toList());
+        IInstalledPatchService installedPatchService = IInstalledPatchService.get();
+        if (installedPatchService != null) {
+            String currentVersion = installedPatchService.getLatestInstalledVersion(true);
+            if (StringUtils.isNotBlank(currentVersion) && currentVersion.equals(versionStrlist.get(0))) {
+                versionStrlist.remove(0);
+            }
+        }
+        versionStrlist.add(versionFrom);
+        return versionStrlist.toArray(new String[versionStrlist.size()]);
+    }
+
+    private String getDefaultCVEFromVersion(String[] versions) {
+        if (versions == null || versions.length < 1) {
+            return "";
+        }
+        return versions[0];
+    }
+
+    private void generateCVEReport() {
+        String version = versionCombo.getText();
+        Set<CVEData> cveData = getCVEData();
+        if (cveData == null || cveData.isEmpty()) {
+            MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogTitle"),
+                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogMessage"));
+            return;
+        }
+
+        if (IDetectCVEService.get() != null) {
+            Job job = new Job("Generating CVE report") {
+
+                @Override
+                protected IStatus run(IProgressMonitor monitor) {
+                    IDetectCVEService detectCVEService = IDetectCVEService.get();
+                    detectCVEService.clearCache();
+                    Set<CVEData> filterCVEData = detectCVEService.filterCVEData(cveData, version, null, false);
+                    if (filterCVEData == null || filterCVEData.isEmpty()) {
+                        Display.getDefault().syncExec(() -> {
+                            MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogTitle"),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogMessage"));
+                        });
+                        return Status.OK_STATUS;
+                    }
+                    Project currentProject = ProjectManager.getInstance().getCurrentProject();
+                    List<IDetectCVEService.ImpactedItem> result = detectCVEService.detect(currentProject, filterCVEData, false);
+
+                    List<Project> allReferencedProjects = ProjectManager.getInstance().getAllReferencedProjects();
+                    allReferencedProjects.forEach(project -> {
+                        result.addAll(detectCVEService.detect(project, filterCVEData, false));
+                    });
+
+                    if (result == null || result.isEmpty()) {
+                        Display.getDefault().syncExec(() -> {
+                            MessageDialog.openInformation(PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogTitle"),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.infoDialogMessage"));
+                        });
+                        return Status.OK_STATUS;
+                    }
+                    String currentTimeString = ItemsReportUtil.getCurrentTimeString();
+                    String folderName = "CVEReport" + "_" + currentTimeString;
+                    String fileName = currentTimeString + "_"
+                            + ProjectManager.getInstance().getCurrentProject().getTechnicalLabel() + "_CVE_Report.csv";
+                    String filePath = ResourcesPlugin.getWorkspace().getRoot().getLocation().toString() + "/report/" + folderName
+                            + "/" + fileName;
+
+                    File reportFile = new File(filePath);
+                    detectCVEService.writeReport(result, reportFile);
+                    if (reportFile.exists()) {
+                        Display.getDefault().asyncExec(() -> {
+                            ReportAccessDialog accessDialog = new ReportAccessDialog(
+                                    PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell(),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.reportDialogTitle"),
+                                    Messages.getString("AuditProjectSettingPage.cveDetect.reportDialogMessage"),
+                                    reportFile.getAbsolutePath());
+                            accessDialog.open();
+                        });
+                    }
+                    return Status.OK_STATUS;
+                }
+
+            };
+            job.setUser(false);
+            job.setPriority(Job.INTERACTIVE);
+            job.schedule();
+
+        }
+
+    }
+
 
     private void createProjectAuditArea(Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);

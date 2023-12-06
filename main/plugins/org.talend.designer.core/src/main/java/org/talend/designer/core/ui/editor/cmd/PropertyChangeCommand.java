@@ -58,6 +58,7 @@ import org.talend.designer.core.model.components.Expression;
 import org.talend.designer.core.model.process.jobsettings.JobSettingsConstants;
 import org.talend.designer.core.ui.editor.connections.Connection;
 import org.talend.designer.core.ui.editor.nodes.Node;
+import org.talend.designer.core.ui.editor.process.ProcessUpdateManager;
 import org.talend.designer.core.ui.views.CodeView;
 import org.talend.designer.core.ui.views.jobsettings.JobSettings;
 import org.talend.designer.core.ui.views.properties.ComponentSettings;
@@ -362,12 +363,11 @@ public class PropertyChangeCommand extends Command {
                 && !("").equals(repositoryTypeParam.getValue())) {
             Node node = (Node) elem;
             for (IElementParameter param : node.getElementParameters()) {
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if ((repositoryValue != null)
                         && (!param.getName().equals(EParameterName.PROPERTY_TYPE.getName()))
-                        && param.getFieldType() != EParameterFieldType.MEMO_SQL
-                        && !("tMDMReceive".equals(node.getComponent().getName()) && "XPATH_PREFIX".equals(param //$NON-NLS-1$ //$NON-NLS-2$
-                                .getRepositoryValue()))
+                        && param.getFieldType() != EParameterFieldType.MEMO_SQL && !ProcessUpdateManager.isIgnoreJDBCRepositoryParameter(node, param.getName())
+                        && !("tMDMReceive".equals(node.getComponent().getName()) && "XPATH_PREFIX".equals(repositoryValue))
                         && !("tSAPOutput".equals(node.getComponent().getName()) && param.getName().equals(
                                 UpdatesConstants.MAPPING))
                         && !("tFileInputEBCDIC".equals(node.getComponent().getName()) && "DATA_FILE".equals(repositoryValue))) {
@@ -921,7 +921,7 @@ public class PropertyChangeCommand extends Command {
                 elem.setPropertyValue(propertyTypeName, EmfComponent.REPOSITORY);
             }
             for (IElementParameter param : elem.getElementParameters()) {
-                String repositoryValue = param.getRepositoryValue();
+                String repositoryValue = param.calcRepositoryValue();
                 if (param.isShow(elem.getElementParameters()) && (repositoryValue != null)
                         && param.getCategory().equals(currentParam.getCategory())) {
                     param.setRepositoryValueUsed(true);
