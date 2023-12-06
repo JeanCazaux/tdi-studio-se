@@ -295,26 +295,6 @@
     </PARAMETER>
     
     <PARAMETER
-      NAME="SET_OBJECT_TAGS"
-      FIELD="CHECK"
-      NUM_ROW="55"
-    >
-    </PARAMETER>
-	
-	<PARAMETER
-	  NAME="OBJECT_TAGS"
-	  FIELD="TABLE"
-	  NUM_ROW="56"
-	  REQUIRED="true"
-	  SHOW_IF="SET_OBJECT_TAGS =='true'"
-	>
-      <ITEMS>
-        <ITEM NAME="OBJECT_TAG_KEY"  FIELD="TEXT"/>
-        <ITEM NAME="OBJECT_TAG_VALUE"  FIELD="TEXT"/>
-      </ITEMS>
-    </PARAMETER>
-    
-    <PARAMETER
         NAME="ENABLE_SERVER_SIDE_ENCRYPTION"
         FIELD="CHECK"
         NUM_ROW="85"
@@ -630,6 +610,26 @@
 	      <ITEMS DEFAULT="DAYS">
 	        <ITEM NAME="DAYS" VALUE="DAYS" />
 	        <ITEM NAME="YEARS" VALUE="YEARS" />
+	      </ITEMS>
+	    </PARAMETER>
+	    <PARAMETER
+	      NAME="SET_OBJECT_TAGS"
+	      FIELD="CHECK"
+	      NUM_ROW="120"
+	    >
+	      <DEFAULT>false</DEFAULT>
+	    </PARAMETER>
+		
+		<PARAMETER
+		  NAME="OBJECT_TAGS"
+		  FIELD="TABLE"
+		  NUM_ROW="121"
+		  REQUIRED="true"
+		  SHOW_IF="SET_OBJECT_TAGS =='true'"
+		>
+	      <ITEMS>
+	        <ITEM NAME="OBJECT_TAG_KEY"  FIELD="TEXT"/>
+	        <ITEM NAME="OBJECT_TAG_VALUE"  FIELD="TEXT"/>
 	      </ITEMS>
 	    </PARAMETER>
         
