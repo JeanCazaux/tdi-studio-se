@@ -256,7 +256,7 @@ public class TaCoKitDragAndDropHandler extends AbstractDragAndDropServiceHandler
         if (Lookups.taCoKitCache().isVirtualComponentName(component)) {
             return Lookups.taCoKitCache().getComponentDetailByName(component);
         }
-        final ComponentIndices indices = client().getIndex(language());
+        final ComponentIndices indices = Lookups.service().getComponentIndex();
         final ComponentId id = indices.getComponents().stream().map(ComponentIndex::getId)
                 .filter(i -> component.equals(TaCoKitUtil.getFullComponentName(i.getFamily(), i.getName())))
                 .findFirst()

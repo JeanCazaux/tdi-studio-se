@@ -242,9 +242,13 @@ public class ComponentService {
         return detailList.getDetails().get(0);
     }
 
-    private ComponentIndices getComponentIndex() {
+    public ComponentIndices getComponentIndex() {
         if (index == null) {
-            index = client().getIndex(language());
+            synchronized (this) {
+                if (index == null) {
+                    index = client().getIndex(language());
+                }
+            }
         }
         return index;
     }

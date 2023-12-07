@@ -66,6 +66,7 @@ import org.talend.sdk.component.server.front.model.ConfigTypeNodes;
 import org.talend.sdk.component.server.front.model.DocumentationContent;
 import org.talend.sdk.component.server.front.model.Environment;
 import org.talend.sdk.component.server.front.model.error.ErrorPayload;
+import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.lang.Pair;
 import org.talend.sdk.component.studio.util.TaCoKitConst;
 
@@ -371,7 +372,7 @@ public class WebSocketClient implements AutoCloseable {
         }
 
         public Stream<Pair<ComponentIndex, ComponentDetail>> details(final String language) {
-            final List<ComponentIndex> components = getIndex(language).getComponents();
+            final List<ComponentIndex> components = Lookups.service().getComponentIndex().getComponents();
             // create bundles
             int bundleCount = components.size() / BUNDLE_SIZE;
             bundleCount = bundleCount * BUNDLE_SIZE >= components.size() ? bundleCount : (bundleCount + 1);
