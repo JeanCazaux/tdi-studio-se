@@ -33,11 +33,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import org.eclipse.swt.graphics.RGB;
-import org.talend.core.model.process.AbstractNode;
 import org.talend.core.model.process.EConnectionType;
 import org.talend.core.model.process.INode;
 import org.talend.core.model.process.INodeConnector;
-import org.talend.designer.core.model.components.NodeConnector;
 import org.talend.sdk.component.server.front.model.ComponentDetail;
 import org.talend.sdk.component.studio.util.TaCoKitSpeicalManager;
 
@@ -162,6 +160,7 @@ class ProcessorConnectorCreator extends AbstractConnectorCreator {
                     reject.setHasInput(false);
                     reject.setHasOutput(true);
                     reject.addConnectionProperty(EConnectionType.FLOW_MAIN, new RGB(255, 0, 0), 2);
+                    reject.addConnectionProperty(FLOW_MERGE, FLOW_MERGE.getRGB(), FLOW_MERGE.getDefaultLineStyle());
                     reject.getConnectionProperty(EConnectionType.FLOW_MAIN).setRGB(new RGB(255, 0, 0));
                     existingTypes.add(getType(output));
                     return reject;

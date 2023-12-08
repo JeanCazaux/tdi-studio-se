@@ -21,7 +21,8 @@ Require-Bundle: org.eclipse.emf.ecore,
  org.talend.metadata.managment,
  org.talend.common.ui.runtime,
  org.talend.commons.runtime,
- org.talend.core.runtime
+ org.talend.core.runtime,
+ org.talend.components.api
 Bundle-Vendor: .Talend SA.
 Import-Package: org.eclipse.core.runtime,
  org.slf4j

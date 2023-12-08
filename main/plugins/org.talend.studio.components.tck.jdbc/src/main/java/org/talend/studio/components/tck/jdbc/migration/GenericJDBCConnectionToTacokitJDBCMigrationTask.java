@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.eclipse.core.runtime.Path;
 import org.talend.commons.ui.runtime.exception.ExceptionHandler;
+import org.talend.components.api.properties.ComponentProperties;
 import org.talend.core.model.metadata.builder.connection.ConnectionFactory;
 import org.talend.core.model.metadata.builder.connection.DatabaseConnection;
 import org.talend.core.model.metadata.builder.connection.TacokitDatabaseConnection;
@@ -20,6 +21,9 @@ import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.repository.IRepositoryViewObject;
 import org.talend.core.repository.model.ProxyRepositoryFactory;
 import org.talend.cwm.helper.ResourceHelper;
+import org.talend.daikon.NamedThing;
+import org.talend.daikon.properties.Properties;
+import org.talend.daikon.serialize.SerializerDeserializer;
 import org.talend.sdk.component.server.front.model.ConfigTypeNode;
 import org.talend.sdk.component.studio.Lookups;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.BuiltInKeys;
@@ -90,10 +94,39 @@ public class GenericJDBCConnectionToTacokitJDBCMigrationTask extends AbstractIte
             tacokitDatabaseConnection.setDbmsId(connection.getDbmsId());
             tacokitDatabaseConnection.setURL(connection.getURL());
             tacokitDatabaseConnection.setDatabaseType(connection.getDatabaseType());
+            
+            String driverPath = connection.getDriverJarPath();
+            String properties = connection.getCompProperties();
+            if (properties != null) {
+                SerializerDeserializer.Deserialized<ComponentProperties> d = Properties.Helper
+                        .fromSerializedPersistent(connection.getCompProperties(), ComponentProperties.class);
+                ComponentProperties compProperties = d.object;
+                if (compProperties != null) {
+                    NamedThing nt = compProperties.getProperty("connection.driverTable.drivers");
+                    if (nt != null) {
+                        if (nt instanceof org.talend.daikon.properties.property.Property) {
+                            Object storedValue = org.talend.daikon.properties.property.Property.class.cast(nt).getStoredValue();
+                            if (storedValue != null) {
+                                if (storedValue instanceof List) {
+                                    StringBuffer sb = new StringBuffer();
+                                    for (Object obj : (List) storedValue) {
+                                        if (sb.length() > 0) {
+                                            sb.append(";");
+                                        }
+                                        sb.append(obj);
+                                    }
+                                    driverPath = sb.toString();
+                                } else {
+                                    driverPath = storedValue.toString();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             if (connection.isContextMode()) {
-                tacokitDatabaseConnection.setDriverJarPath(connection.getDriverJarPath());
+                tacokitDatabaseConnection.setDriverJarPath(driverPath);
             } else {
-                String driverPath = connection.getDriverJarPath();
                 StringBuffer newPathSB = new StringBuffer();
                 if (driverPath != null) {
                     String[] values = driverPath.split(";");
@@ -110,6 +143,7 @@ public class GenericJDBCConnectionToTacokitJDBCMigrationTask extends AbstractIte
                 } 
                 tacokitDatabaseConnection.setDriverJarPath(newPathSB.toString());
             }
+            
             tacokitDatabaseConnection.setDriverClass(connection.getDriverClass());
             tacokitDatabaseConnection.setUsername(connection.getUsername());
             tacokitDatabaseConnection.setPassword(connection.getPassword());

@@ -105,8 +105,6 @@
 		<module>main/plugins/org.talend.designer.runtime.visualization.tools</module>
 		<module>main/plugins/org.talend.designer.unifiedcomponent</module>
 		<module>main/plugins/org.talend.sdk.component.studio-integration</module>
-		<module>main/plugins/org.talend.studio.components.tcompv0.jdbc</module>
-		<module>main/features/org.talend.studio.components.tcompv0.jdbc.feature</module>
 		<module>main/plugins/org.talend.studio.components.tcompv0.netsuite</module>
 		<module>main/features/org.talend.studio.components.tcompv0.netsuite.feature</module>
 		<module>main/plugins/org.talend.studio.components.tcompv0.marklogic</module>

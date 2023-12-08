@@ -19,7 +19,6 @@
    <requires>
       <import feature="org.talend.studio.components.tck.jira.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tck.splunk.feature" version="0.0.0" match="greaterOrEqual"/>
-      <import feature="org.talend.studio.components.tcompv0.jdbc.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.netsuite.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.googledrive.feature" version="0.0.0" match="greaterOrEqual"/>
       <import feature="org.talend.studio.components.tcompv0.marketo.feature" version="0.0.0" match="greaterOrEqual"/>

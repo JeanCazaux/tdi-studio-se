@@ -78,6 +78,7 @@ public class OutputConnectorCreator extends AbstractConnectorCreator {
                     reject.setMaxLinkOutput(1);
                     reject.setHasInput(false);
                     reject.addConnectionProperty(EConnectionType.FLOW_MAIN, new RGB(255, 0, 0), 2);
+                    reject.addConnectionProperty(FLOW_MERGE, FLOW_MERGE.getRGB(), FLOW_MERGE.getDefaultLineStyle());
                     reject.getConnectionProperty(EConnectionType.FLOW_MAIN).setRGB(new RGB(255, 0, 0));
                     existingTypes.add(getType(output));
                     return reject;
