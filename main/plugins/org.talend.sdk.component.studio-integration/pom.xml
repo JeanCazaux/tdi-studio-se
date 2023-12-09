@@ -102,6 +102,7 @@
     <dependency>
 		<groupId>com.headius</groupId>
 		<artifactId>options</artifactId>
+		<version>1.7</version>
 	</dependency>
 
     <dependency> <!-- needed by tomcat-websocket -->
