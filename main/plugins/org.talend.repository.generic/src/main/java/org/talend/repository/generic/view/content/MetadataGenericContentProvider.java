@@ -57,7 +57,7 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
         @Override
         protected IRepositoryNode getTopNodeFromResourceDelta(final IResourceDelta delta) {
             if (ERepositoryObjectType.SNOWFLAKE == null) {
-                return null;
+                return super.getTopNodeFromResourceDelta(delta);
             }
             Set<RepositoryNode> topLevelNodes = getTopNodes();
             IPath rootPath = new Path(ERepositoryObjectType.SNOWFLAKE.getFolder());
@@ -109,8 +109,10 @@ public class MetadataGenericContentProvider extends ProjectRepoDirectChildrenNod
                     nodes.add(jdbc);
                 }
             }
-            nodes.add(ProjectRepositoryNode.getInstance().getGenericTopNodesMap()
-                    .get(ERepositoryObjectType.SNOWFLAKE.getType()));
+            if (ERepositoryObjectType.SNOWFLAKE != null) {
+                nodes.add(ProjectRepositoryNode.getInstance().getGenericTopNodesMap()
+                        .get(ERepositoryObjectType.SNOWFLAKE.getType()));
+            }
             return nodes;
         }
 

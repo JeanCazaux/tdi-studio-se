@@ -13,9 +13,11 @@
 package org.talend.sdk.component.studio.ui.wizard.page;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -34,8 +36,8 @@ import org.talend.metadata.managment.ui.utils.ConnectionContextHelper;
 import org.talend.metadata.managment.ui.wizard.context.AbstractRepositoryContextHandler;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel;
 import org.talend.sdk.component.studio.metadata.model.TaCoKitConfigurationModel.ValueModel;
+import org.talend.sdk.component.studio.model.parameter.ValueConverter;
 import org.talend.sdk.component.studio.model.parameter.VersionParameter;
-import org.talend.sdk.component.studio.util.TacokitContextUtil;
 
 public class TaCoKitContextHandler extends AbstractRepositoryContextHandler {
 
@@ -132,7 +134,29 @@ public class TaCoKitContextHandler extends AbstractRepositoryContextHandler {
         try {
             ValueModel valueModel = taCoKitConfigurationModel.getValue(key);
             EParameterFieldType eParameterFieldType = taCoKitConfigurationModel.getEParameterFieldType(key);
-            if (valueModel != null && TacokitContextUtil.isSupportContextFieldType(eParameterFieldType)) {
+            if (valueModel != null) {
+                if (eParameterFieldType == EParameterFieldType.TABLE) {
+                    List<Map<String, Object>> tableValueList = ValueConverter.toTable((String) valueModel.getValue());
+                    List<Map<String, Object>> originalTableValueList = new ArrayList<>();
+                    for (Map<String, Object> map : tableValueList) {
+                        for (Entry<String, Object> entryTable : map.entrySet()) {
+                            Object value = entryTable.getValue();
+                            if (value instanceof String) {
+                                String tableOriginalValue = ContextParameterUtils.getOriginalValue(contextType, value.toString());
+                                if (tableOriginalValue != null) {
+                                    String[] splitValues = tableOriginalValue.split(";");
+                                    for (String s : splitValues) {
+                                        Map<String, Object> originMap = new HashMap<String, Object>();
+                                        originalTableValueList.add(originMap);
+                                        originMap.put(entryTable.getKey(), TalendQuoteUtils.removeQuotes(s));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    taCoKitConfigurationModel.setValue(key, originalTableValueList.toString());
+                    return;
+                }
                 String applicationId = TalendQuoteUtils
                         .removeQuotes(ContextParameterUtils.getOriginalValue(contextType, valueModel.getValue()));
                 taCoKitConfigurationModel.setValue(key, applicationId);

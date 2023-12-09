@@ -29,6 +29,7 @@ import org.talend.core.model.properties.HeaderFooterConnectionItem;
 import org.talend.core.model.properties.Item;
 import org.talend.core.model.repository.ERepositoryObjectType;
 import org.talend.core.model.repository.IRepositoryViewObject;
+import org.talend.core.repository.utils.RepositoryNodeManager;
 import org.talend.repository.model.IRepositoryNode.ENodeType;
 import org.talend.repository.model.RepositoryNode;
 
@@ -153,7 +154,7 @@ public class RepositoryTypeProcessor extends SingleTypeProcessor {
         // friendly.
         ERepositoryObjectType eRepositoryObjectType = ERepositoryObjectType.getTypeFromKey(repositoryType);
         if (eRepositoryObjectType != null) {
-            if (eRepositoryObjectType == ERepositoryObjectType.SNOWFLAKE) {
+            if (RepositoryNodeManager.isSnowflake(eRepositoryObjectType)) {
                 return ERepositoryObjectType.METADATA_CONNECTIONS;
             }
             return eRepositoryObjectType;
