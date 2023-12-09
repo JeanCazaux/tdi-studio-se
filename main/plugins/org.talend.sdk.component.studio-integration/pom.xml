@@ -98,6 +98,11 @@
       <version>${oro.version}</version>
       <scope>provided</scope>
     </dependency>
+    
+    <dependency>
+		<groupId>com.headius</groupId>
+		<artifactId>options</artifactId>
+	</dependency>
 
     <dependency> <!-- needed by tomcat-websocket -->
       <groupId>org.apache.tomcat</groupId>
