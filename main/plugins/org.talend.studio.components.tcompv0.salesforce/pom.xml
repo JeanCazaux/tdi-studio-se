@@ -145,6 +145,7 @@
 							<includeScope>runtime</includeScope>
 							<useRepositoryLayout>true</useRepositoryLayout>
 							<excludeGroupIds>org.talend.studio</excludeGroupIds>
+							<includeGroupIds>com.sun.mail,org.json,com.fasterxml.jackson.dataformat,biz.aQute.bnd,org.talend.components</includeGroupIds>
 						</configuration>
 					</execution>
 				</executions>
